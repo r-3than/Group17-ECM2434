@@ -38,6 +38,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'microsoft_auth',
 ]
 
 MIDDLEWARE = [
@@ -63,6 +64,7 @@ TEMPLATES = [
                 'django.template.context_processors.request',
                 'django.contrib.auth.context_processors.auth',
                 'django.contrib.messages.context_processors.messages',
+                'microsoft_auth.context_processors.microsoft',
             ],
         },
     },
@@ -100,6 +102,15 @@ AUTH_PASSWORD_VALIDATORS = [
     },
 ]
 
+AUTHENTICATION_BACKENDS = [
+    'microsoft_auth.backends.MicrosoftAuthenticationBackend',
+    'django.contrib.auth.backends.ModelBackend' # if you also want to use Django's authentication
+    # I recommend keeping this with at least one database superuser in case of unable to use others
+]
+MICROSOFT_AUTH_CLIENT_ID = '24bdff02-06db-48b9-b65a-da869ccd651d'
+MICROSOFT_AUTH_CLIENT_SECRET = 'mXr8Q~b8BO9E9gI~Lv38QCFcO2G45Rc27nv6AajQ'
+
+MICROSOFT_AUTH_LOGIN_TYPE = 'ma'
 
 # Internationalization
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
