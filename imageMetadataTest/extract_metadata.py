@@ -26,3 +26,12 @@ if __name__ == '__main__':
                 print('    {0:21}: {1}'.format(key, data[key_id]))
         else:
             print('{0:25}: {1}'.format(tag, data))
+
+"""
+DateTime can be used to check if the photo was taken
+    (a) after the challenge is set and
+    (b) within the time window
+GPSInfo contains data which can be used to check location-specific challenges
+
+GDPR note: no other metadata should be extracted/stored unless it is used for the purposes outliuned above
+"""
