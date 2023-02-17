@@ -1,0 +1,7 @@
+
+{% if user.is_authenticated %}
+    <a>hi {{user.email}}</a>
+    <a href="{% url 'microsoft_authentication:microsoft_authentication_logout' %}" >logout</a>
+{% else %}
+<a href="{% url 'microsoft_authentication:microsoft_authentication_login' %}" >login</a>
+{% endif %}
