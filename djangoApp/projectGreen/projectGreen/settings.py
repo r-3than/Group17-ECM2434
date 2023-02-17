@@ -55,7 +55,7 @@ ROOT_URLCONF = 'projectGreen.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates/"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -110,7 +110,7 @@ MICROSOFT = {
     "scopes": ["user.read"],
     "authority": "https://login.microsoftonline.com/common",  # or using tenant "https://login.microsoftonline.com/{tenant}",
     "valid_email_domains": ["exeter.ac.uk"],
-    "logout_uri": "http://localhost:8000/admin/logout"
+    "logout_uri": "http://localhost:8000/"
 }
 
 LOGIN_URL = "/microsoft_authentication/login"
