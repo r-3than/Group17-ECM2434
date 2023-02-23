@@ -1,43 +1,84 @@
+'''
+Emails through SMTP
+Works with a test email address (djangotestemail31@gmail.com)
+Password is an "App Password" (used by gmail)
+'''
+
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-from_address = "djangotestemail31@gmail.com"
-to_addresses = [
-    "djangotestemail31@gmail.com",
-    "grosdino2003@gmail.com",
-    "emailtest4626@gmail.com"
-]
+def build_message(sender, recipient, subject):
+    '''Create a message to be sent to a recipient via email
 
+    :param recipient: the recipient's email address
+    :param subject: the subject of the message
+    :return: the constructed message'''
 
-# Credentials
-username = 'djangotestemail31@gmail.com'  
-password = 'nrsrhztfmmwyqzey'
-
-# Sending the email
-server = smtplib.SMTP('smtp.gmail.com', 587) 
-server.ehlo()
-server.starttls()
-server.login(username,password)
-
-for to_address in to_addresses:
-    # Create message container - the correct MIME type is multipart/alternative.
+    # Create message container
     msg = MIMEMultipart('alternative')
-    msg['Subject'] = "Test email"
-    msg['From'] = from_address
-    msg['To'] = to_address
+    msg['Subject'] = subject
+    msg['From'] = sender
+    msg['To'] = recipient
 
-    # Create the message (HTML).
+    # Create the message (HTML)
     html = """\
     A new challenge has been posted!
     """
 
-    # Record the MIME type - text/html.
+    # Record the MIME type - text/html
     part1 = MIMEText(html, 'html')
 
     # Attach parts into message container
-    msg.attach(part1)
- 
-    server.sendmail(from_address, to_address, msg.as_string())  
+    msg.attach(part1)    
 
-server.quit()
+    return msg
+
+
+def send_email(sender, username, password, recipients_list, subject):
+    '''Send an email to each recipient in a given list of recipients
+   
+    :params sender: the sender's email address
+    :params username: the sender's username (email address)
+    :params password: the sender's App Password
+    :param recipients_list: the list of recipients' email addresses
+    :param subject: the content of the email
+    :return: None
+    '''
+
+    # Connect to the SMTP server
+    try:
+        server = smtplib.SMTP('smtp.gmail.com', 587) 
+        server.ehlo()
+        server.starttls()
+        server.login(username, password)
+    except:
+        print("Error connecting to smtp server")
+
+    # Send the email to all recipients
+    for recipient in recipients_list:
+        new_message = build_message(sender, recipient, subject)
+        server.sendmail(sender, recipient, new_message.as_string())  
+
+    # Close connection
+    server.quit()
+
+    return
+
+
+if __name__ == '__main__':
+    # Sender, recipients and message subject
+    from_email = "djangotestemail31@gmail.com"
+    to_list = [
+        "djangotestemail31@gmail.com",
+        "grosdino2003@gmail.com",
+        "emailtest4626@gmail.com"
+    ]
+    msg_subject = "New challenge is out!"
+
+    # Credentials
+    username = 'djangotestemail31@gmail.com'  
+    password = 'nrsrhztfmmwyqzey'
+
+    # Send message
+    send_email(from_email, username, password, to_list, msg_subject)
