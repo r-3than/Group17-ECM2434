@@ -7,7 +7,7 @@ from extract_metadata import extract_metadata, extract_metadata_from_filepath
 TEST_IMG_FILEPATH = 'IMG_1379.jpg'
 CARDINAL = ['N', 'E', 'S', 'W']
 
-def test_extract_metatdata():
+def test_extract_metadata():
     source_img = Image.open(TEST_IMG_FILEPATH)
     output = extract_metadata(source_img)
     print(output['DateTime'])
