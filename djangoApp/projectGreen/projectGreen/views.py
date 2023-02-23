@@ -7,9 +7,15 @@ from django.template import loader
 
 
 def home(request):
-    template = loader.get_template('home/home.html')
     context = {}
-    return HttpResponse(template.render(context, request))
+    if request.user.is_authenticated:
+        template = loader.get_template('home/home.html')
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+    
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names

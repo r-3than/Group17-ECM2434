@@ -1,3 +1,5 @@
+@import url(https://fonts.googleapis.com/css2?family=Inter:wght@200..900);
+
 html,
 body {
   height: 100%;
@@ -8,7 +10,26 @@ body {
   align-items: center;
   padding-top: 40px;
   padding-bottom: 40px;
-  background-color: #f5f5f5;
+  background-color: var(--exeter-deep-green);
+  font-family: "Inter";
+}
+
+div.title {
+  line-height: 200%;
+}
+
+a.title {
+  color: var(--exeter-dark-green);
+  font-weight: 700;
+  font-size: 96px;
+  text-decoration: none;
+}
+
+a.subtitle {
+  color: var(--exeter-bright-green);
+  font-weight: 400;
+  font-size: 24px;
+  text-decoration: none;
 }
 
 .form-signin {

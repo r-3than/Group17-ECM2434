@@ -69,20 +69,25 @@
     
     <!-- Custom styles for this template -->
     <link href="{% static 'css/sign-in.css' %}" rel="stylesheet">
+    <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+    <link rel="stylesheet"
+          href="">
   </head>
   <body class="text-center">
-    
-    <main class="form-signin w-100 m-auto">
-      <form>
-        <img class="mb-4" src="{% static 'img/bootstrap-logo.svg' %}" alt="" width="72" height="57">
-        <h1 class="h3 mb-3 fw-normal">Click to automatically sign in with your Exeter account</h1>
 
-        <div class="checkbox mb-3">
+    
+    <main class="w-100 m-auto">
+      <div class="title">
+        <a class="title">BeGreen</a> <br/>
+        <a class="subtitle">Today's Challenge: [challenge]</a>
+      </div>
+      <form class="form-signin m-auto mt-5" action="{% url 'microsoft_authentication:microsoft_authentication_login' %}">
+        <button class="w-100 btn btn-lg btn-primary mb-3" style="background-color:#003c3c" type="submit">Login with SSO</button>
+        <div class="checkbox">
           <label>
             <input type="checkbox" value="remember-me"> Remember me
           </label>
         </div>
-        <a class="w-100 btn btn-lg btn-primary" href="{% url 'microsoft_authentication:microsoft_authentication_login' %}">Sign in</a>
         <p class="mt-5 mb-3 text-muted">Project BeGreen</p>
       </form>
     </main>
