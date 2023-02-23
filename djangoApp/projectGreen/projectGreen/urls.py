@@ -1,7 +1,7 @@
 """projectGreen URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
-    https://docs.djangoproject.com/en/3.1/topics/http/urls/
+    https://docs.djangoproject.com/en/4.1/topics/http/urls/
 Examples:
 Function views
     1. Add an import:  from my_app import views
@@ -22,4 +22,6 @@ urlpatterns = [
     path('camera/',camera),
     path('specific_group_access', specific_group_access, ),
     path('admin/', admin.site.urls),
+    path('microsoft_authentication/', include('microsoft_authentication.urls')),
+    
 ]
