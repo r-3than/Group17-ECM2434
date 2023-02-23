@@ -27,4 +27,5 @@ jobs:
         pip install -r ./djangoApp/projectGreen/requirements.txt
     - name: Run Tests
       run: |
+        cd ./djangoApp/projectGreen/
         python manage.py test
