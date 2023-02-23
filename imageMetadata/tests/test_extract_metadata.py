@@ -5,7 +5,7 @@ import os
 
 from extract_metadata import extract_metadata, extract_metadata_from_filepath
 
-TEST_IMG_FILEPATH = 'IMG_1379.jpg'
+TEST_IMG_FILEPATH = 'IMG_1379.JPG'
 CARDINAL = ['N', 'E', 'S', 'W']
 
 def test_extract_metadata():
