@@ -26,9 +26,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r ./djangoApp/projectGreen/requirements.txt
     - name: Run Unit Tests
-      env:
-        TEST_IMG_FILEPATH: /home/runner/work/ECM2434/ECM2434/imageMetadata/IMG_1379.jpg
       run: |
-        env
         cd imageMetadata
         python -m pytest
