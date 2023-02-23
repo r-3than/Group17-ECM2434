@@ -31,7 +31,12 @@ def extract_metadata(img: Image) -> dict[dict, dt]:
             for key_id in data:
                 key = GPSTAGS.get(key_id, key_id)
                 if key in relevant_tags:
-                    out['GPSInfo'][key] = data[key_id]
+                    if isinstance(data[key_id], str):
+                        out['GPSInfo'][key] = data[key_id]
+                    elif isinstance(data[key_id], tuple):
+                        out['GPSInfo'][key] = [float(data[key_id][i]) for i in range(3)]
+                    else:
+                        out['GPSInfo'][key] = float(data[key_id])
         if tag == 'DateTime':
             date_string = exif_data.get(tag_id)
             out['DateTime'] = dt.strptime(date_string, '%Y:%m:%d %H:%M:%S')
