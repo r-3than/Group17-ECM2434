@@ -77,7 +77,7 @@ WSGI_APPLICATION = 'projectGreen.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': 'Group17-ECM2434 / djangoApp / projectGreen / projectGreen / templates / db.sqlite3'
+        'NAME':  BASE_DIR / 'db.sqlite3'
     }
 }
 
