@@ -35,7 +35,6 @@
       },
       body: JSON.stringify({
         img: canvas.toDataURL("image/png"),
-        authkey: "somekeytobeaddedlaterinbackend"
       }),
     })
       .then((response) => response.json())
