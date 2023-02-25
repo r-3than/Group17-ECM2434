@@ -14,7 +14,7 @@ def uploadphoto(request):
         print(data)
         img_data = data["img"]
         img_data = base64.b64decode(img_data.split(",")[1])
-        with open(request.user+".png", "wb") as fh:
+        with open(str(request.user)+".png", "wb") as fh:
             fh.write(img_data)
         return HttpResponse({"success":"true"})
 
