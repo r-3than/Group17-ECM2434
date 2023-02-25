@@ -1,37 +1,72 @@
-
 {% if user.is_authenticated %}
 <a>hi test {{user.email}}</a>
-<a href="{% url 'microsoft_authentication:microsoft_authentication_logout' %}" >logout</a>
+<a href="{% url 'microsoft_authentication:microsoft_authentication_logout' %}">logout</a>
 <a>click the video feed to send pic (WIP)</a>
-<video id="playbackvideo" autoplay></video>
+<div>
+  <video id="playbackvideo" autoplay></video>
+  <canvas id="canvas" style="visibility: hidden"> </canvas>
+  <img id="photo" />
+</div>
 <script>
-    document.getElementById("playbackvideo").addEventListener("click", getImage);
+  document.getElementById("playbackvideo").addEventListener("click", getImage);
+  video = document.getElementById("playbackvideo");
+  canvas = document.getElementById("canvas");
+  photo = document.getElementById("photo");
+  photo.addEventListener("click", sendImage);
 
-    function getImage() {
-        alert("WIP")
+  function getImage() {
+    const context = canvas.getContext("2d");
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+
+    const data = canvas.toDataURL("image/png");
+    photo.setAttribute("src", data);
     //get frame from stream here and send a post request to backend in django (need db)
-    }
-    var errorCallback = function(e) {
-    console.log('Perms denied!', e);
-    };
-    navigator.getUserMedia = ( navigator.getUserMedia ||
-                   navigator.webkitGetUserMedia ||
-                   navigator.mozGetUserMedia ||
-                   navigator.msGetUserMedia);
+  }
 
-    // Not showing vendor prefixes.
-    navigator.getUserMedia({video: true, audio: true}, function(localMediaStream) {
-        var video = document.querySelector('video');
-        video.srcObject = localMediaStream
+  function sendImage() {
+    fetch("http://localhost:8000/uploadphoto/", {
+      method: "POST",
+      credentials: 'include',
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        img: canvas.toDataURL("image/png"),
+        authkey: "somekeytobeaddedlaterinbackend"
+      }),
+    })
+      .then((response) => response.json())
+      .then((response) => console.log(JSON.stringify(response)));
+  }
 
-        // Note: onloadedmetadata doesn't fire in Chrome when using it with getUserMedia.
-        // See crbug.com/110938.
-        video.onloadedmetadata = function(e) {
-            // Ready to go. Do some stuff.
-        };
-    }, errorCallback);
+  var errorCallback = function (e) {
+    console.log("Perms denied!", e);
+  };
+  navigator.getUserMedia =
+    navigator.getUserMedia ||
+    navigator.webkitGetUserMedia ||
+    navigator.mozGetUserMedia ||
+    navigator.msGetUserMedia;
+
+  // Not showing vendor prefixes.
+  navigator.getUserMedia(
+    { video: true, audio: true },
+    function (localMediaStream) {
+      var video = document.querySelector("video");
+      video.srcObject = localMediaStream;
+
+      // Note: onloadedmetadata doesn't fire in Chrome when using it with getUserMedia.
+      // See crbug.com/110938.
+      video.onloadedmetadata = function (e) {
+        // Ready to go. Do some stuff.
+      };
+    },
+    errorCallback
+  );
 </script>
 {% else %}
-<a href="{% url 'microsoft_authentication:microsoft_authentication_login' %}" >login</a>
+<a href="{% url 'microsoft_authentication:microsoft_authentication_login' %}">login</a>
 {% endif %}
-

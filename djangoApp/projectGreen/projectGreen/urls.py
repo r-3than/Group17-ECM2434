@@ -15,11 +15,12 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from projectGreen.views import home,camera, specific_group_access
+from projectGreen.views import home,camera,uploadphoto, specific_group_access
 
 urlpatterns = [
     path('', home, ),
     path('camera/',camera),
+    path('uploadphoto/',uploadphoto),
     path('specific_group_access', specific_group_access, ),
     path('admin/', admin.site.urls),
     path('microsoft_authentication/', include('microsoft_authentication.urls')),
