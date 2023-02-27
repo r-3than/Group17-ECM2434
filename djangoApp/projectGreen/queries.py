@@ -3,7 +3,7 @@ import sqlite3
 DATABASE_PATH = "db.sqlite3"
 
 class Queries:
-	def fetch_query(sql):
+	def fetch_query(sql: str) -> list:
 		'''
 		For SELECT queries
 		'''
@@ -15,7 +15,7 @@ class Queries:
 		connection.close()
 		return result
 	
-	def modify_query(sql):
+	def modify_query(sql: str):
 		'''
 		For INSERT INTO and DELETE FROM queries
 		'''
