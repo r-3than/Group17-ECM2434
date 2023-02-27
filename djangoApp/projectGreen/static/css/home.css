@@ -1,0 +1,135 @@
+html,
+body {
+    width: auto;
+    height: auto;
+    background-color: var(--exeter-deep-green);
+}
+
+/* body {
+    display: table;
+    clear: both;
+    overflow: auto;
+} */
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+header {
+    width: auto;
+    border: solid black 3px;
+    position: sticky;
+    top:0;
+    background-color: var(--exeter-deep-green);
+    height: 130px; 
+    /* display: flex;
+    justify-content: center;
+    align-items: center; */
+    z-index: 1000;
+}
+
+div.title {
+    /* width: 100vw; */
+    text-align: center;
+    line-height: 250%;
+}
+
+a.title {
+    color: var(--exeter-dark-green);
+    font-weight: 700;
+    font-size: 48px;
+    text-decoration: none;
+    margin: auto;
+}
+  
+a.subtitle {
+    color: #00BDA7;
+    font-weight: 700;
+    font-size: 24px;
+    text-decoration: none;
+    margin: auto;
+}
+
+div.account {
+    width: auto;
+    height: 100%;
+    border: 3px solid black;
+    display: flex;
+    justify-content: right;
+    padding: 7px;
+}
+
+div.icon {
+    height: 100%;
+    aspect-ratio: 1/1;
+    border: 3px solid black;
+}
+
+main {
+    height: 3000px;
+    width: auto;
+    content: "";
+}
+
+.centre {
+    float: left;
+    width: 50%;
+    border: black solid 5px;
+    height: auto;
+}
+
+.post {
+    background-color: #191919;
+    color: white;
+    width: 500px;
+    height: auto;
+    padding: 10px;
+    margin: auto;
+    position: relative;
+    top: 30px;
+}
+
+.post > .side {
+    float: left;
+    width: 25%;
+    border: black solid 5px;
+    height: auto;
+    padding: 0;
+}
+
+.post > .centre {
+    float: left;
+    width: 50%;
+    border: black solid 5px;
+    height: auto;
+}
+
+.img {
+    width: auto;
+    aspect-ratio: 4/3;
+    /* margin: 20px; */
+    border: 3px solid white;
+}
+
+.side {
+    float: left;
+    width: 25%;
+    border: black solid 5px;
+    height: auto;
+    padding: 0;
+}
+
+.links {
+    background-color: var(--exeter-dark-green);
+    color: white;
+    width: 250px;
+    height: 350px;
+    padding: 30px;
+    margin: auto;
+    position: relative;
+    top: 50px;
+    font-size: larger;
+    font-weight: 500;
+}
