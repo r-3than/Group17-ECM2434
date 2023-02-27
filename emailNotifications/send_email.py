@@ -8,12 +8,15 @@ import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 
-def build_message(sender, recipient, subject):
-    '''Create a message to be sent to a recipient via email
+def build_message(sender: str, recipient: str, subject: str) -> dict[str, str]:
+    '''
+    Create a message to be sent to a recipient via email
 
-    :param recipient: the recipient's email address
-    :param subject: the subject of the message
-    :return: the constructed message'''
+        :param sender: the sender's email address
+        :param recipient: the recipient's email address
+        :param subject: the subject of the message
+        :return: the constructed message
+    '''
 
     # Create message container
     msg = MIMEMultipart('alternative')
@@ -35,7 +38,7 @@ def build_message(sender, recipient, subject):
     return msg
 
 
-def send_email(sender, username, password, recipients_list, subject):
+def send_email(sender: str, username: str, password: str, recipients_list: list[str], subject: str) -> None:
     '''Send an email to each recipient in a given list of recipients
    
     :params sender: the sender's email address
@@ -52,13 +55,16 @@ def send_email(sender, username, password, recipients_list, subject):
         server.ehlo()
         server.starttls()
         server.login(username, password)
-    except:
+    except smtplib.SMTPAuthenticationError:
         print("Error connecting to smtp server")
 
     # Send the email to all recipients
     for recipient in recipients_list:
-        new_message = build_message(sender, recipient, subject)
-        server.sendmail(sender, recipient, new_message.as_string())  
+        try:
+            new_message = build_message(sender, recipient, subject)
+            server.sendmail(sender, recipient, new_message.as_string())  
+        except:
+            print("Message to ", recipient, "failed to send.")
 
     # Close connection
     server.quit()

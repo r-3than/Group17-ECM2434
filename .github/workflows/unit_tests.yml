@@ -29,3 +29,5 @@ jobs:
       run: |
         cd imageMetadata
         python -m pytest
+        cd ../emailNotifications
+        python -m pytest
