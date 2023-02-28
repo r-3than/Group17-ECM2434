@@ -1,2 +1,6 @@
 http://127.0.0.1:8000/ will not work due to how azure is setup use
 http://localhost:8000/ instead
+
+To get all requirements/dependencies:
+    "cd djangoApp/projectGreen"
+    "pip install -r requirements.txt"
