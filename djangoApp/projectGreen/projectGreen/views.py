@@ -7,9 +7,15 @@ from django.template import loader
 
 
 def home(request):
-    template = loader.get_template('home/home.html')
     context = {}
-    return HttpResponse(template.render(context, request))
+    if request.user.is_authenticated:
+        template = loader.get_template('home/home.html')
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+    
 
 def camera(request):
     template = loader.get_template('camera/camera.html')
