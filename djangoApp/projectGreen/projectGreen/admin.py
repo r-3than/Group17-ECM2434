@@ -1,9 +1,11 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from projectGreen.models import Profile, Challenge, ActiveChallenge
+from projectGreen.models import Profile, Challenge, ActiveChallenge, Submission, Upvote
+
 #from projectGreen.send_email import send_email
 from projectGreen.settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
 from datetime import datetime
+from projectGreen.points import recalculate_user_points # correct version; import callbacks from here
 
 '''
 def get_user_emails():
@@ -42,12 +44,9 @@ def publish_challenge(modeladmin, request, queryset):
 @admin.action(description='Resynchronise Points')
 def recalculate_points(modeladmin, request, queryset):
     for user in queryset:
-        try:
-            profile = Profile.objects.get(user=user)
-            profile.points = 10
-        except Profile.DoesNotExist:
-            profile = Profile(user=user, points=10)
-        profile.save()
+        recalculate_user_points(user.username)
+
+## callbacks to go here; i dont wanna do all this importing its a mess
 
 class ProfileInline(admin.StackedInline):
     model = Profile
@@ -73,7 +72,19 @@ class ActiveChallengesAdmin(admin.ModelAdmin):
     ordering = ['challenge_id']
     actions = []
 
+class SubmissionAdmin(admin.ModelAdmin):
+    list_display = ['username', 'challenge_date', 'minutes_late']
+    ordering = ['username']
+    actions = []
+
+class UpvoteAdmin(admin.ModelAdmin):
+    list_display = ['submission_username', 'submission_date', 'voter_username']
+    ordering = ['submission_username']
+    actions = []
+
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
 admin.site.register(Challenge, ChallengesAdmin)
 admin.site.register(ActiveChallenge, ActiveChallengesAdmin)
+admin.site.register(Submission, SubmissionAdmin)
+admin.site.register(Upvote, UpvoteAdmin)

@@ -48,6 +48,7 @@ class Friends(models.Model):
 class Challenge(models.Model):
     challenge_id = models.IntegerField(primary_key=True)
     description = models.CharField(max_length=200)
+    time_for_challenge = models.IntegerField(default=0)
     verbose_name = 'Challenge'
     verbose_name_plural = 'Challenges'
     class Meta:
@@ -57,19 +58,20 @@ class ActiveChallenge(models.Model):
     challenge_date = models.DateTimeField('challenge-date', primary_key=True)
     # FOLLOWING LINE CAUSES AN ERROR
     #challenge_id = models.ForeignKey(Challenge, models.CASCADE)
-    challenge_id = models.IntegerField() # TEMPORARY SOLUTION (TO CHANGE)
+    challenge_id = models.IntegerField(default=0) # TEMPORARY SOLUTION (TO CHANGE)
     is_expired = models.BooleanField(default=False)
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
     class Meta:
         db_table = 'ActiveChallenges'
 
-''' COMPOUND KEYS NOT SUPPORTED BY django.models
 class Submission(models.Model):
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
-    challenge_date = models.DateTimeField('challenge-date')
-    models.UniqueConstraint(fields=['username', 'challenge_date'], name='user_and_date')
+    challenge_date = models.DateTimeField('challenge date')
+    minutes_late = models.IntegerField()
+    #models.UniqueConstraint(fields=['username', 'challenge_date'], name='user_and_date')
 
+    '''
     def get_path(self):
         date = self.challenge_date.strtime('%Y-%m-%d')
         return 'photos\\{date}\\{username}.png'.format(date, self.username)
@@ -79,28 +81,10 @@ class Submission(models.Model):
         cd = dt.strptime(path[1], '%Y-%m-%d')
         un = path[2].strip('.png')
         Submission.objects.get(username=un, challenge_date=cd)
-'''
-
-## Version using single path key, which can be decomposed into component keys
-
-class Submission(models.Model):
-    path = models.CharField(max_length=200, primary_key=True)
-
-    def get_username(self):
-        p = self.path.split('\\')
-        username = p[2].strip('.png')
-        return username
+    '''
     
-    def get_challenge_date(self):
-        path = path.split('\\')
-        challenge_date = dt.strptime(path[1], '%Y-%m-%d')
-        return challenge_date
-
-    def generate_path(username:str, challenge_date: dt):
-        date = challenge_date.strtime('%Y-%m-%d')
-        return '{path}\\{date}\\{username}.png'.format(path=PATH_TO_SUBMISSIONS_FOLDER,
-                                                       date=date, username=username)
-
 class Upvote(models.Model):
-    submission_path = models.ForeignKey(Submission, models.CASCADE)
-    username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+    #submission_path = models.ForeignKey(Submission, models.CASCADE)
+    submission_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+    submission_date = models.DateTimeField('challenge date')
+    voter_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
