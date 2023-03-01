@@ -1,10 +1,26 @@
 from datetime import datetime as dt
 
 from django.db import models
+from django.contrib.auth.models import User
+
+from projectGreen.settings import MICROSOFT
+DOMAIN = MICROSOFT['valid_email_domains'][0]
+# this is the primary domain; if multiple domains exist, then domain
+# suffixes will be used in usernames not in the primary domain
+
+def username_to_email(username: str) -> str:
+    if '@' in username:
+        return username
+    else:
+        return username + '@' + DOMAIN
+
+def email_to_username(email: str) -> str:
+    return email.strip('@'+DOMAIN)
 
 USERNAME_MAX_LENGTH = 20
 PATH_TO_SUBMISSIONS_FOLDER = 'photos'
 
+'''
 class User(models.Model):
     email = models.CharField(max_length=USERNAME_MAX_LENGTH, primary_key=True)
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
@@ -14,19 +30,16 @@ class User(models.Model):
     verbose_name_plural = 'Users'
     class Meta:
         db_table = 'Users'
+        '''
 
-'''
-# Doesn't work yet (use of the auth_user table clashes with another model?)
-class AuthenticatedUser(models.Model):
-    id = models.IntegerField(primary_key=True)
-    email = models.CharField(max_length=200)
-    is_superuser = models.BooleanField()
-    verbose_name = 'Authenticated User'
-    verbose_name_plural = 'Authenticated Users'
+class Profile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    points = models.IntegerField()
+
+    verbose_name = 'Profile'
+    verbose_name_plural = 'Profiles'
     class Meta:
-        db_table = 'auth_user'
-'''
-        
+        db_table = 'Profiles'
 
 class Friends(models.Model):
     self_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
@@ -41,11 +54,11 @@ class Challenge(models.Model):
         db_table = 'Challenges'
 
 class ActiveChallenge(models.Model):
-    challenge_date = models.DateTimeField('challenge-date')
+    challenge_date = models.DateTimeField('challenge-date', primary_key=True)
     # FOLLOWING LINE CAUSES AN ERROR
     #challenge_id = models.ForeignKey(Challenge, models.CASCADE)
-    challenge_id = models.IntegerField(primary_key=True) # TEMPORARY SOLUTION (TO CHANGE)
-    is_expired = models.BooleanField()
+    challenge_id = models.IntegerField() # TEMPORARY SOLUTION (TO CHANGE)
+    is_expired = models.BooleanField(default=False)
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
     class Meta:
