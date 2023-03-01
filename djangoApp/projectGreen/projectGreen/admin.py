@@ -39,10 +39,11 @@ def approve_submission(modeladmin, request, queryset):
     for submission in queryset:
         submission.review_submission(True)
 
-@admin.action(description='Remove Submission(s)')
-def deny_submission(modeladmin, request, queryset):
-    for submission in queryset:
-        submission.review_submission(False)
+    for user in User.objects.all():
+        try:
+            user.email_user('Time to BeGreen!','A new challenge has been posted! \n'+queryset[0].description+'\nDate: '+date, from_email)
+        except:
+            print("Message to ", user.email, "failed to send.")
 
 
 class ProfileInline(admin.StackedInline):
