@@ -1,7 +1,23 @@
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime as dt
-import math
+
+from django.db import models
+from django.contrib.auth.models import User
+
+from projectGreen.settings import MICROSOFT
+DOMAIN = MICROSOFT['valid_email_domains'][0]
+# this is the primary domain; if multiple domains exist, then domain
+# suffixes will be used in usernames not in the primary domain
+
+def username_to_email(username: str) -> str:
+    if '@' in username:
+        return username
+    else:
+        return username + '@' + DOMAIN
+
+def email_to_username(email: str) -> str:
+    return email.strip('@'+DOMAIN)
 
 USERNAME_MAX_LENGTH = 20
 SCORES = {'submission':10, 'upvote':{'given':1, 'recieved':2}}
