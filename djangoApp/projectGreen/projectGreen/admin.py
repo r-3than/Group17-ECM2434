@@ -2,6 +2,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote
 from datetime import datetime
+from projectGreen.points import recalculate_user_points # correct version; import callbacks from here
 
 
 @admin.action(description='Publish challenge')
@@ -115,6 +116,16 @@ class UpvoteAdmin(admin.ModelAdmin):
     @admin.display(ordering='submission__submission', description='submission')
     def get_submission(self, upvote):
         return upvote.submission
+
+class SubmissionAdmin(admin.ModelAdmin):
+    list_display = ['username', 'challenge_date', 'minutes_late']
+    ordering = ['username']
+    actions = []
+
+class UpvoteAdmin(admin.ModelAdmin):
+    list_display = ['submission_username', 'submission_date', 'voter_username']
+    ordering = ['submission_username']
+    actions = []
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
