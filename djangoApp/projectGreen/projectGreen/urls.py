@@ -15,10 +15,11 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from projectGreen.views import home,camera, specific_group_access
+from projectGreen.views import home,challenge,camera, specific_group_access
 
 urlpatterns = [
-    path('', home, ),
+    path('', challenge, ),
+    path('home/', home, name='home'),
     path('camera/',camera),
     path('specific_group_access', specific_group_access, ),
     path('admin/', admin.site.urls),
