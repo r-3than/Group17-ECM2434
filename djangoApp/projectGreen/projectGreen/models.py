@@ -6,22 +6,50 @@ USERNAME_MAX_LENGTH = 20
 PATH_TO_SUBMISSIONS_FOLDER = 'photos'
 
 class User(models.Model):
-    username = models.CharField(max_length=USERNAME_MAX_LENGTH, primary_key=True)
+    email = models.CharField(max_length=USERNAME_MAX_LENGTH, primary_key=True)
+    username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     display_name = models.CharField(max_length=200)
     is_superuser = models.BooleanField()
+    verbose_name = 'User'
+    verbose_name_plural = 'Users'
+    class Meta:
+        db_table = 'Users'
+
+'''
+# Doesn't work yet (use of the auth_user table clashes with another model?)
+class AuthenticatedUser(models.Model):
+    id = models.IntegerField(primary_key=True)
+    email = models.CharField(max_length=200)
+    is_superuser = models.BooleanField()
+    verbose_name = 'Authenticated User'
+    verbose_name_plural = 'Authenticated Users'
+    class Meta:
+        db_table = 'auth_user'
+'''
+        
 
 class Friends(models.Model):
     self_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     friend_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
 
-class Challenges(models.Model):
+class Challenge(models.Model):
     challenge_id = models.IntegerField(primary_key=True)
     description = models.CharField(max_length=200)
+    verbose_name = 'Challenge'
+    verbose_name_plural = 'Challenges'
+    class Meta:
+        db_table = 'Challenges'
 
-class ActiveChallenges(models.Model):
+class ActiveChallenge(models.Model):
     challenge_date = models.DateTimeField('challenge-date')
-    challenge_id = models.ForeignKey(Challenges)
+    # FOLLOWING LINE CAUSES AN ERROR
+    #challenge_id = models.ForeignKey(Challenge, models.CASCADE)
+    challenge_id = models.IntegerField(primary_key=True) # TEMPORARY SOLUTION (TO CHANGE)
     is_expired = models.BooleanField()
+    verbose_name = 'ActiveChallenge'
+    verbose_name_plural = 'ActiveChallenges'
+    class Meta:
+        db_table = 'ActiveChallenges'
 
 ''' COMPOUND KEYS NOT SUPPORTED BY django.models
 class Submission(models.Model):
@@ -61,5 +89,5 @@ class Submission(models.Model):
                                                        date=date, username=username)
 
 class Upvote(models.Model):
-    submission_path = models.ForeignKey(Submission)
+    submission_path = models.ForeignKey(Submission, models.CASCADE)
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)

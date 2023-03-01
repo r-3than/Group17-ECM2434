@@ -2,10 +2,6 @@ from django.http import HttpResponse
 from microsoft_authentication.auth.auth_decorators import microsoft_login_required
 from django.template import loader
 
-
-
-
-
 def home(request):
     context = {}
     if request.user.is_authenticated:
