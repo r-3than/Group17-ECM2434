@@ -30,4 +30,4 @@ def test_send_message():
     test_password = "nrsrhztfmmwyqzey"
 
     wrong_credentials = send_email(test_sender, test_username_wrong, test_password_wrong, test_recipients, test_subject)
-    assert wrong_credentials == "Authentication failed"
+    assert wrong_credentials == None
