@@ -6,9 +6,27 @@ USERNAME_MAX_LENGTH = 20
 PATH_TO_SUBMISSIONS_FOLDER = 'photos'
 
 class User(models.Model):
-    username = models.CharField(max_length=USERNAME_MAX_LENGTH, primary_key=True)
+    email = models.CharField(max_length=USERNAME_MAX_LENGTH, primary_key=True)
+    username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     display_name = models.CharField(max_length=200)
     is_superuser = models.BooleanField()
+    verbose_name = 'User'
+    verbose_name_plural = 'Users'
+    class Meta:
+        db_table = 'Users'
+
+'''
+# Doesn't work yet (use of the auth_user table clashes with another model?)
+class AuthenticatedUser(models.Model):
+    id = models.IntegerField(primary_key=True)
+    email = models.CharField(max_length=200)
+    is_superuser = models.BooleanField()
+    verbose_name = 'Authenticated User'
+    verbose_name_plural = 'Authenticated Users'
+    class Meta:
+        db_table = 'auth_user'
+'''
+        
 
 class Friends(models.Model):
     self_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
