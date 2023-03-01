@@ -16,6 +16,16 @@ def home(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
     
+def challenge(request):
+    context = {}
+    if request.user.is_authenticated:
+        template = loader.get_template('home/challenge.html')
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+    
 
 def camera(request):
     template = loader.get_template('camera/camera.html')
