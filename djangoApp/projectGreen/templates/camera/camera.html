@@ -3,6 +3,7 @@
 <a href="{% url 'microsoft_authentication:microsoft_authentication_logout' %}">logout</a>
 <a>click the video feed to save a pic</a>
 <div>
+  <input type="file" name="image" accept="image/*" capture="environment">
   <video id="playbackvideo" autoplay></video>
   <canvas id="canvas" style="visibility: hidden"> </canvas>
   <img id="photo" />
