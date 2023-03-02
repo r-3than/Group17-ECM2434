@@ -17,7 +17,7 @@
             <div class="side">
                 <div class="account">
                     <div style="height: 80%; padding-left: 50%;">
-                        <div class="icon rounded-circle">T</div>
+                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
                     </div>
                     <div class="points">Score: 312</div>
                 </div>
@@ -25,7 +25,7 @@
         </header>
         <main class="w-100 m-auto text-center">
           <div>
-            <a class="title">Hello Thomas!</a>
+            <a class="title" id="welcomeBanner">Hello {{user.username| capfirst}}!</a>
             <br>
             <a class="subtitle">Today's Challenge: Visit the Coast!</a>
           </div>
