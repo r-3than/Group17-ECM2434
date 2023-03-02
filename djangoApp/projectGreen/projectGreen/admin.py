@@ -54,24 +54,49 @@ class UserAdmin(admin.ModelAdmin):
         return user.profile.points
 
 class ChallengesAdmin(admin.ModelAdmin):
-    list_display = ['challenge_id', 'description']
-    ordering = ['challenge_id']
+    list_display = ['id', 'description']
+    ordering = ['id']
     actions = [publish_challenge]
 
 class ActiveChallengesAdmin(admin.ModelAdmin):
-    list_display = ['challenge_id', 'challenge_date', 'is_expired']
-    ordering = ['challenge_id']
+    list_display = ['challenge_date', 'get_challenge_id', 'get_challenge_description', 'get_time_for_challenge', 'is_expired']
+    ordering = ['challenge_date']
     actions = []
 
+    @admin.display(ordering='challenge__id', description='challenge_id')
+    def get_challenge_id(self, active_challenge):
+        return active_challenge.challenge.id
+    
+    @admin.display(ordering='challenge__description', description='description')
+    def get_challenge_description(self, active_challenge):
+        return active_challenge.challenge.description
+    
+    @admin.display(ordering='challenge__time_for_challenge', description='time_for_challenge')
+    def get_time_for_challenge(self, active_challenge):
+        return active_challenge.challenge.time_for_challenge
+
+
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ['username', 'challenge_date', 'minutes_late']
+    list_display = ['username', 'get_challenge_date', 'minutes_late']
     ordering = ['username']
     actions = []
 
+    @admin.display(ordering='challenge__challenge_date', description='challenge_date')
+    def get_challenge_date(self, submission):
+        return submission.challenge.challenge_date
+
 class UpvoteAdmin(admin.ModelAdmin):
-    list_display = ['submission_username', 'submission_date', 'voter_username']
-    ordering = ['submission_username']
+    list_display = ['get_submission_username', 'get_submission_date', 'voter_username']
+    ordering = ['voter_username'] # get_submission_username
     actions = []
+
+    @admin.display(ordering='submission__submission_username', description='submission_username')
+    def get_submission_username(self, upvote):
+        return upvote.submission.username
+    
+    @admin.display(ordering='submission__submission_date', description='submission_date')
+    def get_submission_date(self, upvote):
+        return upvote.submission.challenge_date
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)

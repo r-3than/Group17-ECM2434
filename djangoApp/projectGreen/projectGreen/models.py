@@ -1,28 +1,12 @@
-from datetime import datetime as dt
-
 from django.db import models
 from django.contrib.auth.models import User
-
-from projectGreen.settings import MICROSOFT
-DOMAIN = MICROSOFT['valid_email_domains'][0]
-# this is the primary domain; if multiple domains exist, then domain
-# suffixes will be used in usernames not in the primary domain
-
-def username_to_email(username: str) -> str:
-    if '@' in username:
-        return username
-    else:
-        return username + '@' + DOMAIN
-
-def email_to_username(email: str) -> str:
-    return email.strip('@'+DOMAIN)
 
 USERNAME_MAX_LENGTH = 20
 PATH_TO_SUBMISSIONS_FOLDER = 'photos'
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
-    points = models.IntegerField()
+    points = models.IntegerField(default=0)
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
@@ -34,7 +18,7 @@ class Friends(models.Model):
     friend_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
 
 class Challenge(models.Model):
-    challenge_id = models.IntegerField(primary_key=True)
+    id = models.IntegerField(primary_key=True) # challenge_id
     description = models.CharField(max_length=200)
     time_for_challenge = models.IntegerField(default=0)
     verbose_name = 'Challenge'
@@ -43,10 +27,8 @@ class Challenge(models.Model):
         db_table = 'Challenges'
 
 class ActiveChallenge(models.Model):
-    challenge_date = models.DateTimeField('challenge-date', primary_key=True)
-    # FOLLOWING LINE CAUSES AN ERROR
-    #challenge_id = models.ForeignKey(Challenge, models.CASCADE)
-    challenge_id = models.IntegerField(default=0) # TEMPORARY SOLUTION (TO CHANGE)
+    challenge_date = models.DateTimeField('Challenge Date', primary_key=True)
+    challenge = models.ForeignKey(Challenge, models.CASCADE, null=True)
     is_expired = models.BooleanField(default=False)
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -54,10 +36,16 @@ class ActiveChallenge(models.Model):
         db_table = 'ActiveChallenges'
 
 class Submission(models.Model):
+    id = models.IntegerField(primary_key=True) # submission_id
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
-    challenge_date = models.DateTimeField('challenge date')
-    minutes_late = models.IntegerField()
-    #models.UniqueConstraint(fields=['username', 'challenge_date'], name='user_and_date')
+    challenge = models.ForeignKey(Challenge, models.CASCADE, null=True)
+    minutes_late = models.IntegerField(default=0)
+    # add photo field here
+
+    verbose_name = 'Submission'
+    verbose_name_plural = 'Submissions'
+    class Meta:
+        db_table = 'Submissions'
 
     '''
     def get_path(self):
@@ -72,7 +60,12 @@ class Submission(models.Model):
     '''
     
 class Upvote(models.Model):
-    #submission_path = models.ForeignKey(Submission, models.CASCADE)
-    submission_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
-    submission_date = models.DateTimeField('challenge date')
+    submission = models.ForeignKey(Submission, models.CASCADE, null=True)
+    #submission_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+    #submission_date = models.DateTimeField('challenge date')
     voter_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+
+    verbose_name = 'Upvote'
+    verbose_name_plural = 'Upvotes'
+    class Meta:
+        db_table = 'Upvotes'
