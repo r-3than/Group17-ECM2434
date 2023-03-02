@@ -26,7 +26,7 @@ SECRET_KEY = 'django-insecure-*f-8r*xtx6mljgv8pdcp^^)z&y&80r1p_iyf!y_lf=*0600$ca
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com"]
+ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com","localhost"]
 
 
 # Application definition
@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'corsheaders',
     'projectGreen'
 ]
 
@@ -50,8 +51,13 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
 ]
 
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:8000',
+]
+CORS_ORIGIN_ALLOW_ALL = True
 ROOT_URLCONF = 'projectGreen.urls'
 
 TEMPLATES = [
@@ -108,11 +114,11 @@ AUTH_PASSWORD_VALIDATORS = [
 MICROSOFT = {
     "app_id": "24bdff02-06db-48b9-b65a-da869ccd651d",
     "app_secret": "mXr8Q~b8BO9E9gI~Lv38QCFcO2G45Rc27nv6AajQ",
-    "redirect": "https://projectgreen.grayitsolutions.com/microsoft_authentication/callback",
+    "redirect": "http://localhost:8000/microsoft_authentication/callback",
     "scopes": ["user.read"],
     "authority": "https://login.microsoftonline.com/common",  # or using tenant "https://login.microsoftonline.com/{tenant}",
     "valid_email_domains": ["exeter.ac.uk"],
-    "logout_uri": "https://projectgreen.grayitsolutions.com/"
+    "logout_uri": "http://localhost:8000"
 }
 
 LOGIN_URL = "/microsoft_authentication/login"
