@@ -26,20 +26,6 @@
         <main class="w-100 m-auto text-center">
           <div>
             <a class="title" id="welcomeBanner">Hello {{user.username| capfirst}}!</a>
-            <script>
-                banner = document.getElementById("welcomeBanner");
-                fetch("https://graph.microsoft.com/v1.0/me", {
-                method: "GET",
-                credentials: 'include',
-                headers: {
-                    Accept: "application/json",
-                    "Content-Type": "application/json",
-                },
-                })
-                .then((response) => response.json())
-                .then((response) => banner.textContent = response["givenName"]);
-                    
-            </script>
             <br>
             <a class="subtitle">Today's Challenge: Visit the Coast!</a>
           </div>
