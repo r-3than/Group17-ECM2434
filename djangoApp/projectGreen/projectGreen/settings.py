@@ -109,16 +109,17 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+broadcastURL = "http://localhost:8000" # makes it easier when hosting so i can just change this url
 
 
 MICROSOFT = {
     "app_id": "24bdff02-06db-48b9-b65a-da869ccd651d",
     "app_secret": "mXr8Q~b8BO9E9gI~Lv38QCFcO2G45Rc27nv6AajQ",
-    "redirect": "http://localhost:8000/microsoft_authentication/callback",
+    "redirect": broadcastURL+"/microsoft_authentication/callback",
     "scopes": ["user.read"],
     "authority": "https://login.microsoftonline.com/common",  # or using tenant "https://login.microsoftonline.com/{tenant}",
     "valid_email_domains": ["exeter.ac.uk"],
-    "logout_uri": "http://localhost:8000"
+    "logout_uri": broadcastURL
 }
 
 LOGIN_URL = "/microsoft_authentication/login"
