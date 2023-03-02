@@ -7,15 +7,6 @@ from projectGreen.settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
 from datetime import datetime
 from projectGreen.points import recalculate_user_points # correct version; import callbacks from here
 
-'''
-def get_user_emails():
-    user_emails = []
-    user_objects = User.objects.all()
-    for user_info in user_objects:
-        user_emails.append(user_info.email)
-    return user_emails
-'''
-
 @admin.action(description='Publish challenge')
 def publish_challenge(modeladmin, request, queryset):
     date = datetime.now().strftime('%Y-%m-%d')

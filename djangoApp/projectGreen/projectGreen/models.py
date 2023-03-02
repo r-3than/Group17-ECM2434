@@ -20,18 +20,6 @@ def email_to_username(email: str) -> str:
 USERNAME_MAX_LENGTH = 20
 PATH_TO_SUBMISSIONS_FOLDER = 'photos'
 
-'''
-class User(models.Model):
-    email = models.CharField(max_length=USERNAME_MAX_LENGTH, primary_key=True)
-    username = models.CharField(max_length=USERNAME_MAX_LENGTH)
-    display_name = models.CharField(max_length=200)
-    is_superuser = models.BooleanField()
-    verbose_name = 'User'
-    verbose_name_plural = 'Users'
-    class Meta:
-        db_table = 'Users'
-        '''
-
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField()
