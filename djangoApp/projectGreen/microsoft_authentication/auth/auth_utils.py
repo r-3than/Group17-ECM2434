@@ -88,7 +88,7 @@ def validate_email(email):
     return "@" in email and email.split("@")[1] in settings.MICROSOFT["valid_email_domains"]
 
 
-def get_django_user(email, create_new=True):
+def get_django_user(email,givenName,surName, create_new=True):
     if not validate_email(email=email):
         return
     try:
@@ -97,7 +97,8 @@ def get_django_user(email, create_new=True):
         if not create_new:
             return
         random_password = "".join(random.choice(string.ascii_letters) for i in range(32))
-        user = User(username=email, email=email, password=make_password(random_password))
+        username = email.split("@")[0]
+        user = User(username=username, email=email,first_name=givenName,last_name=surName, password=make_password(random_password))
         user.is_staff = True
         user.save()
     return user

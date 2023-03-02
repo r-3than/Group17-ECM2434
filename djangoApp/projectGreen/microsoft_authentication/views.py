@@ -27,7 +27,8 @@ def microsoft_logout(request):
 def callback(request):
     result = get_token_from_code(request)
     ms_user = get_user(result['access_token'])
-    user = get_django_user(email=ms_user['mail'])
+    print(ms_user)
+    user = get_django_user(email=ms_user['mail'],givenName=ms_user["givenName"],surName=ms_user["surname"])
     if user:
         login(request, user)
     else:
