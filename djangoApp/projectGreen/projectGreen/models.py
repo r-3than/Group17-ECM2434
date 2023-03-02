@@ -141,7 +141,7 @@ class ActiveChallenge(models.Model):
         db_table = 'ActiveChallenges'
 
 class Submission(models.Model):
-    id = models.IntegerField(primary_key=True) # submission_id
+    # id = models.IntegerField(primary_key=True) # submission_id added automatically
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     active_challenge = models.ForeignKey(ActiveChallenge, models.CASCADE, null=True)
     submission_time = models.DateTimeField('Submission Time', null=True)

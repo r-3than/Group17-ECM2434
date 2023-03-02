@@ -120,20 +120,16 @@ class SubmissionAdmin(admin.ModelAdmin):
 
     @admin.display(ordering='challenge__challenge_date', description='challenge_date')
     def get_challenge_date(self, submission):
-        return submission.challenge.challenge_date
+        return submission.active_challenge.date
 
 class UpvoteAdmin(admin.ModelAdmin):
-    list_display = ['get_submission_username', 'get_submission_date', 'voter_username']
+    list_display = ['get_submission', 'voter_username']
     ordering = ['voter_username'] # get_submission_username
     actions = []
 
-    @admin.display(ordering='submission__submission_username', description='submission_username')
-    def get_submission_username(self, upvote):
-        return upvote.submission.username
-    
-    @admin.display(ordering='submission__submission_date', description='submission_date')
-    def get_submission_date(self, upvote):
-        return upvote.submission.challenge_date
+    @admin.display(ordering='submission__submission', description='submission')
+    def get_submission(self, upvote):
+        return upvote.submission
 
 admin.site.unregister(User)
 admin.site.register(User, UserAdmin)
