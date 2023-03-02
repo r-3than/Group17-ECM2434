@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-*f-8r*xtx6mljgv8pdcp^^)z&y&80r1p_iyf!y_lf=*0600$ca
 DEBUG = True
 
 ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com","localhost"]
-
+CSRF_TRUSTED_ORIGINS = ['https://projectgreen.grayitsolutions.com',"http://localhost:8000"]
 
 # Application definition
 
