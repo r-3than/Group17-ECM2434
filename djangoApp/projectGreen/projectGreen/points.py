@@ -33,12 +33,12 @@ def recalculate_user_points(username: str):
     points = 0
     upvotes_given = Upvote.objects.filter(voter_username=username)
     points += len(upvotes_given)*SCORES['upvote']['given']
-    upvotes_recieved = Upvote.objects.filter(submission_username=username)
+    upvotes_recieved = Upvote.objects.filter(submission__username=username)
     points += len(upvotes_recieved)*SCORES['upvote']['recieved']
     submissions = Submission.objects.filter(username=username)
     for sub in submissions:
-        id = ActiveChallenge.objects.get(challenge_date__date=sub.challenge_date).challenge_id
-        time_for_challenge = Challenge.objects.get(challenge_id=id).time_for_challenge
+        #id = ActiveChallenge.objects.get(challenge_date__date=sub.challenge.date).challenge_id
+        time_for_challenge = sub.active_challenge.challenge.time_for_challenge
         points += SCORES['submission'] * punctuality_scaling(time_for_challenge, sub.minutes_late)
     set_points(username, points)
 

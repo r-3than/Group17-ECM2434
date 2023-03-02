@@ -18,7 +18,7 @@ class Friends(models.Model):
     friend_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
 
 class Challenge(models.Model):
-    id = models.IntegerField(primary_key=True) # challenge_id
+    # id = models.IntegerField(primary_key=True) # challenge_id added automatically
     description = models.CharField(max_length=200)
     time_for_challenge = models.IntegerField(default=0)
     verbose_name = 'Challenge'
@@ -27,7 +27,7 @@ class Challenge(models.Model):
         db_table = 'Challenges'
 
 class ActiveChallenge(models.Model):
-    challenge_date = models.DateTimeField('Challenge Date', primary_key=True)
+    date = models.DateTimeField('Challenge Date', primary_key=True)
     challenge = models.ForeignKey(Challenge, models.CASCADE, null=True)
     is_expired = models.BooleanField(default=False)
     verbose_name = 'ActiveChallenge'
@@ -36,9 +36,9 @@ class ActiveChallenge(models.Model):
         db_table = 'ActiveChallenges'
 
 class Submission(models.Model):
-    id = models.IntegerField(primary_key=True) # submission_id
+    # id = models.IntegerField(primary_key=True) # submission_id added automatically
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
-    challenge = models.ForeignKey(Challenge, models.CASCADE, null=True)
+    active_challenge = models.ForeignKey(ActiveChallenge, models.CASCADE, null=True)
     minutes_late = models.IntegerField(default=0)
     # add photo field here
 
