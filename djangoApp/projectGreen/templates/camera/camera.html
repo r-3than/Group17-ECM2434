@@ -20,13 +20,10 @@
   >
   <a>click the video feed to save a pic</a>
   <div>
-    {% if request.user_agent.is_mobile %}
     <label class="custom-file-upload">
       <input type="file"/>
       Custom Upload
     </label>
-  
-    {% endif %}
     <video id="playbackvideo" autoplay muted></video>
     <canvas id="canvas" style="visibility: hidden"> </canvas>
     <img id="photo" />
