@@ -17,7 +17,10 @@ def set_points(username: str, points_value: int):
 
 def add_points(username: str, points_to_add: int):
     user = User.objects.get(username=username)
-    profile = Profile.objects.get(user=user)
+    try:
+        profile = Profile.objects.get(user=user)
+    except Profile.DoesNotExist:
+        profile = Profile(user=user, points=0)
     points = profile.points
     points += points_to_add
     profile.points = points
