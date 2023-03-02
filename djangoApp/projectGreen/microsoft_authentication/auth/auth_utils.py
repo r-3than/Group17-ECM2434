@@ -98,7 +98,7 @@ def username_to_email(username: str) -> str:
         return username + '@' + PRIMARY_DOMAIN
 
 def email_to_username(email: str) -> str:
-    return email.strip('@'+PRIMARY_DOMAIN)
+    return email.rstrip('@'+PRIMARY_DOMAIN)
 
 def get_django_user(email,givenName,surName, create_new=True):
     if not validate_email(email=email):
@@ -113,4 +113,5 @@ def get_django_user(email,givenName,surName, create_new=True):
         user = User(username=username, email=email,first_name=givenName,last_name=surName, password=make_password(random_password))
         user.is_staff = True
         user.save()
+        ## set points to zero?
     return user
