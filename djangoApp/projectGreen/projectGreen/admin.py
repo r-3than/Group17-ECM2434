@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
-from projectGreen.models import Profile, Challenge, ActiveChallenge, Submission, Upvote
+from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote
 
 #from projectGreen.send_email import send_email
 from projectGreen.settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
@@ -37,6 +37,22 @@ def recalculate_points(modeladmin, request, queryset):
     for user in queryset:
         recalculate_user_points(user.username)
 
+@admin.action(description='Report Submission(s)')
+def report_submission(modeladmin, request, queryset):
+    for submission in queryset:
+        submission.report_submission()
+
+@admin.action(description='Approve Submission(s)')
+def approve_submission(modeladmin, request, queryset):
+    for submission in queryset:
+        submission.review_submission(True)
+
+@admin.action(description='Remove Submission(s)')
+def remove_submission(modeladmin, request, queryset):
+    for submission in queryset:
+        submission.review_submission(False)
+        # delete submission ?
+
 ## callbacks to go here; i dont wanna do all this importing its a mess
 
 class ProfileInline(admin.StackedInline):
@@ -45,13 +61,17 @@ class ProfileInline(admin.StackedInline):
 
 class UserAdmin(admin.ModelAdmin):
     inlines = [ ProfileInline ]
-    list_display = ['email', 'username', 'is_superuser', 'get_points'] # 'display_name'
+    list_display = ['email', 'username', 'is_superuser', 'get_points', 'get_friends']
     ordering = ['email']
     actions = [recalculate_points]
 
     @admin.display(ordering='profile__points', description='Points')
     def get_points(self, user):
         return user.profile.points
+    
+    @admin.display(ordering='', description='Friends')
+    def get_friends(self, user):
+        return Friend.get_friend_usernames(user.username)
 
 class ChallengesAdmin(admin.ModelAdmin):
     list_display = ['id', 'description']
@@ -79,7 +99,7 @@ class ActiveChallengesAdmin(admin.ModelAdmin):
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ['username', 'get_challenge_date', 'minutes_late']
     ordering = ['username']
-    actions = []
+    actions = [report_submission, approve_submission, remove_submission]
 
     @admin.display(ordering='challenge__challenge_date', description='challenge_date')
     def get_challenge_date(self, submission):
@@ -100,3 +120,4 @@ admin.site.register(Challenge, ChallengesAdmin)
 admin.site.register(ActiveChallenge, ActiveChallengesAdmin)
 admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(Upvote, UpvoteAdmin)
+admin.site.register(Friend)
