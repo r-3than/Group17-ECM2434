@@ -46,6 +46,23 @@ def approve_submission(modeladmin, request, queryset):
         except:
             print("Message to ", user.email, "failed to send.")
 
+@admin.action(description='Report Submission(s)')
+def report_submission(modeladmin, request, queryset):
+    for submission in queryset:
+        submission.report_submission()
+
+@admin.action(description='Approve Submission(s)')
+def approve_submission(modeladmin, request, queryset):
+    for submission in queryset:
+        submission.review_submission(True)
+
+@admin.action(description='Remove Submission(s)')
+def remove_submission(modeladmin, request, queryset):
+    for submission in queryset:
+        submission.review_submission(False)
+        # delete submission ?
+
+## callbacks to go here; i dont wanna do all this importing its a mess
 
 class ProfileInline(admin.StackedInline):
     model = Profile
@@ -116,7 +133,7 @@ class UpvoteAdmin(admin.ModelAdmin):
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ['username', 'get_challenge_date', 'minutes_late']
     ordering = ['username']
-    actions = []
+    actions = [report_submission, approve_submission, remove_submission]
 
     @admin.display(ordering='challenge__challenge_date', description='challenge_date')
     def get_challenge_date(self, submission):

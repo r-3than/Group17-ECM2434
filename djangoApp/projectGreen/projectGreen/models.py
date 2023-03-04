@@ -110,10 +110,26 @@ class Friend(models.Model):
     verbose_name_plural = 'Friends'
     class Meta:
         db_table = 'Friends'
+class Friend(models.Model):
+    left_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+    right_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+
+    def get_friend_usernames(username: str) -> list[str]:
+        friends_left = Friend.objects.filter(left_username=username)
+        friends = [friend.right_username for friend in friends_left]
+        friends_right = Friend.objects.filter(right_username=username)
+        all_friends = friends + [friend.left_username for friend in friends_right]
+        return all_friends
+
+    verbose_name = 'Friend'
+    verbose_name_plural = 'Friends'
+    class Meta:
+        db_table = 'Friends'
 
 class Challenge(models.Model):
     description = models.CharField(max_length=200)
     time_for_challenge = models.IntegerField(default=0)
+
 
     verbose_name = 'Challenge'
     verbose_name_plural = 'Challenges'
@@ -125,23 +141,12 @@ class ActiveChallenge(models.Model):
     challenge = models.ForeignKey(Challenge, models.CASCADE, null=True)
     is_expired = models.BooleanField(default=False)
 
-    def create_submission(self, username: str, submission_time: dt, create_submission_instance: bool=True):
-        '''
-        Creates submission object associated with this challenge in database and syncronises points
-        [previously submission_callback]
-        '''
-        s = Submission(username=username, active_challenge=self, submission_time=submission_time)
-        if create_submission_instance:
-            s.save()
-        Profile.add_points(username, int(SCORES['submission']*s.get_punctuality_scaling()))                           
-
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
     class Meta:
         db_table = 'ActiveChallenges'
 
 class Submission(models.Model):
-    # id = models.IntegerField(primary_key=True) # submission_id added automatically
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     active_challenge = models.ForeignKey(ActiveChallenge, models.CASCADE, null=True)
     submission_time = models.DateTimeField('Submission Time', null=True)
