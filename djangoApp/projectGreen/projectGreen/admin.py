@@ -2,11 +2,9 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote
 from datetime import datetime
-from projectGreen.points import recalculate_user_points # correct version; import callbacks from here
-
-from projectGreen.points import recalculate_user_points, upvote_callback, submission_callback
+from projectGreen.points import recalculate_user_points, upvote_callback, submission_callback, remove_upvote, remove_submission
 # for callbacks; https://stackoverflow.com/questions/43145712/calling-a-function-in-django-after-saving-a-model
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 @admin.action(description='Publish challenge')
@@ -20,6 +18,7 @@ def publish_challenge(modeladmin, request, queryset):
         ac = ActiveChallenge(date=datetime.now(), challenge=queryset[0])
         ac.save()
 
+    # Credentials now stored in settings.py
     message = 'A new challenge has been posted! \n'+queryset[0].description+'\nDate: '+date
 
     for user in User.objects.all():
@@ -73,7 +72,15 @@ def upvote_callback_handler(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Submission)
 def submission_callback_handler(sender, instance, **kwargs):
-    submission_callback(instance.username, instance.active_challenge, datetime.now() , False) # not sure about time argument
+    submission_callback(instance.username, instance.active_challenge, instance.minutes_late , False)
+
+@receiver(post_delete, sender=Upvote)
+def upvote_callback_handler(sender, instance, **kwargs):
+    remove_upvote(instance, False)
+
+@receiver(post_delete, sender=Submission)
+def submission_callback_handler(sender, instance, **kwargs):
+    remove_submission(instance, False)
 
 
 class ProfileInline(admin.StackedInline):
