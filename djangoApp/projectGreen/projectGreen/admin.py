@@ -4,9 +4,9 @@ from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Sub
 
 from projectGreen.settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
 from datetime import datetime
-from projectGreen.points import recalculate_user_points, upvote_callback, submission_callback
+from projectGreen.points import recalculate_user_points, upvote_callback, submission_callback, remove_upvote, remove_submission
 # for callbacks; https://stackoverflow.com/questions/43145712/calling-a-function-in-django-after-saving-a-model
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
 
 @admin.action(description='Publish challenge')
@@ -20,14 +20,12 @@ def publish_challenge(modeladmin, request, queryset):
         ac = ActiveChallenge(challenge_date=datetime.now(), challenge=queryset[0])
         ac.save()
 
-    # Sender, recipients and message subject
-    from_email = "djangotestemail31@gmail.com"
-
     # Credentials now stored in settings.py
+    message = 'A new challenge has been posted! \n'+queryset[0].description+'\nDate: '+date
 
     for user in User.objects.all():
         try:
-            user.email_user('Time to BeGreen!','A new challenge has been posted! \n'+queryset[0].description+'\nDate: '+date, from_email)
+            user.email_user('Time to BeGreen!',message, 'djangotestemail31@gmail.com')
         except:
             print("Message to ", user.email, "failed to send.")
 
@@ -60,7 +58,15 @@ def upvote_callback_handler(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Submission)
 def submission_callback_handler(sender, instance, **kwargs):
-    submission_callback(instance.username, instance.active_challenge, datetime.now() , False) # not sure about time argument
+    submission_callback(instance.username, instance.active_challenge, instance.minutes_late , False)
+
+@receiver(post_delete, sender=Upvote)
+def upvote_callback_handler(sender, instance, **kwargs):
+    remove_upvote(instance, False)
+
+@receiver(post_delete, sender=Submission)
+def submission_callback_handler(sender, instance, **kwargs):
+    remove_submission(instance, False)
 
 
 class ProfileInline(admin.StackedInline):
