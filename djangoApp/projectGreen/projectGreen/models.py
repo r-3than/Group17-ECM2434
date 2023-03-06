@@ -5,6 +5,8 @@ from datetime import datetime as dt
 from django.db import models
 from django.contrib.auth.models import User
 
+import base64
+
 USERNAME_MAX_LENGTH = 20
 SCORES = {'submission':10, 'upvote':{'given':1, 'recieved':2}}
 
