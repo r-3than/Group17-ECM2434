@@ -2,10 +2,12 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote
 
-#from projectGreen.send_email import send_email
 from projectGreen.settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
 from datetime import datetime
-from projectGreen.points import recalculate_user_points # correct version; import callbacks from here
+from projectGreen.points import recalculate_user_points, upvote_callback, submission_callback
+# for callbacks; https://stackoverflow.com/questions/43145712/calling-a-function-in-django-after-saving-a-model
+from django.db.models.signals import post_save
+from django.dispatch import receiver
 
 @admin.action(description='Publish challenge')
 def publish_challenge(modeladmin, request, queryset):
@@ -21,9 +23,7 @@ def publish_challenge(modeladmin, request, queryset):
     # Sender, recipients and message subject
     from_email = "djangotestemail31@gmail.com"
 
-    # Credentials
-    username = EMAIL_HOST_USER
-    password = EMAIL_HOST_PASSWORD
+    # Credentials now stored in settings.py
 
     for user in User.objects.all():
         try:
@@ -53,7 +53,15 @@ def remove_submission(modeladmin, request, queryset):
         submission.review_submission(False)
         # delete submission ?
 
-## callbacks to go here; i dont wanna do all this importing its a mess
+
+@receiver(post_save, sender=Upvote)
+def upvote_callback_handler(sender, instance, **kwargs):
+    upvote_callback(instance.submission, instance.voter_username, False)
+
+@receiver(post_save, sender=Submission)
+def submission_callback_handler(sender, instance, **kwargs):
+    submission_callback(instance.username, instance.active_challenge, datetime.now() , False) # not sure about time argument
+
 
 class ProfileInline(admin.StackedInline):
     model = Profile
@@ -97,13 +105,20 @@ class ActiveChallengesAdmin(admin.ModelAdmin):
 
 
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ['username', 'get_challenge_date', 'minutes_late']
+    list_display = ['username', 'get_challenge_date', 'minutes_late', 'get_submission']
     ordering = ['username']
     actions = [report_submission, approve_submission, remove_submission]
 
     @admin.display(ordering='challenge__challenge_date', description='challenge_date')
     def get_challenge_date(self, submission):
         return submission.active_challenge.date
+    
+    @admin.display(description='Photo')
+    def get_submission(self, submission):
+        if submission.photo_bytes != None:
+            return 'data:image/png;base64,${decoded}'.format(decoded=submission.photo_bytes.decode)
+        else:
+            return '[no image found]'
 
 class UpvoteAdmin(admin.ModelAdmin):
     list_display = ['get_submission', 'voter_username']

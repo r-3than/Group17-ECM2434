@@ -37,22 +37,27 @@ def recalculate_user_points(username: str):
     points += len(upvotes_recieved)*SCORES['upvote']['recieved']
     submissions = Submission.objects.filter(username=username)
     for sub in submissions:
-        #id = ActiveChallenge.objects.get(challenge_date__date=sub.challenge.date).challenge_id
         time_for_challenge = sub.active_challenge.challenge.time_for_challenge
         points += SCORES['submission'] * punctuality_scaling(time_for_challenge, sub.minutes_late)
     set_points(username, points)
+    # TODO add consideration for reported posts
 
-def upvote_callback(submission_username: str, submission_date: dt, voter_username: str):
-    upvote = Upvote(submission_username=submission_username, submission_date=submission_date, voter_username=voter_username)
-    upvote.save()
-    add_points(submission_username, SCORES['upvote']['recieved'])
+def upvote_callback(submission: Submission, voter_username: str, create_upvote_instance: bool=True):
+    if create_upvote_instance:
+        u = Upvote(submission=submission, voter_username=voter_username)
+        u.save()
+    add_points(submission.username, SCORES['upvote']['recieved'])
     add_points(voter_username, SCORES['upvote']['given'])
 
-def submission_callback(username: str, challenge_date: dt, submission_time: dt):
+def submission_callback(username: str, a_challenge: ActiveChallenge, submission_time: dt, create_submission_instance: bool=True):
     #https://stackoverflow.com/questions/5259882/subtract-two-times-in-python
-    minutes_late = dt.combine(dt.min, submission_time) - dt.combine(dt.min, challenge_date)
+    minutes_late = dt.combine(dt.min, submission_time) - dt.combine(dt.min, a_challenge.date)
     minutes_late = minutes_late.minute
-    s = Submission(username=username, challenge_date=challenge_date, minutes_late=minutes_late)
-    s.save()
-    time_for_challenge = Challenge.objects.get(challenge_date=challenge_date).time_for_challenge
+    if create_submission_instance:
+        s = Submission(username=username, active_challenge=a_challenge, minutes_late=minutes_late)
+        s.save()
+    time_for_challenge = a_challenge.challenge.time_for_challenge
     add_points(username, SCORES['submission']*punctuality_scaling(time_for_challenge, minutes_late))
+
+
+# TODO need callbacks for removing submissions / upvotes
