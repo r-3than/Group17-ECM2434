@@ -4,6 +4,7 @@ from datetime import datetime as dt
 
 from django.db import models
 from django.contrib.auth.models import User
+from projectGreen.points import SCORES, add_points, upvote_callback, remove_upvote, submission_callback, remove_submission
 
 import base64
 
@@ -183,6 +184,10 @@ class Submission(models.Model):
             self.remove_submission(False)
             self.reported = True
             self.save()
+            for u in self.get_upvotes():
+                # removes points from upvotes associated with this submission
+                remove_upvote(u, False)
+            remove_submission(self, False)
 
     def review_submission(self, is_suitable: bool):
         '''
