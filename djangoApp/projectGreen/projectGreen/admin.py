@@ -46,10 +46,9 @@ def approve_submission(modeladmin, request, queryset):
         submission.review_submission(True)
 
 @admin.action(description='Remove Submission(s)')
-def remove_submission(modeladmin, request, queryset):
+def deny_submission(modeladmin, request, queryset):
     for submission in queryset:
-        submission.review_submission(False)
-        # delete submission ?
+        submission.delete()
 
 
 @receiver(post_save, sender=Upvote)
@@ -128,7 +127,7 @@ class SubmissionAdmin(admin.ModelAdmin):
 
 class UpvoteAdmin(admin.ModelAdmin):
     list_display = ['get_submission', 'voter_username']
-    ordering = ['voter_username'] # get_submission_username
+    ordering = ['voter_username']
     actions = []
 
     @admin.display(ordering='submission__submission', description='submission')

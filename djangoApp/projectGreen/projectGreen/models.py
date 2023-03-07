@@ -58,12 +58,6 @@ class Submission(models.Model):
     reported = models.BooleanField(default=False)
     reviewed = models.BooleanField(default=False)
     photo_bytes = models.BinaryField(null=True)
-    # bytestring is untested
-
-    @classmethod # @ethan please check this
-    def from_base64(cls, username, challenge, minutes_late, photo_base64):
-        photo_bytestring = base64.encodebytes(photo_base64)
-        return cls(username=username, challenge=challenge, minutes_late=minutes_late, photo_bytes=photo_bytestring)
 
     def report_submission(self):
         '''
