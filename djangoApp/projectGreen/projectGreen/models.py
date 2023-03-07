@@ -29,7 +29,7 @@ class Profile(models.Model):
     number_of_submissions_removed = models.IntegerField(default=0)
 
     @classmethod
-    def set_points(username: str, points_value: int):
+    def set_points(cls, username: str, points_value: int):
         '''
         Sets the points of a user's profile
         '''
@@ -42,7 +42,7 @@ class Profile(models.Model):
         profile.save()
 
     @classmethod
-    def add_points(username: str, points_to_add: int):
+    def add_points(cls, username: str, points_to_add: int):
         '''
         Increments a user's points in their profile
         '''
@@ -57,7 +57,7 @@ class Profile(models.Model):
         profile.save()
 
     @classmethod
-    def recalculate_user_points(username: str):
+    def recalculate_user_points(cls, username: str):
         '''
         Calculates the total points for a user based on submissions and interactions
         Interactions are only counted / points are only assigned for non-reported submissions
@@ -86,7 +86,7 @@ class Friend(models.Model):
     pending = models.BooleanField(default=True)
 
     @classmethod
-    def create_friend_request(from_username: str, to_username: str):
+    def create_friend_request(cls, from_username: str, to_username: str):
         '''
         Creates a pending pair such that the left is the user sending the request
         and the right is the user recieving the request
@@ -95,7 +95,7 @@ class Friend(models.Model):
         f.save()
 
     @classmethod
-    def get_pending_friend_usernames(username: str) -> list[str]:
+    def get_pending_friend_usernames(cls, username: str) -> list[str]:
         '''
         Fetchs all friend connections to a user flagged as pending
         i.e. outstanding friend requests
@@ -104,7 +104,7 @@ class Friend(models.Model):
         return [f.left_username for f in friend_requests]
 
     @classmethod
-    def get_friend_usernames(username: str) -> list[str]:
+    def get_friend_usernames(cls, username: str) -> list[str]:
         '''
         Gets a list of usernames of all friends of a user
         '''
