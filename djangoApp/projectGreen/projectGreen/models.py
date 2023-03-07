@@ -1,6 +1,8 @@
 from django.db import models
 from django.contrib.auth.models import User
-from projectGreen.points import upvote_callback, remove_upvote, submission_callback, remove_submission
+#from projectGreen.points import upvote_callback, remove_upvote, submission_callback, remove_submission
+from datetime import datetime as dt
+import math
 
 USERNAME_MAX_LENGTH = 20
 SCORES = {'submission':10, 'upvote':{'given':1, 'recieved':2}}
@@ -16,6 +18,54 @@ def punctuality_scaling(time_for_challenge: int, minutes_late: int):
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField(default=0)
+    number_of_submissions_removed = models.IntegerField(default=0)
+
+    @classmethod
+    def set_points(username: str, points_value: int):
+        '''
+        Sets the points of a user's profile
+        '''
+        user = User.objects.get(username=username)
+        try:
+            profile = Profile.objects.get(user=user)
+            profile.points = points_value
+        except Profile.DoesNotExist:
+            profile = Profile(user=user, points=points_value)
+        profile.save()
+
+    @classmethod
+    def add_points(username: str, points_to_add: int):
+        '''
+        Increments a user's points in their profile
+        '''
+        user = User.objects.get(username=username)
+        try:
+            profile = Profile.objects.get(user=user)
+            points = profile.points
+            points += points_to_add
+            profile.points = points
+        except Profile.DoesNotExist:
+            profile = Profile(user=user, points=points_to_add)
+        profile.save()
+
+    @classmethod
+    def recalculate_user_points(username: str):
+        '''
+        Calculates the total points for a user based on submissions and interactions
+        Interactions are only counted / points are only assigned for non-reported submissions
+        '''
+        points = 0
+        upvotes_given = Upvote.objects.filter(voter_username=username, submission__reported=False)
+        points += len(upvotes_given)*SCORES['upvote']['given']
+        upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
+        points += len(upvotes_recieved)*SCORES['upvote']['recieved']
+        submissions = Submission.objects.filter(username=username)
+        for sub in submissions:
+            if sub.reported:
+                continue
+            time_for_challenge = sub.active_challenge.challenge.time_for_challenge
+            points += SCORES['submission'] * punctuality_scaling(time_for_challenge, sub.minutes_late)
+        Profile.set_points(username, points)
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
@@ -28,7 +78,7 @@ class Friend(models.Model):
     pending = models.BooleanField(default=True)
 
     @classmethod
-    def create_friend_request(cls, from_username: str, to_username: str):
+    def create_friend_request(from_username: str, to_username: str):
         '''
         Creates a pending pair such that the left is the user sending the request
         and the right is the user recieving the request
@@ -37,7 +87,7 @@ class Friend(models.Model):
         f.save()
 
     @classmethod
-    def get_pending_friend_usernames(cls, username: str) -> list[str]:
+    def get_pending_friend_usernames(username: str) -> list[str]:
         '''
         Fetchs all friend connections to a user flagged as pending
         i.e. outstanding friend requests
@@ -46,45 +96,7 @@ class Friend(models.Model):
         return [f.left_username for f in friend_requests]
 
     @classmethod
-    def get_friend_usernames(cls, username: str) -> list[str]:
-        '''
-        Gets a list of usernames of all friends of a user
-        '''
-        friends_left = Friend.objects.filter(left_username=username, pending=False)
-        friends = [friend.right_username for friend in friends_left]
-        friends_right = Friend.objects.filter(right_username=username, pending=False)
-        all_friends = friends + [friend.left_username for friend in friends_right]
-        return all_friends
-
-    verbose_name = 'Friend'
-    verbose_name_plural = 'Friends'
-    class Meta:
-        db_table = 'Friends'
-class Friend(models.Model):
-    left_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
-    right_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
-    pending = models.BooleanField(default=True)
-
-    @classmethod
-    def create_friend_request(cls, from_username: str, to_username: str):
-        '''
-        Creates a pending pair such that the left is the user sending the request
-        and the right is the user recieving the request
-        '''
-        f = Friend(left_username=from_username, right_username=to_username, pending=True)
-        f.save()
-
-    @classmethod
-    def get_pending_friend_usernames(cls, username: str) -> list[str]:
-        '''
-        Fetchs all friend connections to a user flagged as pending
-        i.e. outstanding friend requests
-        '''
-        friend_requests = Friend.objects.filter(right_username=username)
-        return [f.left_username for f in friend_requests]
-
-    @classmethod
-    def get_friend_usernames(cls, username: str) -> list[str]:
+    def get_friend_usernames(username: str) -> list[str]:
         '''
         Gets a list of usernames of all friends of a user
         '''
@@ -114,6 +126,17 @@ class ActiveChallenge(models.Model):
     date = models.DateTimeField('Challenge Date', primary_key=True)
     challenge = models.ForeignKey(Challenge, models.CASCADE, null=True)
     is_expired = models.BooleanField(default=False)
+
+    def create_submission(self, username: str, minutes_late: dt, create_submission_instance: bool=True):
+        '''
+        Creates submission object associated with this challenge in database and syncronises points
+        [previously submission_callback]
+        '''
+        if create_submission_instance:
+            s = Submission(username=username, active_challenge=self, minutes_late=minutes_late)
+            s.save()
+        time_for_challenge = self.challenge.time_for_challenge
+        Profile.add_points(username, SCORES['submission']*punctuality_scaling(time_for_challenge, minutes_late))
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -156,8 +179,8 @@ class Submission(models.Model):
             self.reported = True
             self.save()
             for u in self.get_upvotes():
-                remove_upvote(u, False)
-            remove_submission(self, False)
+                u.remove_upvote(False)
+            self.remove_submission(False)
             self.reported = True
             self.save()
 
@@ -171,9 +194,41 @@ class Submission(models.Model):
         if is_suitable:
             # reinstate points
             for u in self.get_upvotes():
-                upvote_callback(self, u.voter_username, False)
-            submission_callback(self.username, self.active_challenge, self.minutes_late, False)
+                self.create_upvote(u.voter_username, False)
+            self.active_challenge.create_submission(self.username, self.minutes_late, False)
+        else:
+            u = User.objects.get(username=self.username)
+            try:
+                p = Profile.objects.get(user=u)
+                p.number_of_submissions_removed += 1
+            except Profile.DoesNotExist:
+                p = Profile(user=u, number_of_submissions_removed=1)
+            p.save()
+            self.delete()
 
+    def remove_submission(self, delete_instance: bool=True):
+        '''
+        Removes submission object in database (conditional flag) and syncronises points
+        '''
+        if not self.reported:
+            time_for_challenge = self.active_challenge.challenge.time_for_challenge
+            points_to_remove = SCORES['submission'] * punctuality_scaling(time_for_challenge, self.minutes_late)
+            Profile.add_points(self.username, -points_to_remove)
+            for upvote in self.get_upvotes():
+                upvote.remove_upvote(delete_instance)
+        if delete_instance: self.delete()
+
+    def create_upvote(self, voter_username: str, create_upvote_instance: bool=True):
+        '''
+        Creates upvote object for this submission in database and syncronises points
+        [previously upvote_callback]
+        '''
+        if create_upvote_instance:
+            u = Upvote(submission=self, voter_username=voter_username)
+            u.save()
+        Profile.add_points(self.username, SCORES['upvote']['recieved'])
+        Profile.add_points(voter_username, SCORES['upvote']['given'])
+        
     def get_upvotes(self):
         '''
         Gets list of Upvotes for this submission
