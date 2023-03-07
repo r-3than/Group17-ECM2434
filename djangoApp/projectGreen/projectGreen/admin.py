@@ -4,7 +4,7 @@ from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Sub
 
 from projectGreen.settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
 from datetime import datetime
-from projectGreen.points import recalculate_user_points, upvote_callback, submission_callback, remove_upvote, remove_submission
+
 # for callbacks; https://stackoverflow.com/questions/43145712/calling-a-function-in-django-after-saving-a-model
 from django.db.models.signals import post_save, post_delete
 from django.dispatch import receiver
@@ -33,7 +33,7 @@ def publish_challenge(modeladmin, request, queryset):
 @admin.action(description='Resynchronise Points')
 def recalculate_points(modeladmin, request, queryset):
     for user in queryset:
-        recalculate_user_points(user.username)
+        Profile.recalculate_user_points(user.username)
 
 @admin.action(description='Report Submission(s)')
 def report_submission(modeladmin, request, queryset):
@@ -53,19 +53,19 @@ def deny_submission(modeladmin, request, queryset):
 
 @receiver(post_save, sender=Upvote)
 def upvote_callback_handler(sender, instance, **kwargs):
-    upvote_callback(instance.submission, instance.voter_username, False)
+    instance.submission.create_upvote(instance.voter_username, False)
 
 @receiver(post_save, sender=Submission)
 def submission_callback_handler(sender, instance, **kwargs):
-    submission_callback(instance.username, instance.active_challenge, instance.minutes_late , False)
+    instance.active_challenge.create_submission(instance.username, instance.minutes_late , False)
 
 @receiver(post_delete, sender=Upvote)
 def upvote_callback_handler(sender, instance, **kwargs):
-    remove_upvote(instance, False)
+    instance.remove_upvote(False)
 
 @receiver(post_delete, sender=Submission)
 def submission_callback_handler(sender, instance, **kwargs):
-    remove_submission(instance, False)
+    instance.remove_submission(False)
 
 
 class ProfileInline(admin.StackedInline):
@@ -112,7 +112,7 @@ class ActiveChallengesAdmin(admin.ModelAdmin):
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ['username', 'get_challenge_date', 'minutes_late', 'get_submission']
     ordering = ['username']
-    actions = [report_submission, approve_submission, remove_submission]
+    actions = [report_submission, approve_submission, deny_submission]
 
     @admin.display(ordering='challenge__challenge_date', description='challenge_date')
     def get_challenge_date(self, submission):
