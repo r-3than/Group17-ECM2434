@@ -26,8 +26,8 @@ SECRET_KEY = 'django-insecure-*f-8r*xtx6mljgv8pdcp^^)z&y&80r1p_iyf!y_lf=*0600$ca
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
-
+ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com","localhost"]
+CSRF_TRUSTED_ORIGINS = ['https://projectgreen.grayitsolutions.com',"http://localhost:8000"]
 
 # Application definition
 
@@ -72,6 +72,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'projectGreen.wsgi.application'
 
+# Email Settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'djangotestemail31@gmail.com'  
+EMAIL_HOST_PASSWORD = 'nrsrhztfmmwyqzey'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
@@ -103,16 +110,17 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+broadcastURL = "http://localhost:8000" # makes it easier when hosting so i can just change this url
 
 
 MICROSOFT = {
     "app_id": "24bdff02-06db-48b9-b65a-da869ccd651d",
     "app_secret": "mXr8Q~b8BO9E9gI~Lv38QCFcO2G45Rc27nv6AajQ",
-    "redirect": "http://localhost:8000/microsoft_authentication/callback",
+    "redirect": broadcastURL+"/microsoft_authentication/callback",
     "scopes": ["user.read"],
     "authority": "https://login.microsoftonline.com/common",  # or using tenant "https://login.microsoftonline.com/{tenant}",
     "valid_email_domains": ["exeter.ac.uk"],
-    "logout_uri": "http://localhost:8000/"
+    "logout_uri": broadcastURL
 }
 
 LOGIN_URL = "/microsoft_authentication/login"

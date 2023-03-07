@@ -1,11 +1,37 @@
+from sre_constants import SUCCESS
 from django.http import HttpResponse
 from microsoft_authentication.auth.auth_decorators import microsoft_login_required
 from django.template import loader
+from django.views.decorators.csrf import csrf_exempt
+import base64 , json
+
+
+
+@csrf_exempt
+def uploadphoto(request):
+     if request.method == "POST":
+        data=json.loads(request.body)
+        print(data)
+        img_data = data["img"]
+        img_data = base64.b64decode(img_data.split(",")[1])
+        with open(str(request.user)+".png", "wb") as fh:
+            fh.write(img_data)
+        return HttpResponse({"success":"true"})
 
 def home(request):
     context = {}
     if request.user.is_authenticated:
         template = loader.get_template('home/home.html')
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+    
+def challenge(request):
+    context = {}
+    if request.user.is_authenticated:
+        template = loader.get_template('home/challenge.html')
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")

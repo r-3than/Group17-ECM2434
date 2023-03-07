@@ -14,14 +14,14 @@
             <div class="title centre">
                 <a class="title">BeGreen</a>
                 <br>
-                <a class="subtitle">Today's challenge: [challenge goes here]</a>
+                <a class="subtitle">Today's challenge: Visit the Coast!</a>
             </div>
             <div class="side">
                 <div class="account">
                     <div style="height: 80%; padding-left: 50%;">
-                        <div class="icon rounded-circle"></div>
+                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
                     </div>
-                    <div class="points">Points</div>
+                    <div class="points">Score: 312</div>
                 </div>
             </div>
         </header>
@@ -37,23 +37,25 @@
               <div class="centre">
                 <div class="post rounded-5">
                     <div class="header row">
-                        <div class="user">Username</div>
-                        <div class="time">Time</div>
+                        <div class="user">Thomas</div>
+                        <div class="time">13:56</div>
                     </div>
                     <div class="row">
                         <div class="side interactions">
                             <div>
                                 <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
                             </div>
-                            <div>Un</div>
+                            <div>1</div>
                             <div>
                                 <img src="{% static 'img/Comment.svg' %}">
                             </div>
-                            <div>Cn</div>
+                            <div>0</div>
                         </div>
                         <div class="centre">
-                            <div class="icon rounded-circle"></div>
-                            <div class="img rounded-5"></div>
+                            <div class="icon rounded-circle">T</div>
+                            <div class="img rounded-5">
+                                <img src="{% static 'img/Post1.jpg' %}">
+                            </div>
                         </div>
                         <div class="side"></div>
                     </div>
@@ -61,23 +63,25 @@
                 <div class="break"></div>
                 <div class="post rounded-5">
                     <div class="header row">
-                        <div class="user">Username</div>
-                        <div class="time">Time</div>
+                        <div class="user">Oli</div>
+                        <div class="time">13:45</div>
                     </div>
                     <div class="row">
                         <div class="side interactions">
                             <div>
                                 <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
                             </div>
-                            <div>Un</div>
+                            <div>12</div>
                             <div>
                                 <img src="{% static 'img/Comment.svg' %}">
                             </div>
-                            <div>Cn</div>
+                            <div>2</div>
                         </div>
                         <div class="centre">
-                            <div class="icon rounded-circle"></div>
-                            <div class="img rounded-5"></div>
+                            <div class="icon rounded-circle">O</div>
+                            <div class="img rounded-5">
+                                <img src="{% static 'img/Post2.jpg' %}">
+                            </div>
                         </div>
                         <div class="side"></div>
                     </div>
@@ -85,28 +89,82 @@
                 <div class="break"></div>
                 <div class="post rounded-5">
                     <div class="header row">
-                        <div class="user">Username</div>
-                        <div class="time">Time</div>
+                        <div class="user">Ethan</div>
+                        <div class="time">13:32</div>
                     </div>
                     <div class="row">
                         <div class="side interactions">
                             <div>
                                 <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
                             </div>
-                            <div>Un</div>
+                            <div>8</div>
                             <div>
                                 <img src="{% static 'img/Comment.svg' %}">
                             </div>
-                            <div>Cn</div>
+                            <div>1</div>
                         </div>
                         <div class="centre">
-                            <div class="icon rounded-circle"></div>
-                            <div class="img rounded-5"></div>
+                            <div class="icon rounded-circle">E</div>
+                            <div class="img rounded-5">
+                                <img src="{% static 'img/Post3.jpg' %}">
+                            </div>
                         </div>
                         <div class="side"></div>
                     </div>
                 </div>
                 <div class="break"></div>
+                <div class="post rounded-5">
+                    <div class="header row">
+                        <div class="user">Luc</div>
+                        <div class="time">13:29</div>
+                    </div>
+                    <div class="row">
+                        <div class="side interactions">
+                            <div>
+                                <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
+                            </div>
+                            <div>96</div>
+                            <div>
+                                <img src="{% static 'img/Comment.svg' %}">
+                            </div>
+                            <div>12</div>
+                        </div>
+                        <div class="centre">
+                            <div class="icon rounded-circle">L</div>
+                            <div class="img rounded-5">
+                                <img src="{% static 'img/Post4.jpg' %}">
+                            </div>
+                        </div>
+                        <div class="side"></div>
+                    </div>
+                </div>
+                <div class="break"></div>
+                <div class="post rounded-5">
+                    <div class="header row">
+                        <div class="user">Steven</div>
+                        <div class="time">13:28</div>
+                    </div>
+                    <div class="row">
+                        <div class="side interactions">
+                            <div>
+                                <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
+                            </div>
+                            <div>15</div>
+                            <div>
+                                <img src="{% static 'img/Comment.svg' %}">
+                            </div>
+                            <div>0</div>
+                        </div>
+                        <div class="centre">
+                            <div class="icon rounded-circle">S</div>
+                            <div class="img rounded-5">
+                                <img style=width:100% src="{% static 'img/Post5.jpg' %}">
+                            </div>
+                        </div>
+                        <div class="side"></div>
+                    </div>
+                </div>
+                <br style="user-select: none;"> <br style="user-select: none;">
               </div>
               <div class="side"></div>
           </main>
