@@ -5,6 +5,8 @@ from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 
+from projectGreen.models import Submission
+
 
 
 @csrf_exempt
@@ -21,7 +23,20 @@ def uploadphoto(request):
 def home(request):
     context = {}
     if request.user.is_authenticated:
-        template = loader.get_template('home/home.html')
+        template = loader.get_template('home/home2.html')
+
+        submissions_info = {}
+        submissions = Submission.objects.all()
+        for submission in submissions:
+            submissions_info[submission.id] = {'submission_username': submission.username,
+                                               'submission_minutes_late': submission.minutes_late,
+                                               'submission_photo': submission.photo_bytes,
+                                               'submission_upvote_count': submission.get_upvote_count()
+                                            }
+        
+        context['submissions'] = submissions_info
+
+        print(submissions_info)
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")

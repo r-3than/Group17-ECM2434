@@ -229,6 +229,12 @@ class Submission(models.Model):
         '''
         return Upvote.objects.filter(submission=self)
 
+    def get_upvote_count(self) -> int:
+        '''
+        Gets the number of Upvotes for a submission
+        '''
+        return len(self.get_upvotes())
+
     verbose_name = 'Submission'
     verbose_name_plural = 'Submissions'
     class Meta:
