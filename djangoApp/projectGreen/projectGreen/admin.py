@@ -65,7 +65,7 @@ def upvote_callback_handler(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Submission)
 def submission_callback_handler(sender, instance, **kwargs):
-    if not instance.reviewed: remove_submission(instance, False)
+    remove_submission(instance, False)
 
 
 class ProfileInline(admin.StackedInline):

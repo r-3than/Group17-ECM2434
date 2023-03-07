@@ -90,11 +90,11 @@ class Submission(models.Model):
         elif self.reviewed:
             print('{username}\'s post on {date} has been reviewed.'.format(self.username, date))
         else:
-            self.reported = True
-            self.save()
             for u in self.get_upvotes():
                 remove_upvote(u, False)
             remove_submission(self, False)
+            self.reported = True
+            self.save()
 
     def review_submission(self, is_suitable: bool):
         '''
