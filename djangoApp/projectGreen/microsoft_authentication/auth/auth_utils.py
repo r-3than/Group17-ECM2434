@@ -113,5 +113,5 @@ def get_django_user(email,givenName,surName, create_new=True):
         user = User(username=username, email=email,first_name=givenName,last_name=surName, password=make_password(random_password))
         user.is_staff = True
         user.save()
-        ## set points to zero?
+        ## setting points to zero here requires relative imports
     return user

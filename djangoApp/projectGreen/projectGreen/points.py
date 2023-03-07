@@ -25,12 +25,13 @@ def add_points(username: str, points_to_add: int):
     user = User.objects.get(username=username)
     try:
         profile = Profile.objects.get(user=user)
+        points = profile.points
+        points += points_to_add
+        profile.points = points
     except Profile.DoesNotExist:
-        profile = Profile(user=user, points=0)
-    points = profile.points
-    points += points_to_add
-    profile.points = points
+        profile = Profile(user=user, points=points_to_add)
     profile.save()
+
 
 def minutes_late_calc(reference_time: dt, submission_time: dt) -> int:
     '''
@@ -46,6 +47,7 @@ def punctuality_scaling(time_for_challenge: int, minutes_late: int):
     max ~= sqrt(time_for_challenge); min = 1
     '''
     return round(math.sqrt(max(time_for_challenge-minutes_late, 0)+1))
+
 
 def recalculate_user_points(username: str):
     '''
@@ -65,6 +67,7 @@ def recalculate_user_points(username: str):
         time_for_challenge = sub.active_challenge.challenge.time_for_challenge
         points += SCORES['submission'] * punctuality_scaling(time_for_challenge, sub.minutes_late)
     set_points(username, points)
+
 
 def upvote_callback(submission: Submission, voter_username: str, create_upvote_instance: bool=True):
     '''
@@ -86,8 +89,6 @@ def submission_callback(username: str, a_challenge: ActiveChallenge, minutes_lat
     time_for_challenge = a_challenge.challenge.time_for_challenge
     add_points(username, SCORES['submission']*punctuality_scaling(time_for_challenge, minutes_late))
 
-
-# TODO concurrently remove points when post is reported
 def remove_upvote(upvote: Upvote, delete_instance: bool=True):
     '''
     Removes upvote object in database (conditional flag) and syncronises points

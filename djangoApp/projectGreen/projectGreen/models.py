@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from projectGreen.points import SCORES, add_points, upvote_callback, remove_upvote, submission_callback, remove_submission
 
 import base64
 
@@ -56,13 +57,12 @@ class Submission(models.Model):
     minutes_late = models.IntegerField(default=0)
     reported = models.BooleanField(default=False)
     reviewed = models.BooleanField(default=False)
-    # TODO add base 64 photo field here
     photo_bytes = models.BinaryField(null=True)
-    # bytestring untested
+    # bytestring is untested
 
-    @classmethod
+    @classmethod # @ethan please check this
     def from_base64(cls, username, challenge, minutes_late, photo_base64):
-        photo_bytestring = base64.encodebytes(photo_base64) # ??
+        photo_bytestring = base64.encodebytes(photo_base64)
         return cls(username=username, challenge=challenge, minutes_late=minutes_late, photo_bytes=photo_bytestring)
 
     def report_submission(self):
@@ -70,6 +70,7 @@ class Submission(models.Model):
         Marks a submission as reported - it will not be
         displayed in the feed while reported == True
         A post cannot be re-reported
+        Points are updated accordingly
         '''
         if self.reviewed:
             date = self.active_challenge.date.strftime('%Y-%m-%d')
@@ -77,13 +78,29 @@ class Submission(models.Model):
         else:
             self.reported = True
             self.save()
+            for u in self.get_upvotes():
+                # removes points from upvotes associated with this submission
+                remove_upvote(u, False)
+            remove_submission(self, False)
 
     def review_submission(self, is_suitable: bool):
         '''
         Sets reported to True if the post is deemed suitable
+        Points are updated accordingly
         '''
         self.reported = is_suitable
         self.reviewed = True
+        if is_suitable:
+            # reinstate points
+            for u in self.get_upvotes():
+                upvote_callback(self, u.voter_username, False)
+            submission_callback(self.username, self.active_challenge, self.minutes_late, False)
+
+    def get_upvotes(self):
+        '''
+        Gets list of Upvotes for this submission
+        '''
+        return Upvote.objects.filter(submission=self)
 
     verbose_name = 'Submission'
     verbose_name_plural = 'Submissions'
