@@ -2,45 +2,32 @@ import sqlite3
 
 databasePath = "db.sqlite3"
 
-def addUser(email, name, superuser):
+def addUser(email, name, isSuperuser, points):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
 	username = email.split('@')
-	text = ("INSERT INTO Users VALUES ('"+ email + "','" + username[0] + "','" + name + "','" + superuser + "');")
+	text = ("INSERT INTO Users VALUES ('"+ username[0] + "','" + email + "','" + name + "','" + isSuperuser + "','" + points + "');")
 	cur.execute(text)
 	con.commit()
 	con.close()
 
-def getUsername(email):
+def getEmail(username):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("SELECT username FROM Users WHERE email = '" + email + "';")
+	text = ("SELECT email FROM Users WHERE username = '" + username + "';")
 	cur.execute(text)
 	result = cur.fetchone()
 	con.close()
 	return result[0]
 
-def getName(email):
+def getName(username):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("SELECT name FROM Users WHERE email = '" + email + "';")
+	text = ("SELECT name FROM Users WHERE username = '" + username + "';")
 	cur.execute(text)
 	result = cur.fetchone()
 	con.close()
 	return result[0]
-
-def isSuperuser(email):
-	con = sqlite3.connect(databasePath)
-	cur = con.cursor()
-	text = ("SELECT superuser FROM Users WHERE email = '" + email + "';")
-	cur.execute(text)
-	result = cur.fetchone()
-	con.close()
-
-	isSuperuser = False
-	if result[0] == 1:
-		isSuperuser = True 
-	return isSuperuser
 
 def getAllEmails():
 	con = sqlite3.connect(databasePath)
@@ -55,27 +42,27 @@ def getAllEmails():
 		emails.append(result[i][0])
 	return emails
 
-def deleteUser(email):
+def deleteUser(username):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("DELETE FROM Users WHERE email='" + email + "';")
+	text = ("DELETE FROM Users WHERE username = '" + username + "';")
 	cur.execute(text)
 	con.commit()
 	con.close()
 
-def addFriend(email, friendEmail):
+def addFriend(selfUsername, friendUsername):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
 	username = email.split('@')
-	text = ("INSERT INTO Friends VALUES ('"+ email + "','" + friendEmail + "');")
+	text = ("INSERT INTO Friends VALUES ('"+ selfUsername + "','" + friendUsername + "');")
 	cur.execute(text)
 	con.commit()
 	con.close()
 
-def deleteFriend(email, FriendEmail):
+def deleteFriend(selfUsername, friendUsername):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("DELETE FROM Friends WHERE email='" + email + "' AND friend_email='" + FriendEmail + "';")
+	text = ("DELETE FROM Friends WHERE selfUsername = '" + selfUsername + "' AND friendUsername='" + friendUsername + "';")
 	cur.execute(text)
 	con.commit()
 	con.close()
@@ -91,15 +78,15 @@ def addChallenge(challengeId, description):
 def deleteChallenge(challengeId):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("DELETE FROM Challenges WHERE challengeId='" + challengeId + "';")
+	text = ("DELETE FROM Challenges WHERE challengeId = '" + challengeId + "';")
 	cur.execute(text)
 	con.commit()
 	con.close()
 
-def addActiveChallenge(challengeDate, challengeId, expired):
+def addActiveChallenge(challengeDate, challengeId, timeFrameMinutes, isExpired):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("INSERT INTO ActiveChallenges VALUES ('"+ challengeDate + "','" + challengeId + "','" + expired + "');")
+	text = ("INSERT INTO ActiveChallenges VALUES ('"+ challengeDate + "','" + challengeId + "','" + timeFrameMinutes + "','" + isExpired + "');")
 	cur.execute(text)
 	con.commit()
 	con.close()
@@ -107,39 +94,39 @@ def addActiveChallenge(challengeDate, challengeId, expired):
 def deleteActiveChallenge(challengeDate):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("DELETE FROM ActiveChallenges WHERE challengeDate='" + challengeDate + "';")
+	text = ("DELETE FROM ActiveChallenges WHERE challengeDate = '" + challengeDate + "';")
 	cur.execute(text)
 	con.commit()
 	con.close()
 
-def addSubmission(photoPath, email, challengeDate):
+def addSubmission(username, challengeDate, photo, miutesLate, sumOfInteractions):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("INSERT INTO Submission VALUES ('"+ photoPath + "','" + email + "','" + challengeDate + "');")
+	text = ("INSERT INTO Submission VALUES ('"+ username + "','" + challengeDate + "','" + photo + "','" + miutesLate + "','" + sumOfInteractions + "');")
 	cur.execute(text)
 	con.commit()
 	con.close()
 
-def deleteSubmission(photoPath):
+def deleteSubmission(username, challengeDate):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("DELETE FROM Submission WHERE photoPath='" + photoPath + "';")
+	text = ("DELETE FROM Submission WHERE username = '" + username + "' AND challengeDate = '" + challengeDate + "';")
 	cur.execute(text)
 	con.commit()
 	con.close()
 
-def addVote(email, photoPath):
+def addVote(submissionUsername, submissionDate, voterUsername):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("INSERT INTO Upvote VALUES ('"+ email + "','" + photoPath + "');")
+	text = ("INSERT INTO Upvote VALUES ('"+ submissionUsername + "','" + submissionDate + "','" + voterUsername + "');")
 	cur.execute(text)
 	con.commit()
 	con.close()
 
-def removeVote(email, photoPath):
+def removeVote(submissionUsername, submissionDate, voterUsername):
 	con = sqlite3.connect(databasePath)
 	cur = con.cursor()
-	text = ("DELETE FROM Upvote WHERE email='" + email + "' AND photoPath='" + photoPath + "';")
+	text = ("DELETE FROM Upvote WHERE submissionUsername = '" + emsubmissionUsernameail + "' AND submissionDate = '" + submissionDate + "' AND voterUsername = '" + voterUsername + "';")
 	cur.execute(text)
 	con.commit()
 	con.close()
