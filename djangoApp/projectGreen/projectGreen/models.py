@@ -158,6 +158,8 @@ class Submission(models.Model):
             for u in self.get_upvotes():
                 remove_upvote(u, False)
             remove_submission(self, False)
+            self.reported = True
+            self.save()
 
     def review_submission(self, is_suitable: bool):
         '''
