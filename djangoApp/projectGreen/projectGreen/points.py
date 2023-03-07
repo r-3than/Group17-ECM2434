@@ -52,17 +52,16 @@ def punctuality_scaling(time_for_challenge: int, minutes_late: int):
 def recalculate_user_points(username: str):
     '''
     Calculates the total points for a user based on submissions and interactions
+    Interactions are only counted / points are only assigned for non-reported submissions
     '''
     points = 0
     upvotes_given = Upvote.objects.filter(voter_username=username, submission__reported=False)
     points += len(upvotes_given)*SCORES['upvote']['given']
     upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
     points += len(upvotes_recieved)*SCORES['upvote']['recieved']
-    # interactions only counted on non-reported submissions
     submissions = Submission.objects.filter(username=username)
     for sub in submissions:
         if sub.reported:
-            # no points for reported submission
             continue
         time_for_challenge = sub.active_challenge.challenge.time_for_challenge
         points += SCORES['submission'] * punctuality_scaling(time_for_challenge, sub.minutes_late)
@@ -100,10 +99,12 @@ def remove_upvote(upvote: Upvote, delete_instance: bool=True):
 
 def remove_submission(submission: Submission, delete_instance: bool=True):
     '''
-    Removes upvote object in database (conditional flag) and syncronises points
+    Removes submission object in database (conditional flag) and syncronises points
     '''
     if not submission.reported:
         time_for_challenge = submission.active_challenge.challenge.time_for_challenge
         points_to_remove = SCORES['submission'] * punctuality_scaling(time_for_challenge, submission.minutes_late)
         add_points(submission.username, -points_to_remove)
+        for upvote in submission.get_upvotes():
+            remove_upvote(upvote, delete_instance)
     if delete_instance: submission.delete()

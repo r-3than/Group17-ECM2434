@@ -48,7 +48,7 @@ def approve_submission(modeladmin, request, queryset):
 @admin.action(description='Remove Submission(s)')
 def deny_submission(modeladmin, request, queryset):
     for submission in queryset:
-        submission.delete()
+        submission.review_submission(False)
 
 
 @receiver(post_save, sender=Upvote)
@@ -65,7 +65,7 @@ def upvote_callback_handler(sender, instance, **kwargs):
 
 @receiver(post_delete, sender=Submission)
 def submission_callback_handler(sender, instance, **kwargs):
-    remove_submission(instance, False)
+    if not instance.reviewed: remove_submission(instance, False)
 
 
 class ProfileInline(admin.StackedInline):
