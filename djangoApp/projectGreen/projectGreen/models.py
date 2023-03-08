@@ -1,12 +1,16 @@
 from django.db import models
 from django.contrib.auth.models import User
+<<<<<<< HEAD
 #from projectGreen.points import upvote_callback, remove_upvote, submission_callback, remove_submission
+=======
+>>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
 from datetime import datetime as dt
 import math
 
 USERNAME_MAX_LENGTH = 20
 SCORES = {'submission':10, 'upvote':{'given':1, 'recieved':2}}
 
+<<<<<<< HEAD
 def minutes_late_calc(reference_time: dt, submission_time: dt) -> int:
     '''
     Calculates minutes passed since reference_time
@@ -15,6 +19,8 @@ def minutes_late_calc(reference_time: dt, submission_time: dt) -> int:
     minutes_late = dt.combine(dt.min, submission_time) - dt.combine(dt.min, reference_time)
     return minutes_late.minute
 
+=======
+>>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
 def punctuality_scaling(time_for_challenge: int, minutes_late: int):
     '''
     Used to scale points based on "lateness" of submission
@@ -71,8 +77,12 @@ class Profile(models.Model):
         for sub in submissions:
             if sub.reported:
                 continue
+<<<<<<< HEAD
             time_for_challenge = sub.active_challenge.challenge.time_for_challenge
             points += SCORES['submission'] * punctuality_scaling(time_for_challenge, sub.minutes_late)
+=======
+            points += int(SCORES['submission'] * sub.get_punctuality_scaling())
+>>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
         Profile.set_points(username, points)
 
     verbose_name = 'Profile'
@@ -133,16 +143,27 @@ class ActiveChallenge(models.Model):
     challenge = models.ForeignKey(Challenge, models.CASCADE, null=True)
     is_expired = models.BooleanField(default=False)
 
+<<<<<<< HEAD
     def create_submission(self, username: str, minutes_late: dt, create_submission_instance: bool=True):
+=======
+    def create_submission(self, username: str, submission_time: dt, create_submission_instance: bool=True):
+>>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
         '''
         Creates submission object associated with this challenge in database and syncronises points
         [previously submission_callback]
         '''
+<<<<<<< HEAD
         if create_submission_instance:
             s = Submission(username=username, active_challenge=self, minutes_late=minutes_late)
             s.save()
         time_for_challenge = self.challenge.time_for_challenge
         Profile.add_points(username, SCORES['submission']*punctuality_scaling(time_for_challenge, minutes_late))
+=======
+        s = Submission(username=username, active_challenge=self, submission_time=submission_time)
+        if create_submission_instance:
+            s.save()
+        Profile.add_points(username, int(SCORES['submission']*s.get_punctuality_scaling()))                           
+>>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -152,11 +173,16 @@ class ActiveChallenge(models.Model):
 class Submission(models.Model):
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     active_challenge = models.ForeignKey(ActiveChallenge, models.CASCADE, null=True)
+<<<<<<< HEAD
     minutes_late = models.IntegerField(default=0)
+=======
+    submission_time = models.DateTimeField('Submission Time', null=True)
+>>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
     reported = models.BooleanField(default=False)
     reviewed = models.BooleanField(default=False)
     photo_bytes = models.BinaryField(null=True)
 
+<<<<<<< HEAD
     def report_submission(self):
         '''
         Marks a submission as reported - it will not be
@@ -240,6 +266,110 @@ class Submission(models.Model):
     class Meta:
         db_table = 'Submissions'
     
+=======
+    def get_minutes_late(self) -> int:
+        '''
+        Calculates time from when the challenge was set to when the submission was made
+        '''
+        late = self.submission_time - self.active_challenge.date
+        return late.total_seconds() // 60
+    
+    def get_punctuality_scaling(self) -> float:
+        time_for_challenge = self.active_challenge.challenge.time_for_challenge
+        return punctuality_scaling(time_for_challenge, self.get_minutes_late())
+
+    def report_submission(self):
+        '''
+        Marks a submission as reported - it will not be
+        displayed in the feed while reported == True
+        A post cannot be re-reported (once reviewed)
+        Points are updated accordingly
+        '''
+        date = self.active_challenge.date.strftime('%Y-%m-%d')
+        if self.reported:
+            print('{username}\'s post on {date} has already been reported.'.format(self.username, date))
+        elif self.reviewed:
+            print('{username}\'s post on {date} has been reviewed.'.format(self.username, date))
+        else:
+            self.remove_submission(False)
+            self.reported = True
+            self.save()
+
+    def review_submission(self, is_suitable: bool):
+        '''
+        Sets reported to False if the post is deemed suitable and points are reinstated
+        Otherwise, the submission is deleted, and their "removed submissions" count is incremented
+        '''
+        date = self.active_challenge.date.strftime('%Y-%m-%d')
+        if not self.reported:
+            print('{username}\'s post on {date} has not been reported.'.format(self.username, date))
+        elif self.reviewed:
+            print('{username}\'s post on {date} has already been reviewed.'.format(self.username, date))
+        else:
+            self.reported = False if is_suitable else True
+            self.reviewed = True
+            self.save()
+            if is_suitable:
+                self.reinstate_submission()
+            else:
+                u = User.objects.get(username=self.username)
+                try:
+                    p = Profile.objects.get(user=u)
+                    p.number_of_submissions_removed += 1
+                except Profile.DoesNotExist:
+                    p = Profile(user=u, number_of_submissions_removed=1)
+                p.save()
+                self.delete()
+
+    def remove_submission(self, delete_instance: bool=True):
+        '''
+        Removes submission object in database (conditional flag) and syncronises points
+        '''
+        if not self.reported:
+            points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
+            Profile.add_points(self.username, -int(points_to_remove))
+            for upvote in self.get_upvotes():
+                upvote.remove_upvote(delete_instance)
+        if delete_instance: self.delete()
+
+    def reinstate_submission(self): # TODO implement this fix
+        '''
+        Adds points associated with a submission back (used after submission review)
+        '''
+        points = SCORES['submission'] * self.get_punctuality_scaling()
+        Profile.add_points(self.username, int(points))
+        for upvote in self.get_upvotes():
+            upvote.reinstate_upvote()
+
+    def create_upvote(self, voter_username: str, create_upvote_instance: bool=True):
+        '''
+        Creates upvote object for this submission in database and syncronises points
+        [previously upvote_callback]
+        '''
+        u = Upvote(submission=self, voter_username=voter_username)
+        if create_upvote_instance:
+            u.save()
+        Profile.add_points(self.username, SCORES['upvote']['recieved'])
+        Profile.add_points(voter_username, SCORES['upvote']['given'])
+        
+    def get_upvotes(self) -> list:
+        '''
+        Gets list of Upvotes for this submission
+        '''
+        return Upvote.objects.filter(submission=self)
+    
+    def get_upvote_count(self) -> int:
+        '''
+        Gets the number of Upvotes for a submission
+        '''
+        return len(self.get_upvotes())
+
+    verbose_name = 'Submission'
+    verbose_name_plural = 'Submissions'
+    class Meta:
+        db_table = 'Submissions'
+    
+>>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
 class Upvote(models.Model):
     submission = models.ForeignKey(Submission, models.CASCADE, null=True)
     voter_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
@@ -253,6 +383,16 @@ class Upvote(models.Model):
             Profile.add_points(self.submission.username, -SCORES['upvote']['recieved'])
         if delete_instance: self.delete()
 
+<<<<<<< HEAD
+=======
+    def reinstate_upvote(self): # TODO implement this fix
+        '''
+        Adds points from an upvote back (used after submission review)
+        '''
+        Profile.add_points(self.voter_username, SCORES['upvote']['given'])
+        Profile.add_points(self.submission.username, SCORES['upvote']['recieved'])
+
+>>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
     verbose_name = 'Upvote'
     verbose_name_plural = 'Upvotes'
     class Meta:
