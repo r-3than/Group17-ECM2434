@@ -1,31 +1,13 @@
 from django.contrib import admin
 from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote
-<<<<<<< HEAD
-
-from projectGreen.settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
-=======
->>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
 from datetime import datetime
 
-# for callbacks; https://stackoverflow.com/questions/43145712/calling-a-function-in-django-after-saving-a-model
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
 
 @admin.action(description='Publish challenge')
 def publish_challenge(modeladmin, request, queryset):
     date = datetime.now().strftime('%Y-%m-%d')
     try:
-<<<<<<< HEAD
-        ActiveChallenge.objects.get(challenge_date=date)
-        print('Challenge has already been set today')
-        return
-    except ActiveChallenge.DoesNotExist:
-        ac = ActiveChallenge(challenge_date=datetime.now(), challenge=queryset[0])
-        ac.save()
-
-    # Credentials now stored in settings.py
-=======
         ActiveChallenge.objects.get(date=date)
         print('Challenge has already been set today')
         return
@@ -33,7 +15,6 @@ def publish_challenge(modeladmin, request, queryset):
         ac = ActiveChallenge(date=datetime.now(), challenge=queryset[0])
         ac.save()
 
->>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
     message = 'A new challenge has been posted! \n'+queryset[0].description+'\nDate: '+date
 
     for user in User.objects.all():
@@ -64,26 +45,6 @@ def deny_submission(modeladmin, request, queryset):
         submission.review_submission(False)
 
 
-<<<<<<< HEAD
-@receiver(post_save, sender=Upvote)
-def upvote_callback_handler(sender, instance, **kwargs):
-    instance.submission.create_upvote(instance.voter_username, False)
-
-@receiver(post_save, sender=Submission)
-def submission_callback_handler(sender, instance, **kwargs):
-    instance.active_challenge.create_submission(instance.username, instance.minutes_late , False)
-
-@receiver(post_delete, sender=Upvote)
-def upvote_callback_handler(sender, instance, **kwargs):
-    instance.remove_upvote(False)
-
-@receiver(post_delete, sender=Submission)
-def submission_callback_handler(sender, instance, **kwargs):
-    instance.remove_submission(False)
-
-
-=======
->>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
 class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
@@ -126,11 +87,7 @@ class ActiveChallengesAdmin(admin.ModelAdmin):
 
 
 class SubmissionAdmin(admin.ModelAdmin):
-<<<<<<< HEAD
-    list_display = ['username', 'get_challenge_date', 'minutes_late', 'get_submission']
-=======
     list_display = ['username', 'get_challenge_date', 'submission_time', 'get_minutes_late', 'get_submission']
->>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
     ordering = ['username']
     actions = [report_submission, approve_submission, deny_submission]
 
@@ -138,13 +95,10 @@ class SubmissionAdmin(admin.ModelAdmin):
     def get_challenge_date(self, submission):
         return submission.active_challenge.date
     
-<<<<<<< HEAD
-=======
     @admin.display(description='minuites_late')
     def get_minutes_late(self, submission):
         return submission.get_minutes_late()
     
->>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
     @admin.display(description='Photo')
     def get_submission(self, submission):
         if submission.photo_bytes != None:

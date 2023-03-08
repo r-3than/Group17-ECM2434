@@ -8,8 +8,6 @@ from datetime import date, timedelta
 
 from projectGreen.models import Submission
 
-from projectGreen.models import Submission
-
 
 
 @csrf_exempt
@@ -26,15 +24,6 @@ def uploadphoto(request):
 def home(request):
     context = {}
     if request.user.is_authenticated:
-<<<<<<< HEAD
-        template = loader.get_template('home/home2.html')
-
-        submissions_info = {}
-        submissions = Submission.objects.all()
-        for submission in submissions:
-            submissions_info[submission.id] = {'submission_username': submission.username,
-                                               'submission_minutes_late': submission.minutes_late,
-=======
         template = loader.get_template('home/home.html')
 
         submissions_info = {}
@@ -64,17 +53,12 @@ def home(request):
             # Dictionary structure to pass to template 
             submissions_info[submission.id] = {'submission_username': submission.username,
                                                'submission_time': submission_time_form,
->>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
                                                'submission_photo': submission.photo_bytes,
                                                'submission_upvote_count': submission.get_upvote_count()
                                             }
         
         context['submissions'] = submissions_info
 
-<<<<<<< HEAD
-        print(submissions_info)
-=======
->>>>>>> a435eef25957e24b02fcb45b6477a2dd4c12d10a
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")
