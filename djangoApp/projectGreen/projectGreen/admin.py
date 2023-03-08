@@ -6,18 +6,18 @@ from projectGreen.settings import EMAIL_HOST_USER, EMAIL_HOST_PASSWORD
 from datetime import datetime
 
 # for callbacks; https://stackoverflow.com/questions/43145712/calling-a-function-in-django-after-saving-a-model
-from django.db.models.signals import post_save, post_delete
-from django.dispatch import receiver
+# from django.db.models.signals import post_save, post_delete
+# from django.dispatch import receiver
 
 @admin.action(description='Publish challenge')
 def publish_challenge(modeladmin, request, queryset):
     date = datetime.now().strftime('%Y-%m-%d')
     try:
-        ActiveChallenge.objects.get(challenge_date=date)
+        ActiveChallenge.objects.get(date=date)
         print('Challenge has already been set today')
         return
     except ActiveChallenge.DoesNotExist:
-        ac = ActiveChallenge(challenge_date=datetime.now(), challenge=queryset[0])
+        ac = ActiveChallenge(date=datetime.now(), challenge=queryset[0])
         ac.save()
 
     # Credentials now stored in settings.py
@@ -50,6 +50,9 @@ def deny_submission(modeladmin, request, queryset):
     for submission in queryset:
         submission.review_submission(False)
 
+'''
+Django signal callbacks cannot reconcile points flow with admin page modifications.
+Any changes made in the admin interface will require all user's points to be resynchronized.
 
 @receiver(post_save, sender=Upvote)
 def upvote_callback_handler(sender, instance, **kwargs):
@@ -57,7 +60,7 @@ def upvote_callback_handler(sender, instance, **kwargs):
 
 @receiver(post_save, sender=Submission)
 def submission_callback_handler(sender, instance, **kwargs):
-    instance.active_challenge.create_submission(instance.username, instance.minutes_late , False)
+    instance.active_challenge.create_submission(instance.username, instance.submission_time , False)
 
 @receiver(post_delete, sender=Upvote)
 def upvote_callback_handler(sender, instance, **kwargs):
@@ -66,7 +69,7 @@ def upvote_callback_handler(sender, instance, **kwargs):
 @receiver(post_delete, sender=Submission)
 def submission_callback_handler(sender, instance, **kwargs):
     instance.remove_submission(False)
-
+'''
 
 class ProfileInline(admin.StackedInline):
     model = Profile
@@ -110,13 +113,17 @@ class ActiveChallengesAdmin(admin.ModelAdmin):
 
 
 class SubmissionAdmin(admin.ModelAdmin):
-    list_display = ['username', 'get_challenge_date', 'minutes_late', 'get_submission']
+    list_display = ['username', 'get_challenge_date', 'submission_time', 'get_minutes_late', 'get_submission']
     ordering = ['username']
     actions = [report_submission, approve_submission, deny_submission]
 
     @admin.display(ordering='challenge__challenge_date', description='challenge_date')
     def get_challenge_date(self, submission):
         return submission.active_challenge.date
+    
+    @admin.display(description='minuites_late')
+    def get_minutes_late(self, submission):
+        return submission.get_minutes_late()
     
     @admin.display(description='Photo')
     def get_submission(self, submission):
