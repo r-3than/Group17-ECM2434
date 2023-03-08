@@ -63,8 +63,7 @@ class Profile(models.Model):
         for sub in submissions:
             if sub.reported:
                 continue
-            time_for_challenge = sub.active_challenge.challenge.time_for_challenge
-            points += SCORES['submission'] * punctuality_scaling(time_for_challenge, sub.minutes_late)
+            points += SCORES['submission'] * sub.get_punctuality_scaling()
         Profile.set_points(username, points)
 
     verbose_name = 'Profile'
@@ -127,16 +126,15 @@ class ActiveChallenge(models.Model):
     challenge = models.ForeignKey(Challenge, models.CASCADE, null=True)
     is_expired = models.BooleanField(default=False)
 
-    def create_submission(self, username: str, minutes_late: dt, create_submission_instance: bool=True):
+    def create_submission(self, username: str, submission_time: dt, create_submission_instance: bool=True):
         '''
         Creates submission object associated with this challenge in database and syncronises points
         [previously submission_callback]
         '''
+        s = Submission(username=username, active_challenge=self, submission_time=submission_time)
         if create_submission_instance:
-            s = Submission(username=username, active_challenge=self, minutes_late=minutes_late)
             s.save()
-        time_for_challenge = self.challenge.time_for_challenge
-        Profile.add_points(username, SCORES['submission']*punctuality_scaling(time_for_challenge, minutes_late))
+        Profile.add_points(username, SCORES['submission']*s.get_punctuality_scaling())
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -186,50 +184,61 @@ class Submission(models.Model):
 
     def review_submission(self, is_suitable: bool):
         '''
-        Sets reported to True if the post is deemed suitable
-        Points are updated accordingly
+        Sets reported to False if the post is deemed suitable and points are reinstated
+        Otherwise, the submission is deleted, and their "removed submissions" count is incremented
         '''
-        self.reported = is_suitable
-        self.reviewed = True
-        if is_suitable:
-            # reinstate points
-            for u in self.get_upvotes():
-                self.create_upvote(u.voter_username, False)
-            self.active_challenge.create_submission(self.username, self.minutes_late, False)
+        date = self.active_challenge.date.strftime('%Y-%m-%d')
+        if not self.reported:
+            print('{username}\'s post on {date} has not been reported.'.format(self.username, date))
+        elif self.reviewed:
+            print('{username}\'s post on {date} has already been reviewed.'.format(self.username, date))
         else:
-            u = User.objects.get(username=self.username)
-            try:
-                p = Profile.objects.get(user=u)
-                p.number_of_submissions_removed += 1
-            except Profile.DoesNotExist:
-                p = Profile(user=u, number_of_submissions_removed=1)
-            p.save()
-            self.delete()
+            self.reported = not is_suitable # TODO this line still isnt working
+            self.reviewed = True
+            if is_suitable:
+                self.reinstate_submission()
+            else:
+                u = User.objects.get(username=self.username)
+                try:
+                    p = Profile.objects.get(user=u)
+                    p.number_of_submissions_removed += 1
+                except Profile.DoesNotExist:
+                    p = Profile(user=u, number_of_submissions_removed=1)
+                p.save()
+                self.delete()
 
     def remove_submission(self, delete_instance: bool=True):
         '''
         Removes submission object in database (conditional flag) and syncronises points
         '''
         if not self.reported:
-            time_for_challenge = self.active_challenge.challenge.time_for_challenge
-            points_to_remove = SCORES['submission'] * punctuality_scaling(time_for_challenge, self.minutes_late)
+            points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
             Profile.add_points(self.username, -points_to_remove)
             for upvote in self.get_upvotes():
                 upvote.remove_upvote(delete_instance)
         if delete_instance: self.delete()
+
+    def reinstate_submission(self): # TODO implement this fix
+        '''
+        Adds points associated with a submission back (used after submission review)
+        '''
+        points = SCORES['submission'] * self.get_punctuality_scaling()
+        Profile.add_points(self.username, points)
+        for upvote in self.get_upvotes():
+            upvote.reinstate_upvote()
 
     def create_upvote(self, voter_username: str, create_upvote_instance: bool=True):
         '''
         Creates upvote object for this submission in database and syncronises points
         [previously upvote_callback]
         '''
+        u = Upvote(submission=self, voter_username=voter_username)
         if create_upvote_instance:
-            u = Upvote(submission=self, voter_username=voter_username)
             u.save()
         Profile.add_points(self.username, SCORES['upvote']['recieved'])
         Profile.add_points(voter_username, SCORES['upvote']['given'])
         
-    def get_upvotes(self):
+    def get_upvotes(self) -> list:
         '''
         Gets list of Upvotes for this submission
         '''
