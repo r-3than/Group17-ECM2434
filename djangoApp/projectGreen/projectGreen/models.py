@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-#from projectGreen.points import upvote_callback, remove_upvote, submission_callback, remove_submission
 from datetime import datetime as dt
 import math
 
@@ -63,7 +62,7 @@ class Profile(models.Model):
         for sub in submissions:
             if sub.reported:
                 continue
-            points += SCORES['submission'] * sub.get_punctuality_scaling()
+            points += int(SCORES['submission'] * sub.get_punctuality_scaling())
         Profile.set_points(username, points)
 
     verbose_name = 'Profile'
@@ -132,7 +131,7 @@ class ActiveChallenge(models.Model):
         s = Submission(username=username, active_challenge=self, submission_time=submission_time)
         if create_submission_instance:
             s.save()
-        Profile.add_points(username, SCORES['submission']*s.get_punctuality_scaling())
+        Profile.add_points(username, int(SCORES['submission']*s.get_punctuality_scaling()))                           
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -142,7 +141,7 @@ class ActiveChallenge(models.Model):
 class Submission(models.Model):
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     active_challenge = models.ForeignKey(ActiveChallenge, models.CASCADE, null=True)
-    submission_time = models.DateTimeField('Submission Time')
+    submission_time = models.DateTimeField('Submission Time', null=True)
     reported = models.BooleanField(default=False)
     reviewed = models.BooleanField(default=False)
     photo_bytes = models.BinaryField(null=True)
@@ -150,7 +149,6 @@ class Submission(models.Model):
     def get_minutes_late(self) -> int:
         '''
         Calculates time from when the challenge was set to when the submission was made
-        https://stackoverflow.com/questions/5259882/subtract-two-times-in-python
         '''
         late = self.submission_time - self.active_challenge.date
         return late.total_seconds() // 60
@@ -159,7 +157,7 @@ class Submission(models.Model):
         time_for_challenge = self.active_challenge.challenge.time_for_challenge
         return punctuality_scaling(time_for_challenge, self.get_minutes_late())
 
-    def report_submission(self): # AINT WORKIN' (BUT IT SHOULD BE???)
+    def report_submission(self):
         '''
         Marks a submission as reported - it will not be
         displayed in the feed while reported == True
@@ -172,8 +170,6 @@ class Submission(models.Model):
         elif self.reviewed:
             print('{username}\'s post on {date} has been reviewed.'.format(self.username, date))
         else:
-            for u in self.get_upvotes():
-                u.remove_upvote(False)
             self.remove_submission(False)
             self.reported = True
             self.save()
@@ -189,8 +185,9 @@ class Submission(models.Model):
         elif self.reviewed:
             print('{username}\'s post on {date} has already been reviewed.'.format(self.username, date))
         else:
-            self.reported = not is_suitable # TODO this line still isnt working
+            self.reported = False if is_suitable else True
             self.reviewed = True
+            self.save()
             if is_suitable:
                 self.reinstate_submission()
             else:
@@ -209,7 +206,7 @@ class Submission(models.Model):
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
-            Profile.add_points(self.username, -points_to_remove)
+            Profile.add_points(self.username, -int(points_to_remove))
             for upvote in self.get_upvotes():
                 upvote.remove_upvote(delete_instance)
         if delete_instance: self.delete()
@@ -219,7 +216,7 @@ class Submission(models.Model):
         Adds points associated with a submission back (used after submission review)
         '''
         points = SCORES['submission'] * self.get_punctuality_scaling()
-        Profile.add_points(self.username, points)
+        Profile.add_points(self.username, int(points))
         for upvote in self.get_upvotes():
             upvote.reinstate_upvote()
 
