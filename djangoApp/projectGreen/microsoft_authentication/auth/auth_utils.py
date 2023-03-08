@@ -10,6 +10,10 @@ from django.contrib.auth.hashers import make_password
 User = get_user_model()
 
 ms_settings = settings.MICROSOFT
+PRIMARY_DOMAIN = ms_settings['valid_email_domains'][0]
+# this is the primary domain; if multiple domains exist, then domain
+# suffixes will be used in usernames not in the primary domain
+
 graph_url = "https://graph.microsoft.com/v1.0"
 
 
@@ -87,6 +91,14 @@ def get_logout_url():
 def validate_email(email):
     return "@" in email and email.split("@")[1] in settings.MICROSOFT["valid_email_domains"]
 
+def username_to_email(username: str) -> str:
+    if '@' in username:
+        return username
+    else:
+        return username + '@' + PRIMARY_DOMAIN
+
+def email_to_username(email: str) -> str:
+    return email.rstrip('@'+PRIMARY_DOMAIN)
 
 def get_django_user(email,givenName,surName, create_new=True):
     if not validate_email(email=email):
@@ -97,8 +109,9 @@ def get_django_user(email,givenName,surName, create_new=True):
         if not create_new:
             return
         random_password = "".join(random.choice(string.ascii_letters) for i in range(32))
-        username = email.split("@")[0]
+        username = email_to_username(email)
         user = User(username=username, email=email,first_name=givenName,last_name=surName, password=make_password(random_password))
         user.is_staff = True
         user.save()
+        ## setting points to zero here requires relative imports
     return user
