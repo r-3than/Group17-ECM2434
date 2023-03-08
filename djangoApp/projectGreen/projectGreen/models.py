@@ -1,6 +1,5 @@
 from django.db import models
 from django.contrib.auth.models import User
-#from projectGreen.points import upvote_callback, remove_upvote, submission_callback, remove_submission
 from datetime import datetime as dt
 import math
 
@@ -63,7 +62,7 @@ class Profile(models.Model):
         for sub in submissions:
             if sub.reported:
                 continue
-            points += SCORES['submission'] * sub.get_punctuality_scaling()
+            points += int(SCORES['submission'] * sub.get_punctuality_scaling())
         Profile.set_points(username, points)
 
     verbose_name = 'Profile'
@@ -134,7 +133,7 @@ class ActiveChallenge(models.Model):
         s = Submission(username=username, active_challenge=self, submission_time=submission_time)
         if create_submission_instance:
             s.save()
-        Profile.add_points(username, SCORES['submission']*s.get_punctuality_scaling())
+        Profile.add_points(username, int(SCORES['submission']*s.get_punctuality_scaling()))                           
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -173,9 +172,6 @@ class Submission(models.Model):
         elif self.reviewed:
             print('{username}\'s post on {date} has been reviewed.'.format(self.username, date))
         else:
-            self.remove_submission(False)
-            self.reported = True
-            self.save()
             for u in self.get_upvotes():
                 u.remove_upvote(False)
             self.remove_submission(False)
@@ -193,8 +189,9 @@ class Submission(models.Model):
         elif self.reviewed:
             print('{username}\'s post on {date} has already been reviewed.'.format(self.username, date))
         else:
-            self.reported = not is_suitable # TODO this line still isnt working
+            self.reported = False if is_suitable else True
             self.reviewed = True
+            self.save()
             if is_suitable:
                 self.reinstate_submission()
             else:
@@ -213,7 +210,7 @@ class Submission(models.Model):
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
-            Profile.add_points(self.username, -points_to_remove)
+            Profile.add_points(self.username, -int(points_to_remove))
             for upvote in self.get_upvotes():
                 upvote.remove_upvote(delete_instance)
         if delete_instance: self.delete()
@@ -223,7 +220,7 @@ class Submission(models.Model):
         Adds points associated with a submission back (used after submission review)
         '''
         points = SCORES['submission'] * self.get_punctuality_scaling()
-        Profile.add_points(self.username, points)
+        Profile.add_points(self.username, int(points))
         for upvote in self.get_upvotes():
             upvote.reinstate_upvote()
 

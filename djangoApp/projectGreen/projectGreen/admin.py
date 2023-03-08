@@ -3,9 +3,6 @@ from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote
 from datetime import datetime
 
-# for callbacks; https://stackoverflow.com/questions/43145712/calling-a-function-in-django-after-saving-a-model
-# from django.db.models.signals import post_save, post_delete
-# from django.dispatch import receiver
 
 @admin.action(description='Publish challenge')
 def publish_challenge(modeladmin, request, queryset):
@@ -18,7 +15,6 @@ def publish_challenge(modeladmin, request, queryset):
         ac = ActiveChallenge(date=datetime.now(), challenge=queryset[0])
         ac.save()
 
-    # Credentials now stored in settings.py
     message = 'A new challenge has been posted! \n'+queryset[0].description+'\nDate: '+date
 
     for user in User.objects.all():
@@ -48,26 +44,6 @@ def deny_submission(modeladmin, request, queryset):
     for submission in queryset:
         submission.review_submission(False)
 
-'''
-Django signal callbacks cannot reconcile points flow with admin page modifications.
-Any changes made in the admin interface will require all user's points to be resynchronized.
-
-@receiver(post_save, sender=Upvote)
-def upvote_callback_handler(sender, instance, **kwargs):
-    instance.submission.create_upvote(instance.voter_username, False)
-
-@receiver(post_save, sender=Submission)
-def submission_callback_handler(sender, instance, **kwargs):
-    instance.active_challenge.create_submission(instance.username, instance.submission_time , False)
-
-@receiver(post_delete, sender=Upvote)
-def upvote_callback_handler(sender, instance, **kwargs):
-    instance.remove_upvote(False)
-
-@receiver(post_delete, sender=Submission)
-def submission_callback_handler(sender, instance, **kwargs):
-    instance.remove_submission(False)
-'''
 
 class ProfileInline(admin.StackedInline):
     model = Profile
