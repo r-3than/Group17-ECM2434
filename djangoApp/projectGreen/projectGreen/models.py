@@ -44,7 +44,7 @@ class Profile(models.Model):
         if fetch: return data
 
     @classmethod
-    def set_points(cls, username: str, points_value: int):
+    def set_points_by_username(cls, username: str, points_value: int):
         '''
         Sets the points of a user's profile
         '''
@@ -56,8 +56,19 @@ class Profile(models.Model):
             profile = Profile(user=user, points=points_value)
         profile.save()
 
+    def set_points(self, points_value: int):
+        '''
+        Sets the points of a user's profile
+        '''
+        try:
+            profile = Profile.objects.get(user=self.user)
+            profile.points = points_value
+        except Profile.DoesNotExist:
+            profile = Profile(user=self.user, points=points_value)
+        profile.save()
+
     @classmethod
-    def add_points(cls, username: str, points_to_add: int):
+    def add_points_by_username(cls, username: str, points_to_add: int):
         '''
         Increments a user's points in their profile
         '''
@@ -71,8 +82,21 @@ class Profile(models.Model):
             profile = Profile(user=user, points=points_to_add)
         profile.save()
 
+    def add_points(self, points_to_add: int):
+        '''
+        Increments a user's points in their profile
+        '''
+        try:
+            profile = Profile.objects.get(user=self.user)
+            points = profile.points
+            points += points_to_add
+            profile.points = points
+        except Profile.DoesNotExist:
+            profile = Profile(user=self.user, points=points_to_add)
+        profile.save()
+
     @classmethod
-    def recalculate_user_points(cls, username: str):
+    def recalculate_user_points_by_username(cls, username: str):
         '''
         Calculates the total points for a user based on submissions and interactions
         Interactions are only counted / points are only assigned for non-reported submissions
@@ -87,7 +111,25 @@ class Profile(models.Model):
             if sub.reported:
                 continue
             points += int(SCORES['submission'] * sub.get_punctuality_scaling())
-        Profile.set_points(username, points)
+        Profile.set_points_by_username(username, points)
+
+    def recalculate_user_points(self):
+        '''
+        Calculates the total points for a user based on submissions and interactions
+        Interactions are only counted / points are only assigned for non-reported submissions
+        '''
+        username = self.user.username
+        points = 0
+        upvotes_given = Upvote.objects.filter(voter_username=username, submission__reported=False)
+        points += len(upvotes_given)*SCORES['upvote']['given']
+        upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
+        points += len(upvotes_recieved)*SCORES['upvote']['recieved']
+        submissions = Submission.objects.filter(username=username)
+        for sub in submissions:
+            if sub.reported:
+                continue
+            points += int(SCORES['submission'] * sub.get_punctuality_scaling())
+        self.user.set_points(points)
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
