@@ -1,0 +1,1 @@
+# required for django unit tests to be recognised and run
