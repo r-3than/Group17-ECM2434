@@ -19,6 +19,30 @@ class Profile(models.Model):
     points = models.IntegerField(default=0)
     number_of_submissions_removed = models.IntegerField(default=0)
 
+    def user_data(self, fetch: bool=True, delete: bool=False):
+        '''
+        Can fetch all data related to a single user
+        Will delete all this data if delete flag is set
+        '''
+        data = {}
+        u = self.user
+        data['profile'] = self
+        data['friends'] = Friend.objects.filter(left_username=u.username) + Friend.objects.filter(right_username=u.username)
+        data['submissions'] = Submission.objects.filter(user=u)
+        data['upvotes']['given'] = Upvote.objects.filter(voter_username=u.username)
+        data['upvotes']['recieved'] = []
+        for sub in data['submissions']:
+            data['upvotes']['recieved'].append(sub.get_upvotes())
+        if delete:
+            for sub in data['submissions']:
+                sub.remove_submission()
+            for up in data['upvotes']['given']:
+                up.remove_upvote()
+            data['friends'].delete()
+            u.delete()
+            self.delete()
+        if fetch: return data
+
     @classmethod
     def set_points(cls, username: str, points_value: int):
         '''
@@ -126,7 +150,6 @@ class ActiveChallenge(models.Model):
     def create_submission(self, username: str, submission_time: dt, create_submission_instance: bool=True):
         '''
         Creates submission object associated with this challenge in database and syncronises points
-        [previously submission_callback]
         '''
         s = Submission(username=username, active_challenge=self, submission_time=submission_time)
         if create_submission_instance:
@@ -202,7 +225,8 @@ class Submission(models.Model):
 
     def remove_submission(self, delete_instance: bool=True):
         '''
-        Removes submission object in database (conditional flag) and syncronises points
+        Removes submission object, as well as associated upvote objects,
+        from database (conditional flag) and syncronises points
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
@@ -223,7 +247,6 @@ class Submission(models.Model):
     def create_upvote(self, voter_username: str, create_upvote_instance: bool=True):
         '''
         Creates upvote object for this submission in database and syncronises points
-        [previously upvote_callback]
         '''
         u = Upvote(submission=self, voter_username=voter_username)
         if create_upvote_instance:
@@ -254,7 +277,7 @@ class Upvote(models.Model):
 
     def remove_upvote(self, delete_instance: bool=True):
         '''
-        Removes upvote object in database (conditional flag) and syncronises points
+        Removes upvote object from database (conditional flag) and syncronises points
         '''
         if not self.submission.reported:
             Profile.add_points(self.voter_username, -SCORES['upvote']['given'])
