@@ -4,6 +4,9 @@ from microsoft_authentication.auth.auth_decorators import microsoft_login_requir
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
 import base64 , json
+from datetime import date, timedelta
+
+from projectGreen.models import Submission
 
 
 
@@ -22,6 +25,40 @@ def home(request):
     context = {}
     if request.user.is_authenticated:
         template = loader.get_template('home/home.html')
+
+        submissions_info = {}
+
+        # List the submissions from most recent
+        submissions = Submission.objects.all().order_by('-submission_time')
+        for submission in submissions:
+            submission_date = submission.submission_time.strftime("%d:%m:%Y")
+            submission_year = submission.submission_time.strftime("%Y")
+            current_date = date.today().strftime("%d:%m:%Y")
+            current_year = date.today().strftime("%Y")
+
+            # Only display submission year if different from current year
+            if submission_year != current_year:
+                submission_time_form = submission.submission_time.strftime("%B %d, %Y")
+            # Only display submission date if different from current date
+            elif submission_date != current_date:
+                # Display "Yesterday" if submission is from previous day
+                if current_date == (submission.submission_time + timedelta(days = 1)).strftime("%d:%m:%Y"):
+                    submission_time_form = submission.submission_time.strftime("Yesterday, %H:%M")
+                # Display actual date otherwise
+                else:
+                    submission_time_form = submission.submission_time.strftime("%B %d, %H:%M")
+            else:
+                submission_time_form = submission.submission_time.strftime("%H:%M")
+
+            # Dictionary structure to pass to template 
+            submissions_info[submission.id] = {'submission_username': submission.username,
+                                               'submission_time': submission_time_form,
+                                               'submission_photo': submission.photo_bytes,
+                                               'submission_upvote_count': submission.get_upvote_count()
+                                            }
+        
+        context['submissions'] = submissions_info
+
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")

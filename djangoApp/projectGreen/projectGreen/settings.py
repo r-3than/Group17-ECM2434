@@ -27,7 +27,7 @@ SECRET_KEY = 'django-insecure-*f-8r*xtx6mljgv8pdcp^^)z&y&80r1p_iyf!y_lf=*0600$ca
 DEBUG = True
 
 ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com","localhost"]
-
+CSRF_TRUSTED_ORIGINS = ['https://projectgreen.grayitsolutions.com',"http://localhost:8000"]
 
 # Application definition
 
@@ -39,7 +39,6 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
-    'corsheaders',
     'projectGreen'
 ]
 
@@ -51,13 +50,8 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
 ]
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:8000',
-]
-CORS_ORIGIN_ALLOW_ALL = True
 ROOT_URLCONF = 'projectGreen.urls'
 
 TEMPLATES = [
@@ -78,6 +72,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'projectGreen.wsgi.application'
 
+# Email Settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'djangotestemail31@gmail.com'  
+EMAIL_HOST_PASSWORD = 'nrsrhztfmmwyqzey'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
