@@ -14,16 +14,19 @@
     <link href="{% static 'css/camera.css' %}" rel="stylesheet" />
     <link href="{% static 'css/variables.css' %}" rel="stylesheet" />
   </head>
-  <a>hi test {{user.email}}</a>
+  <a>Hello, {{user.email}}</a>
   <a href="{% url 'microsoft_authentication:microsoft_authentication_logout' %}"
     >logout</a
   >
   <a>click the video feed to save a pic</a>
   <div>
+    <form method="post" enctype="multipart/form-data" action="/uploadphoto">
     <label class="custom-file-upload">
       <input type="file" accept="image/*" capture="camera">
       Custom Upload
     </label>
+    <div><button>Submit</button> </div>
+  </form>
     <video id="playbackvideo" autoplay muted></video>
     <canvas id="canvas" style="visibility: hidden"> </canvas>
     <img id="photo" />
