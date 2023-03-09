@@ -99,9 +99,6 @@ class Profile(models.Model):
             if sub.reported:
                 continue
             points += int(SCORES['submission'] * sub.get_punctuality_scaling())
-<<<<<<< HEAD
-        Profile.set_points(username, points)
-=======
         Profile.set_points_by_username(username, points)
 
     def recalculate_user_points(self):
@@ -121,7 +118,6 @@ class Profile(models.Model):
                 continue
             points += int(SCORES['submission'] * sub.get_punctuality_scaling())
         self.user.profile.set_points(points)
->>>>>>> 0cdd13fc928632aaf6af9a7254ef1ea296f87bd1
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
