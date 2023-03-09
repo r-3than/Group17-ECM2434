@@ -10,3 +10,7 @@ I needed to change some code in it when creating the users and it will now be st
 To get all requirements/dependencies:
     "cd djangoApp/projectGreen"
     "pip install -r requirements.txt"
+
+Creating/modifying models from the admin page (when testing):
+Django signal callbacks cannot reconcile points flow with admin page modifications.
+Any changes made in the admin interface will require all user's points to be resynchronized.
