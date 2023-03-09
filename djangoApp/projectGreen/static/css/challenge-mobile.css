@@ -6,6 +6,7 @@ body {
     width: 100vw;
     background-color: var(--exeter-deep-green);
     box-sizing: border-box;
+    /* overflow-x: clip; */
     overflow-y: overlay;
     margin: 0px;
     padding: 0px;
@@ -15,6 +16,10 @@ body {
 body {
     display: flex;
     align-items: center;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    background-color: var(--exeter-deep-green);
+    font-family: "Inter";
 }
 
 div.title {
@@ -41,7 +46,7 @@ header {
     position: absolute;
     top:0;
     background-color: var(--exeter-deep-green);
-    height: 130px; 
+    height: 75px; 
     z-index: 1000;
     box-shadow: 1px 5px 10px #202020;
     margin-left: 0px !important;
@@ -50,7 +55,7 @@ header {
 
 div.title {
     text-align: center;
-    line-height: 250%;
+    line-height: 100%;
     display: flex;
     align-items: center;
 }
@@ -58,7 +63,7 @@ div.title {
 a.title {
     color: var(--exeter-dark-green);
     font-weight: 700;
-    font-size: 62px;
+    font-size: 36px;
     text-decoration: none;
     margin: auto;
 }
@@ -66,7 +71,7 @@ a.title {
 a.subtitle {
     color: white ;
     font-weight: 700;
-    font-size: 24px;
+    font-size: 20px;
     text-decoration: none;
   }
 
@@ -88,13 +93,13 @@ div.account {
     text-align: center;
     font-weight: 400;
     line-height: calc(height);
-    font-size: 60px;
+    font-size: 30px;
     float: right;
 }
 
 .points {
     width: 110%;
-    padding-left: 48%;
+    padding-left: 60%;
     color: white;
     font-weight: 540;
     text-align: center;
