@@ -48,52 +48,40 @@ class Profile(models.Model):
         '''
         Sets the points of a user's profile
         '''
-        user = User.objects.get(username=username)
         try:
-            profile = Profile.objects.get(user=user)
+            profile = Profile.objects.get(user__username=username)
             profile.points = points_value
         except Profile.DoesNotExist:
-            profile = Profile(user=user, points=points_value)
+            u = User.objects.get(username=username)
+            profile = Profile(user=u, points=points_value)
         profile.save()
 
     def set_points(self, points_value: int):
         '''
         Sets the points of a user's profile
         '''
-        try:
-            profile = Profile.objects.get(user=self.user)
-            profile.points = points_value
-        except Profile.DoesNotExist:
-            profile = Profile(user=self.user, points=points_value)
-        profile.save()
+        self.points = points_value
+        self.save()
 
     @classmethod
     def add_points_by_username(cls, username: str, points_to_add: int):
         '''
         Increments a user's points in their profile
         '''
-        user = User.objects.get(username=username)
         try:
-            profile = Profile.objects.get(user=user)
-            points = profile.points
-            points += points_to_add
-            profile.points = points
+            profile = Profile.objects.get(user__username=username)
+            profile.points += points_to_add
         except Profile.DoesNotExist:
-            profile = Profile(user=user, points=points_to_add)
+            u = User.objects.get(username=username)
+            profile = Profile(user=u, points=points_to_add)
         profile.save()
 
     def add_points(self, points_to_add: int):
         '''
         Increments a user's points in their profile
         '''
-        try:
-            profile = Profile.objects.get(user=self.user)
-            points = profile.points
-            points += points_to_add
-            profile.points = points
-        except Profile.DoesNotExist:
-            profile = Profile(user=self.user, points=points_to_add)
-        profile.save()
+        self.points += points_to_add
+        self.save()
 
     @classmethod
     def recalculate_user_points_by_username(cls, username: str):
@@ -129,7 +117,7 @@ class Profile(models.Model):
             if sub.reported:
                 continue
             points += int(SCORES['submission'] * sub.get_punctuality_scaling())
-        self.user.set_points(points)
+        self.user.profile.set_points(points)
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
