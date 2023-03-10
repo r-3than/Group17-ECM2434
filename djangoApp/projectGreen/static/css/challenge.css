@@ -78,6 +78,7 @@ div.account {
     padding-right: calc(15px + 1.2vw);
     flex-direction: column;
     float: right;
+    align-items: center;
 }
 
 .account .icon {
@@ -89,7 +90,6 @@ div.account {
     font-weight: 400;
     line-height: calc(height);
     font-size: 60px;
-    float: right;
 }
 
 .points {

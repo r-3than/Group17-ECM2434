@@ -21,21 +21,25 @@ header {
     position: sticky;
     top:0;
     background-color: var(--exeter-deep-green);
-    height: 130px; 
+    height: clamp(75px, 13vw, 130px);
     z-index: 1000;
     box-shadow: 1px 5px 10px #202020;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
 }
 
 div.title {
     text-align: center;
-    line-height: 250%;
-    padding-top: 20px;
+    line-height: 100%;
+    flex-direction: column;
+    display: flex;
+    margin-top: 10px;
 }
 
 a.title {
     color: var(--exeter-dark-green);
     font-weight: 700;
-    font-size: 48px;
+    font-size: clamp(28px, 5vw, 48px);
     text-decoration: none;
     margin: auto;
 }
@@ -43,9 +47,12 @@ a.title {
 a.subtitle {
     color: #00BDA7;
     font-weight: 700;
-    font-size: 24px;
+    font-size: 12px;
+    font-size: clamp(12px, 2vw, 20px);
     text-decoration: none;
     margin: auto;
+    margin-top: -10px;
+    width: 100%;
 }
 
 div.account {
@@ -53,10 +60,9 @@ div.account {
     height: 100%;
     display: flex;
     padding: 7px;
-    padding-right: 20px;
+    padding-right: 15px;
     flex-direction: column;
     float: right;
-    align-items: center;
 }
 
 .account .icon {
@@ -67,16 +73,17 @@ div.account {
     text-align: center;
     font-weight: 400;
     line-height: calc(height);
-    font-size: 60px;
+    font-size: clamp(30px, 6vw, 60px);
+    float: right;
 }
 
 .points {
-    width: 100%;
-    padding-left: 50%;
+    width: 110%;
+    padding-left: 60%;
     color: white;
-    font-weight: 500;
+    font-weight: 540;
     text-align: center;
-    font-size: 15px;
+    font-size: 12px;
 }
 
 main {
@@ -91,11 +98,17 @@ main {
     height: auto;
 }
 
+main .centre {
+    float: left;
+    width: 100%;
+    height: auto;
+}
+
 .post {
     background-color: #191919;
     color: white;
-    width: 66%;
-    min-width: 593px;
+    width: 85%;
+    max-width: 593px;
     height: auto;
     /* aspect-ratio: 6/5; */
     padding: 15px;
@@ -115,14 +128,14 @@ main {
     float: left;
     width: 50%;
     font-size: 22px;
-    padding-left: 40px;
+    padding-left: 20px;
 }
 
 .post .header .time {
     float: right;
     width: 50%;
     text-align: right;
-    padding-right: 50px;
+    padding-right: 30px;
     font-size: small;
 }
 
@@ -190,13 +203,6 @@ main {
     max-height: 100%;
 }
 
-.side {
-    float: left;
-    width: 25%;
-    height: auto;
-    padding: 0;
-}
-
 header .centre {
     width: 60%;
 }
@@ -208,32 +214,34 @@ header .side {
     padding: 0;
 }
 
+main .side {
+    display: none;
+}
+
+.post .side {
+    display: block;
+    float: left;
+    width: 7%;
+    height: auto;
+    padding: 0;
+    user-select: none;
+}
+
 .links {
     background-color: var(--exeter-dark-green);
     color: white;
-    /* width: 75%; */
-    width: 360px;
-    /* height: 37vh; */
-    height: 360px;
+    width: 75%;
+    height: 37vh;
     padding: 6%;
     padding-left: 9%;
     margin: auto;
     position: sticky;
     top: 200px;
-    /* font-size: 1.3vw; */
-    font-size: 24px;
+    font-size: 1.3vw;
     font-weight: 500;
     box-shadow: 1px 5px 10px #202020;
     line-height: 300%;
     overflow-y: auto;
-}
-
-main .left {
-    min-width: 400px;
-}
-
-main > .centre {
-    min-width: 600px;
 }
 
 .links a {
