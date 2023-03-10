@@ -186,7 +186,7 @@ class ActiveChallenge(models.Model):
         s = Submission(username=username, active_challenge=self, submission_time=submission_time)
         if create_submission_instance:
             s.save()
-        Profile.add_points(username, int(SCORES['submission']*s.get_punctuality_scaling()))                           
+        Profile.add_points_by_username(username, int(SCORES['submission']*s.get_punctuality_scaling()))                           
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -264,7 +264,7 @@ class Submission(models.Model):
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
-            Profile.add_points(self.username, -int(points_to_remove))
+            Profile.add_points_by_username(self.username, -int(points_to_remove))
             for upvote in self.get_upvotes():
                 upvote.remove_upvote(delete_instance)
         if delete_instance: self.delete()
@@ -274,7 +274,7 @@ class Submission(models.Model):
         Adds points associated with a submission back (used after submission review)
         '''
         points = SCORES['submission'] * self.get_punctuality_scaling()
-        Profile.add_points(self.username, int(points))
+        Profile.add_points_by_username(self.username, int(points))
         for upvote in self.get_upvotes():
             upvote.reinstate_upvote()
 
@@ -285,8 +285,8 @@ class Submission(models.Model):
         u = Upvote(submission=self, voter_username=voter_username)
         if create_upvote_instance:
             u.save()
-        Profile.add_points(self.username, SCORES['upvote']['recieved'])
-        Profile.add_points(voter_username, SCORES['upvote']['given'])
+        Profile.add_points_by_username(self.username, SCORES['upvote']['recieved'])
+        Profile.add_points_by_username(voter_username, SCORES['upvote']['given'])
         
     def get_upvotes(self) -> list:
         '''
@@ -314,16 +314,16 @@ class Upvote(models.Model):
         Removes upvote object from database (conditional flag) and syncronises points
         '''
         if not self.submission.reported:
-            Profile.add_points(self.voter_username, -SCORES['upvote']['given'])
-            Profile.add_points(self.submission.username, -SCORES['upvote']['recieved'])
+            Profile.add_points_by_username(self.voter_username, -SCORES['upvote']['given'])
+            Profile.add_points_by_username(self.submission.username, -SCORES['upvote']['recieved'])
         if delete_instance: self.delete()
 
     def reinstate_upvote(self): # TODO implement this fix
         '''
         Adds points from an upvote back (used after submission review)
         '''
-        Profile.add_points(self.voter_username, SCORES['upvote']['given'])
-        Profile.add_points(self.submission.username, SCORES['upvote']['recieved'])
+        Profile.add_points_by_username(self.voter_username, SCORES['upvote']['given'])
+        Profile.add_points_by_username(self.submission.username, SCORES['upvote']['recieved'])
 
     verbose_name = 'Upvote'
     verbose_name_plural = 'Upvotes'
