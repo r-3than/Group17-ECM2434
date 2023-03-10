@@ -1,4 +1,7 @@
+import datetime
+import os
 from sre_constants import SUCCESS
+import time
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
@@ -8,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import Submission
+from projectGreen.models import ActiveChallenge, Submission
 
 
 
@@ -16,7 +19,18 @@ from projectGreen.models import Submission
 def uploadphoto(request):
      if request.method == "POST":
         if request.user.is_authenticated:
-            print(request.FILES["upload_pic"])
+            upload=request.FILES["upload_pic"]
+            picture_bytes = b""
+            for data in upload:
+                picture_bytes += data
+            active_challenge = ActiveChallenge.objects.last()
+            newSubmission = Submission(username=request.user.username,
+            active_challenge=active_challenge,
+            reported=False,
+            reviewed=False,
+            photo_bytes=picture_bytes,
+            submission_time=datetime.datetime.now())
+            newSubmission.save()
         return redirect('/home/')
         """
         data=json.loads(request.body)
