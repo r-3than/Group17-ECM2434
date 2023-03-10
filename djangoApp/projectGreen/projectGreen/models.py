@@ -19,36 +19,72 @@ class Profile(models.Model):
     points = models.IntegerField(default=0)
     number_of_submissions_removed = models.IntegerField(default=0)
 
+    def user_data(self, fetch: bool=True, delete: bool=False):
+        '''
+        Can fetch all data related to a single user
+        Will delete all this data if delete flag is set
+        '''
+        data = {}
+        u = self.user
+        data['profile'] = self
+        data['friends'] = Friend.objects.filter(left_username=u.username) + Friend.objects.filter(right_username=u.username)
+        data['submissions'] = Submission.objects.filter(user=u)
+        data['upvotes']['given'] = Upvote.objects.filter(voter_username=u.username)
+        data['upvotes']['recieved'] = []
+        for sub in data['submissions']:
+            data['upvotes']['recieved'].append(sub.get_upvotes())
+        if delete:
+            for sub in data['submissions']:
+                sub.remove_submission()
+            for up in data['upvotes']['given']:
+                up.remove_upvote()
+            data['friends'].delete()
+            u.delete()
+            self.delete()
+        if fetch: return data
+
     @classmethod
-    def set_points(cls, username: str, points_value: int):
+    def set_points_by_username(cls, username: str, points_value: int):
         '''
         Sets the points of a user's profile
         '''
-        user = User.objects.get(username=username)
         try:
-            profile = Profile.objects.get(user=user)
+            profile = Profile.objects.get(user__username=username)
             profile.points = points_value
         except Profile.DoesNotExist:
-            profile = Profile(user=user, points=points_value)
+            u = User.objects.get(username=username)
+            profile = Profile(user=u, points=points_value)
         profile.save()
 
+    def set_points(self, points_value: int):
+        '''
+        Sets the points of a user's profile
+        '''
+        self.points = points_value
+        self.save()
+
     @classmethod
-    def add_points(cls, username: str, points_to_add: int):
+    def add_points_by_username(cls, username: str, points_to_add: int):
         '''
         Increments a user's points in their profile
         '''
-        user = User.objects.get(username=username)
         try:
-            profile = Profile.objects.get(user=user)
-            points = profile.points
-            points += points_to_add
-            profile.points = points
+            profile = Profile.objects.get(user__username=username)
+            profile.points += points_to_add
         except Profile.DoesNotExist:
-            profile = Profile(user=user, points=points_to_add)
+            u = User.objects.get(username=username)
+            profile = Profile(user=u, points=points_to_add)
         profile.save()
 
+    def add_points(self, points_to_add: int):
+        '''
+        Increments a user's points in their profile
+        '''
+        self.points += points_to_add
+        self.save()
+
     @classmethod
-    def recalculate_user_points(cls, username: str):
+    def recalculate_user_points_by_username(cls, username: str):
         '''
         Calculates the total points for a user based on submissions and interactions
         Interactions are only counted / points are only assigned for non-reported submissions
@@ -63,7 +99,25 @@ class Profile(models.Model):
             if sub.reported:
                 continue
             points += int(SCORES['submission'] * sub.get_punctuality_scaling())
-        Profile.set_points(username, points)
+        Profile.set_points_by_username(username, points)
+
+    def recalculate_user_points(self):
+        '''
+        Calculates the total points for a user based on submissions and interactions
+        Interactions are only counted / points are only assigned for non-reported submissions
+        '''
+        username = self.user.username
+        points = 0
+        upvotes_given = Upvote.objects.filter(voter_username=username, submission__reported=False)
+        points += len(upvotes_given)*SCORES['upvote']['given']
+        upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
+        points += len(upvotes_recieved)*SCORES['upvote']['recieved']
+        submissions = Submission.objects.filter(username=username)
+        for sub in submissions:
+            if sub.reported:
+                continue
+            points += int(SCORES['submission'] * sub.get_punctuality_scaling())
+        self.user.profile.set_points(points)
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
@@ -109,9 +163,11 @@ class Friend(models.Model):
     class Meta:
         db_table = 'Friends'
 
+
 class Challenge(models.Model):
     description = models.CharField(max_length=200)
     time_for_challenge = models.IntegerField(default=0)
+
 
     verbose_name = 'Challenge'
     verbose_name_plural = 'Challenges'
@@ -126,12 +182,11 @@ class ActiveChallenge(models.Model):
     def create_submission(self, username: str, submission_time: dt, create_submission_instance: bool=True):
         '''
         Creates submission object associated with this challenge in database and syncronises points
-        [previously submission_callback]
         '''
         s = Submission(username=username, active_challenge=self, submission_time=submission_time)
         if create_submission_instance:
             s.save()
-        Profile.add_points(username, int(SCORES['submission']*s.get_punctuality_scaling()))                           
+        Profile.add_points_by_username(username, int(SCORES['submission']*s.get_punctuality_scaling()))                           
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -170,6 +225,8 @@ class Submission(models.Model):
         elif self.reviewed:
             print('{username}\'s post on {date} has been reviewed.'.format(self.username, date))
         else:
+            for u in self.get_upvotes():
+                u.remove_upvote(False)
             self.remove_submission(False)
             self.reported = True
             self.save()
@@ -202,11 +259,12 @@ class Submission(models.Model):
 
     def remove_submission(self, delete_instance: bool=True):
         '''
-        Removes submission object in database (conditional flag) and syncronises points
+        Removes submission object, as well as associated upvote objects,
+        from database (conditional flag) and syncronises points
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
-            Profile.add_points(self.username, -int(points_to_remove))
+            Profile.add_points_by_username(self.username, -int(points_to_remove))
             for upvote in self.get_upvotes():
                 upvote.remove_upvote(delete_instance)
         if delete_instance: self.delete()
@@ -216,20 +274,19 @@ class Submission(models.Model):
         Adds points associated with a submission back (used after submission review)
         '''
         points = SCORES['submission'] * self.get_punctuality_scaling()
-        Profile.add_points(self.username, int(points))
+        Profile.add_points_by_username(self.username, int(points))
         for upvote in self.get_upvotes():
             upvote.reinstate_upvote()
 
     def create_upvote(self, voter_username: str, create_upvote_instance: bool=True):
         '''
         Creates upvote object for this submission in database and syncronises points
-        [previously upvote_callback]
         '''
         u = Upvote(submission=self, voter_username=voter_username)
         if create_upvote_instance:
             u.save()
-        Profile.add_points(self.username, SCORES['upvote']['recieved'])
-        Profile.add_points(voter_username, SCORES['upvote']['given'])
+        Profile.add_points_by_username(self.username, SCORES['upvote']['recieved'])
+        Profile.add_points_by_username(voter_username, SCORES['upvote']['given'])
         
     def get_upvotes(self) -> list:
         '''
@@ -254,19 +311,19 @@ class Upvote(models.Model):
 
     def remove_upvote(self, delete_instance: bool=True):
         '''
-        Removes upvote object in database (conditional flag) and syncronises points
+        Removes upvote object from database (conditional flag) and syncronises points
         '''
         if not self.submission.reported:
-            Profile.add_points(self.voter_username, -SCORES['upvote']['given'])
-            Profile.add_points(self.submission.username, -SCORES['upvote']['recieved'])
+            Profile.add_points_by_username(self.voter_username, -SCORES['upvote']['given'])
+            Profile.add_points_by_username(self.submission.username, -SCORES['upvote']['recieved'])
         if delete_instance: self.delete()
 
     def reinstate_upvote(self): # TODO implement this fix
         '''
         Adds points from an upvote back (used after submission review)
         '''
-        Profile.add_points(self.voter_username, SCORES['upvote']['given'])
-        Profile.add_points(self.submission.username, SCORES['upvote']['recieved'])
+        Profile.add_points_by_username(self.voter_username, SCORES['upvote']['given'])
+        Profile.add_points_by_username(self.submission.username, SCORES['upvote']['recieved'])
 
     verbose_name = 'Upvote'
     verbose_name_plural = 'Upvotes'
