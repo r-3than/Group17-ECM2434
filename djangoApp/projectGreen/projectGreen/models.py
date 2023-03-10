@@ -221,9 +221,9 @@ class Submission(models.Model):
         '''
         date = self.active_challenge.date.strftime('%Y-%m-%d')
         if self.reported:
-            print('{username}\'s post on {date} has already been reported.'.format(self.username, date))
+            print('{}\'s post on {} has already been reported.'.format(self.username, date))
         elif self.reviewed:
-            print('{username}\'s post on {date} has been reviewed.'.format(self.username, date))
+            print('{}\'s post on {} has been reviewed.'.format(self.username, date))
         else:
             for u in self.get_upvotes():
                 u.remove_upvote(False)
@@ -238,9 +238,9 @@ class Submission(models.Model):
         '''
         date = self.active_challenge.date.strftime('%Y-%m-%d')
         if not self.reported:
-            print('{username}\'s post on {date} has not been reported.'.format(self.username, date))
+            print('{}\'s post on {} has not been reported.'.format(self.username, date))
         elif self.reviewed:
-            print('{username}\'s post on {date} has already been reviewed.'.format(self.username, date))
+            print('{}\'s post on {} has already been reviewed.'.format(self.username, date))
         else:
             self.reported = False if is_suitable else True
             self.reviewed = True
@@ -264,6 +264,7 @@ class Submission(models.Model):
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
+            profile = Profile.objects.get(user__username=self.username)
             Profile.add_points_by_username(self.username, -int(points_to_remove))
             for upvote in self.get_upvotes():
                 upvote.remove_upvote(delete_instance)
@@ -311,7 +312,7 @@ class Upvote(models.Model):
 
     def remove_upvote(self, delete_instance: bool=True):
         '''
-        Removes upvote object from database (conditional flag) and syncronises points
+        Removes upvote object from database (conditional flag) and synchronises points
         '''
         if not self.submission.reported:
             Profile.add_points_by_username(self.voter_username, -SCORES['upvote']['given'])
