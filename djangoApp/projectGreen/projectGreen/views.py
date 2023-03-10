@@ -1,5 +1,7 @@
 from sre_constants import SUCCESS
 from django.http import HttpResponse
+from django.shortcuts import redirect
+
 from microsoft_authentication.auth.auth_decorators import microsoft_login_required
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
@@ -10,6 +12,10 @@ import base64 , json
 @csrf_exempt
 def uploadphoto(request):
      if request.method == "POST":
+        if request.user.is_authenticated:
+            print(request.FILES)
+        return redirect('/home/')
+        """
         data=json.loads(request.body)
         print(data)
         img_data = data["img"]
@@ -17,6 +23,8 @@ def uploadphoto(request):
         with open(str(request.user)+".png", "wb") as fh:
             fh.write(img_data)
         return HttpResponse({"success":"true"})
+        """
+
 
 def home(request):
     context = {}

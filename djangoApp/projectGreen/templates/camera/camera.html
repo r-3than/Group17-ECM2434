@@ -1,101 +1,52 @@
-{% if user.is_authenticated %}
-<!DOCTYPE html>
+<!doctype html>
 {% load static %}
 <html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link
-      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css"
-      rel="stylesheet"
-      integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD"
-      crossorigin="anonymous"
-    />
-    <link href="{% static 'css/camera.css' %}" rel="stylesheet" />
-    <link href="{% static 'css/variables.css' %}" rel="stylesheet" />
-  </head>
-  <a>Hello, {{user.email}}</a>
-  <a href="{% url 'microsoft_authentication:microsoft_authentication_logout' %}"
-    >logout</a
-  >
-  <a>click the video feed to save a pic</a>
-  <div>
-    <form method="post" enctype="multipart/form-data" action="/uploadphoto">
-    <label class="custom-file-upload">
-      <input type="file" accept="image/*" capture="camera">
-      Custom Upload
-    </label>
-    <div><button>Submit</button> </div>
-  </form>
-    <video id="playbackvideo" autoplay muted></video>
-    <canvas id="canvas" style="visibility: hidden"> </canvas>
-    <img id="photo" />
-    <a>click the photo to upload a pic</a>
-  </div>
-  <script>
-    document
-      .getElementById("playbackvideo")
-      .addEventListener("click", getImage);
-    video = document.getElementById("playbackvideo");
-    canvas = document.getElementById("canvas");
-    photo = document.getElementById("photo");
-    photo.addEventListener("click", sendImage);
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+        <link href="{% static 'css/camera.css' %}" rel="stylesheet">
+        <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+    </head>
+    <body>
+        <header class="row">
+            <div class="side"></div>
+            <div class="title centre">
+                <a class="title">BeGreen</a>
+                <br>
+                <a class="subtitle">Today's challenge: Visit the Coast!</a>
+            </div>
+            <div class="side">
+                <div class="account">
+                    <div style="height: 80%; padding-left: 50%;">
+                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                    </div>
+                    
+                </div>
+            </div>
+        </header>
+        <div class="center">
 
-    function getImage() {
-      const context = canvas.getContext("2d");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      context.drawImage(video, 0, 0, video.videoWidth, video.videoHeight);
+          <form method="post" enctype="multipart/form-data" action="/uploadphoto/">
+            <div>
+              <label for="upload_pic">Choose file to upload</label>
+              <input
+                type="file"
+                id="upload_pic"
+                name="upload_pic"
+                accept=".jpg, .jpeg, .png"
+                capture="camera" />
+            </div>
+            <div>
+              <button>Submit</button>
+            </div>
+          </form>
+          
+          
+          
+          
 
-      const data = canvas.toDataURL("image/png");
-      photo.setAttribute("src", data);
-      //get frame from stream here and send a post request to backend in django (need db)
-    }
-
-    function sendImage() {
-      fetch("http://localhost:8000/uploadphoto/", {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          Accept: "application/json",
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          img: canvas.toDataURL("image/png"),
-        }),
-      })
-        .then((response) => response.json())
-        .then((response) => console.log(JSON.stringify(response)));
-    }
-
-    var errorCallback = function (e) {
-      console.log("Perms denied!", e);
-    };
-    navigator.getUserMedia =
-      navigator.getUserMedia ||
-      navigator.webkitGetUserMedia ||
-      navigator.mozGetUserMedia ||
-      navigator.msGetUserMedia;
-
-    // Not showing vendor prefixes.
-    navigator.getUserMedia(
-      { video: true, audio: true },
-      function (localMediaStream) {
-        var video = document.querySelector("video");
-        video.srcObject = localMediaStream;
-
-        // Note: onloadedmetadata doesn't fire in Chrome when using it with getUserMedia.
-        // See crbug.com/110938.
-        video.onloadedmetadata = function (e) {
-          // Ready to go. Do some stuff.
-        };
-      },
-      errorCallback
-    );
-  </script>
-  {% else %}
-  <a href="{% url 'microsoft_authentication:microsoft_authentication_login' %}"
-    >login</a
-  >
-  {% endif %}
+      </div>
+        
+    </body>
 </html>
