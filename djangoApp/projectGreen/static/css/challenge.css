@@ -6,7 +6,6 @@ body {
     width: 100vw;
     background-color: var(--exeter-deep-green);
     box-sizing: border-box;
-    /* overflow-x: clip; */
     overflow-y: overlay;
     margin: 0px;
     padding: 0px;
@@ -16,10 +15,6 @@ body {
 body {
     display: flex;
     align-items: center;
-    padding-top: 40px;
-    padding-bottom: 40px;
-    background-color: var(--exeter-deep-green);
-    font-family: "Inter";
 }
 
 div.title {
@@ -42,13 +37,15 @@ div.title {
 }
 
 header {
-    width: 100.6%;
+    width: 100%;
     position: absolute;
     top:0;
     background-color: var(--exeter-deep-green);
     height: 130px; 
     z-index: 1000;
     box-shadow: 1px 5px 10px #202020;
+    margin-left: 0px !important;
+    margin-right: 0px !important;
 }
 
 div.title {
@@ -81,6 +78,7 @@ div.account {
     padding-right: calc(15px + 1.2vw);
     flex-direction: column;
     float: right;
+    align-items: center;
 }
 
 .account .icon {
@@ -90,7 +88,7 @@ div.account {
     color: white;
     text-align: center;
     font-weight: 400;
-    line-height: 94px;
+    line-height: calc(height);
     font-size: 60px;
 }
 
@@ -106,13 +104,13 @@ div.account {
 .centre {
     float: left;
     width: 50%;
-    height: auto;
+    height: 100%;
 }
 
 .side {
     float: left;
     width: 25%;
-    height: auto;
+    height: 100%;
     padding: 0;
 }
 

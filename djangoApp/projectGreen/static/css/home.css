@@ -53,9 +53,10 @@ div.account {
     height: 100%;
     display: flex;
     padding: 7px;
-    padding-right: 15px;
+    padding-right: 20px;
     flex-direction: column;
     float: right;
+    align-items: center;
 }
 
 .account .icon {
@@ -65,8 +66,8 @@ div.account {
     color: white;
     text-align: center;
     font-weight: 400;
-    line-height: 92px;
-    font-size: 64px;
+    line-height: calc(height);
+    font-size: 60px;
 }
 
 .points {
@@ -75,6 +76,7 @@ div.account {
     color: white;
     font-weight: 500;
     text-align: center;
+    font-size: 15px;
 }
 
 main {
@@ -93,6 +95,7 @@ main {
     background-color: #191919;
     color: white;
     width: 66%;
+    min-width: 593px;
     height: auto;
     /* aspect-ratio: 6/5; */
     padding: 15px;
@@ -163,7 +166,7 @@ main {
     margin: 10px;
     position: absolute;
     z-index: 500;
-    right: -8px;
+    right: 8px;
     background-color: var(--exeter-dark-green);
     color: white;
     text-align: center;
@@ -179,7 +182,7 @@ main {
     margin-top: -60px;
     position: absolute;
     top: 60px;
-    left: 8px;
+    left: -8px;
     box-shadow: 1px 5px 12px black;
 }
 
@@ -194,21 +197,43 @@ main {
     padding: 0;
 }
 
+header .centre {
+    width: 60%;
+}
+
+header .side {
+    float: left;
+    width: 20%;
+    height: 100%;
+    padding: 0;
+}
+
 .links {
     background-color: var(--exeter-dark-green);
     color: white;
-    width: 75%;
-    height: 37vh;
+    /* width: 75%; */
+    width: 360px;
+    /* height: 37vh; */
+    height: 360px;
     padding: 6%;
     padding-left: 9%;
     margin: auto;
     position: sticky;
     top: 200px;
-    font-size: 1.3vw;
+    /* font-size: 1.3vw; */
+    font-size: 24px;
     font-weight: 500;
     box-shadow: 1px 5px 10px #202020;
     line-height: 300%;
     overflow-y: auto;
+}
+
+main .left {
+    min-width: 400px;
+}
+
+main > .centre {
+    min-width: 600px;
 }
 
 .links a {

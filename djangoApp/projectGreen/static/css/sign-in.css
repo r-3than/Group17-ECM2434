@@ -40,3 +40,13 @@ a.subtitle {
 .form-signin .form-floating:focus-within {
   z-index: 2;
 }
+
+@media only screen and (max-width: 600px) {
+  a.title {
+    font-size: clamp(72px, 16vw, 96px);
+  }
+  
+  a.subtitle {
+    font-size: clamp(18px, 4vw, 24px);
+  }
+}
