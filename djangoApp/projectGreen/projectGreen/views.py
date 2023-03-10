@@ -16,7 +16,7 @@ from projectGreen.models import Submission
 def uploadphoto(request):
      if request.method == "POST":
         if request.user.is_authenticated:
-            print(request.FILES)
+            print(request.FILES["upload_pic"])
         return redirect('/home/')
         """
         data=json.loads(request.body)
