@@ -3,7 +3,7 @@ import datetime
 import pytz
 from django.test import TestCase
 from django.contrib.auth.models import User
-from projectGreen.models import Profile, Challenge, ActiveChallenge, Submission
+from projectGreen.models import Profile, Challenge, ActiveChallenge, Submission, Upvote
 
 class ProfileTestCase(TestCase):
     def setUp(self):
@@ -66,6 +66,8 @@ class SubmissionTestCase(TestCase):
         user2.save()
         user3 = User(username='cd123', password='unsecure_password')
         user3.save()
+        user4 = User(username='ef123', password='unsecure_password')
+        user4.save()
         challenge = Challenge(description='test challenge', time_for_challenge='20')
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
@@ -139,3 +141,80 @@ class SubmissionTestCase(TestCase):
         self.assertEqual(profile.number_of_submissions_removed, 1)
         assert(submission.reviewed)
         assert(submission.reported)
+
+    def test_remove_submission(self):
+        # Remove submission with delete_instance = False
+        Profile.recalculate_user_points_by_username('ab123')
+        not_reported = Submission.objects.get(username='ab123')
+        not_reported.create_upvote(voter_username='bc123') # Create upvote for the submission
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 22) # Check profile points
+        not_reported.remove_submission(delete_instance=False) # Remove submission
+        self.assertEqual(not_reported.get_upvote_count(), 1) # Upvotes should not be deleted
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 0) # Points should be removed
+
+        # Remove submission with delete_instance = True
+        Profile.recalculate_user_points_by_username('abc123')
+        not_reported = Submission.objects.get(username='abc123')
+        not_reported.create_upvote(voter_username='bc123') # Create upvote for the submission
+        profile = Profile.objects.get(user__username='abc123')
+        self.assertEqual(profile.points, 22) # Check profile points
+        self.assertEqual(len(Submission.objects.all()), 4) # Check total number of submissions
+        not_reported = Submission.objects.get(username='abc123')
+        not_reported.remove_submission(delete_instance=True) # Remove submission
+        self.assertEqual(not_reported.get_upvote_count(), 0) # Upvotes should be deleted
+        profile = Profile.objects.get(user__username='abc123')
+        self.assertEqual(profile.points, 0) # Points should be removed
+        self.assertEqual(len(Submission.objects.all()), 3) # Check total number of submissions
+
+        # Remove submission with reported flag set to True and delete_instance = False
+        Profile.recalculate_user_points_by_username('bc123')
+        reported = Submission.objects.get(username='bc123')
+        reported.create_upvote(voter_username='ab123') # Create upvote for the submission
+        profile = Profile.objects.get(user__username='bc123')
+        self.assertEqual(profile.points, 3) # 2pt for receiving an upvote, 1pt for upvoting another submission
+        self.assertEqual(len(Submission.objects.all()), 3) # Check total number of submissions
+        reported.remove_submission(delete_instance=False) # Remove submission
+        self.assertEqual(reported.get_upvote_count(), 1) # Upvotes should not be deleted
+        profile = Profile.objects.get(user__username='bc123')
+        self.assertEqual(profile.points, 3) # Points should be not be removed
+        self.assertEqual(len(Submission.objects.all()), 3) # Check total number of submissions
+
+        # Remove submission with reported flag set to True and delete_instance = True
+        activechallenge = ActiveChallenge.objects.get(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC))
+        reported = Submission(username='ef123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True)
+        reported.save() # Create new reported submission (not removed)
+        
+        Profile.recalculate_user_points_by_username('ef123')
+        reported = Submission.objects.get(username='ef123')
+        reported.create_upvote(voter_username='ab123') # Create upvote for the submission
+        profile = Profile.objects.get(user__username='ef123')
+        self.assertEqual(profile.points, 2) # Submission reported - only 2pts for upvote
+        self.assertEqual(len(Submission.objects.all()), 4) # Check total number of submissions
+        reported = Submission.objects.get(username='ef123')
+        reported.remove_submission(delete_instance=True) # Remove submission
+        self.assertEqual(len(Submission.objects.all()), 3) # Check total number of submissions
+        Profile.recalculate_user_points_by_username('ef123')
+        profile = Profile.objects.get(user__username='ef123')
+        self.assertEqual(profile.points, 0) # Points should be removed
+
+    def test_reinstate_submission(self):
+        Profile.recalculate_user_points_by_username('ab123')
+        submission = Submission.objects.get(username='ab123')
+        submission.create_upvote(voter_username='bc123') # Create upvote for the submission
+
+        profile = Profile.objects.get(user__username='ab123')
+        #self.assertEqual(profile.points, 22)
+        #print("upvotes: ", submission.get_upvote_count())
+
+        submission.report_submission()
+
+        profile = Profile.objects.get(user__username='ab123')
+        #print("points: ", profile.points)
+        profile = Profile.objects.get(user__username='ab123')
+        #self.assertEqual(profile.points, 0)
+        submission.reviewed = True
+        submission.reinstate_submission()
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 22) 

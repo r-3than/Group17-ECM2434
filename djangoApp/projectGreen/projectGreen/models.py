@@ -260,11 +260,11 @@ class Submission(models.Model):
     def remove_submission(self, delete_instance: bool=True):
         '''
         Removes submission object, as well as associated upvote objects,
-        from database (conditional flag) and syncronises points
+        from database (conditional flag) and synchronises points
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
-            profile = Profile.objects.get(user__username=self.username)
+            #profile = Profile.objects.get(user__username=self.username)
             Profile.add_points_by_username(self.username, -int(points_to_remove))
             for upvote in self.get_upvotes():
                 upvote.remove_upvote(delete_instance)
