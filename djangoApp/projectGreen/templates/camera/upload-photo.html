@@ -1,0 +1,46 @@
+<!doctype html>
+{% load static %}
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+        <link href="{% static 'css/upload-photo.css' %}" rel="stylesheet">
+        <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+    </head>
+    <body>
+        <header class="row">
+            <div class="side"></div>
+            <div class="title centre">
+                <a class="title">BeGreen</a>
+                <br>
+                <a class="subtitle">Today's challenge: Visit the Coast!</a>
+            </div>
+            <div class="side">
+                <div class="account">
+                    <div style="height: 80%; padding-left: 50%;">
+                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                    </div>
+                    
+                </div>
+            </div>
+        </header>
+        <div class="center">
+
+          <form method="post" enctype="multipart/form-data" action="/uploadphoto/">
+            <div>
+              <label for="upload_pic">Choose file to upload</label>
+              <input
+                type="file"
+                id="upload_pic"
+                name="upload_pic"
+                accept=".jpg, .jpeg, .png"
+                capture="camera" />
+            </div>
+            <div>
+              <button>Submit</button>
+            </div>
+          </form>
+      </div> 
+    </body>
+</html>

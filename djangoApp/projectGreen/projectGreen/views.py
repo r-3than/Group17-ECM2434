@@ -1,5 +1,6 @@
 import datetime
 import os
+import re
 from sre_constants import SUCCESS
 import time
 from django.http import HttpResponse
@@ -99,9 +100,20 @@ def challenge(request):
     
 
 def camera(request):
-    template = loader.get_template('camera/camera.html')
+    if is_mobile(request):
+        template = loader.get_template('camera/camera.html')
+    else:
+        template = loader.get_template('camera/upload-photo.html')
     context = {}
     return HttpResponse(template.render(context, request))
+
+def is_mobile(request):
+    MOBILE_AGENT_RE=re.compile(r".*(iphone|mobile|androidtouch)",re.IGNORECASE)
+
+    if MOBILE_AGENT_RE.match(request.META['HTTP_USER_AGENT']):
+        return True
+    else:
+        return False
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names
