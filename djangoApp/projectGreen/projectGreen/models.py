@@ -135,8 +135,24 @@ class Friend(models.Model):
         Creates a pending pair such that the left is the user sending the request
         and the right is the user recieving the request
         '''
-        f = Friend(left_username=from_username, right_username=to_username, pending=True)
-        f.save()
+        try:
+            f = Friend.objects.get(left_username=from_username, right_username=to_username)
+            if f.pending:
+                print('friend request from {} to {} is still pending.'.format(from_username, to_username))
+            else:
+                print('{} and {} are already friends.'.format(from_username, to_username))
+        except Friend.DoesNotExist:
+            try:
+                f = Friend.objects.get(left_username=to_username, right_username=from_username)
+                if f.pending:
+                    #print('friend request from {} to {} is still pending.'.format(to_username, from_username))
+                    f.pending = False
+                    f.save()
+                else:
+                    print('{} and {} are already friends.'.format(from_username, to_username))
+            except:
+                f = Friend(left_username=from_username, right_username=to_username, pending=True)
+                f.save()
 
     @classmethod
     def get_pending_friend_usernames(cls, username: str) -> list[str]:
@@ -302,6 +318,10 @@ class Submission(models.Model):
     verbose_name_plural = 'Submissions'
     class Meta:
         db_table = 'Submissions'
+        constraints = [
+            models.UniqueConstraint(fields=['username','active_challenge'],
+                                    name='single_submission_per_active_challenge')
+        ]
     
 class Upvote(models.Model):
     submission = models.ForeignKey(Submission, models.CASCADE, null=True)
