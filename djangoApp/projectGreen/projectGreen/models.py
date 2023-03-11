@@ -225,8 +225,6 @@ class Submission(models.Model):
         elif self.reviewed:
             print('{}\'s post on {} has been reviewed.'.format(self.username, date))
         else:
-            for u in self.get_upvotes():
-                u.remove_upvote(False)
             self.remove_submission(False)
             self.reported = True
             self.save()
@@ -264,7 +262,6 @@ class Submission(models.Model):
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
-            #profile = Profile.objects.get(user__username=self.username)
             Profile.add_points_by_username(self.username, -int(points_to_remove))
             for upvote in self.get_upvotes():
                 upvote.remove_upvote(delete_instance)

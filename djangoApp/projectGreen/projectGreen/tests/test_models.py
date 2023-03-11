@@ -185,7 +185,6 @@ class SubmissionTestCase(TestCase):
         activechallenge = ActiveChallenge.objects.get(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC))
         reported = Submission(username='ef123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True)
         reported.save() # Create new reported submission (not removed)
-        
         Profile.recalculate_user_points_by_username('ef123')
         reported = Submission.objects.get(username='ef123')
         reported.create_upvote(voter_username='ab123') # Create upvote for the submission
@@ -202,19 +201,40 @@ class SubmissionTestCase(TestCase):
     def test_reinstate_submission(self):
         Profile.recalculate_user_points_by_username('ab123')
         submission = Submission.objects.get(username='ab123')
-        submission.create_upvote(voter_username='bc123') # Create upvote for the submission
-
+        submission.create_upvote(voter_username='cd123')
+        submission.create_upvote(voter_username='bc123') # Create upvotes for the submission
         profile = Profile.objects.get(user__username='ab123')
-        #self.assertEqual(profile.points, 22)
-        #print("upvotes: ", submission.get_upvote_count())
-
+        self.assertEqual(profile.points, 24) # 0pts because submission reported
         submission.report_submission()
-
         profile = Profile.objects.get(user__username='ab123')
-        #print("points: ", profile.points)
-        profile = Profile.objects.get(user__username='ab123')
-        #self.assertEqual(profile.points, 0)
-        submission.reviewed = True
+        self.assertEqual(profile.points, 0) # 0pts because submission reported
         submission.reinstate_submission()
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 22) 
+        self.assertEqual(profile.points, 24) # Reinstated points
+
+    def test_create_upvote(self):
+        Profile.recalculate_user_points_by_username('ab123')
+        submission = Submission.objects.get(username='ab123')
+        submission.create_upvote(voter_username='cd123') # Create upvote
+        self.assertEqual(submission.get_upvote_count(), 1)
+        self.assertEqual(len(Upvote.objects.all()), 1) # Check upvote exists
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 22) # Check received upvote points
+        profile = Profile.objects.get(user__username='cd123')
+        self.assertEqual(profile.points, 1) # Check given upvote points
+
+    def test_get_upvotes(self):
+        submission = Submission.objects.get(username='ab123')
+        submission.create_upvote(voter_username='cd123')
+        submission.create_upvote(voter_username='bc123') # Create upvotes
+        upvote1 = Upvote.objects.get(voter_username='cd123')
+        upvote2 = Upvote.objects.get(voter_username='bc123')
+        self.assertEqual(len(submission.get_upvotes()), 2)
+        self.assertEqual(submission.get_upvotes()[0], upvote1)
+        self.assertEqual(submission.get_upvotes()[1], upvote2)
+
+    def test_get_upvote_count(self):
+        submission = Submission.objects.get(username='ab123')
+        submission.create_upvote(voter_username='cd123')
+        submission.create_upvote(voter_username='bc123') # Create upvotes
+        self.assertEqual(submission.get_upvote_count(), 2)
