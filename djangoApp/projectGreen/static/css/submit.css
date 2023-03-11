@@ -6,7 +6,6 @@ body {
     width: 100vw;
     background-color: var(--exeter-deep-green);
     box-sizing: border-box;
-    /* overflow-x: clip; */
     overflow-y: overlay;
     margin: 0px;
     padding: 0px;
@@ -16,25 +15,11 @@ body {
 body {
     display: flex;
     align-items: center;
-    padding-top: 40px;
-    padding-bottom: 40px;
-    background-color: var(--exeter-deep-green);
-    font-family: "Inter";
 }
 
 div.title {
   line-height: 200%;
 }
-
-.form-signin {
-    max-width: 330px;
-    padding: 15px;
-}
-
-.form-signin .form-floating:focus-within {
-  z-index: 2;
-}
-
 .row:after {
     content: "";
     display: table;
@@ -46,7 +31,7 @@ header {
     position: absolute;
     top:0;
     background-color: var(--exeter-deep-green);
-    height: clamp(75px, 13vw, 130px);
+    height: 130px; 
     z-index: 1000;
     box-shadow: 1px 5px 10px #202020;
     margin-left: 0px !important;
@@ -55,7 +40,7 @@ header {
 
 div.title {
     text-align: center;
-    line-height: 100%;
+    line-height: 250%;
     display: flex;
     align-items: center;
 }
@@ -63,7 +48,7 @@ div.title {
 a.title {
     color: var(--exeter-dark-green);
     font-weight: 700;
-    font-size: clamp(45px, 6.4vw, 62px);
+    font-size: 62px;
     text-decoration: none;
     margin: auto;
 }
@@ -71,8 +56,11 @@ a.title {
 a.subtitle {
     color: white ;
     font-weight: 700;
-    font-size: clamp(18px, 2.5vw, 24px);
+    font-size: 24px;
     text-decoration: none;
+    display: block;
+    margin-left: -50px;
+    width: 400px;
 }
 
 div.account {
@@ -83,6 +71,7 @@ div.account {
     padding-right: calc(15px + 1.2vw);
     flex-direction: column;
     float: right;
+    align-items: center;
 }
 
 .account .icon {
@@ -93,23 +82,51 @@ div.account {
     text-align: center;
     font-weight: 400;
     line-height: calc(height);
-    font-size: clamp(30px, 6vw, 60px);
-    float: right;
+    font-size: 60px;
 }
 
 .points {
     width: 110%;
-    padding-left: 60%;
+    padding-left: 48%;
     color: white;
     font-weight: 540;
     text-align: center;
-    font-size: 12px;
+    font-size: 15px;
 }
 
 .centre {
     float: left;
     width: 50%;
     height: 100%;
+}
+
+form {
+    max-width: 330px;
+    padding: 15px;
+}
+
+label {
+    height: 80px;
+    background-color: var(--exeter-dark-green);
+    color: white;
+    padding: 0.5rem;
+    font-family: Inter;
+    font-size: 20px;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+label p {
+    width: 100%;
+    margin: auto;
+    display: block;
+}
+
+#submission {
+    max-height: 200px;
+    max-width: 300px;
 }
 
 .side {

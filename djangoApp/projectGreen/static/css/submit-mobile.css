@@ -6,7 +6,6 @@ body {
     width: 100vw;
     background-color: var(--exeter-deep-green);
     box-sizing: border-box;
-    /* overflow-x: clip; */
     overflow-y: overlay;
     margin: 0px;
     padding: 0px;
@@ -16,25 +15,11 @@ body {
 body {
     display: flex;
     align-items: center;
-    padding-top: 40px;
-    padding-bottom: 40px;
-    background-color: var(--exeter-deep-green);
-    font-family: "Inter";
 }
 
 div.title {
   line-height: 200%;
 }
-
-.form-signin {
-    max-width: 330px;
-    padding: 15px;
-}
-
-.form-signin .form-floating:focus-within {
-  z-index: 2;
-}
-
 .row:after {
     content: "";
     display: table;
@@ -73,6 +58,9 @@ a.subtitle {
     font-weight: 700;
     font-size: clamp(18px, 2.5vw, 24px);
     text-decoration: none;
+    width: 390px !important;
+    display: block;
+    margin-left: -45px;
 }
 
 div.account {
@@ -110,6 +98,36 @@ div.account {
     float: left;
     width: 50%;
     height: 100%;
+}
+
+form {
+    max-width: 330px;
+    padding: 15px;
+}
+
+
+label {
+    height: 80px;
+    background-color: var(--exeter-dark-green);
+    color: white;
+    padding: 0.5rem;
+    font-family: Inter;
+    font-size: 20px;
+    margin-top: 1rem;
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+label p {
+    width: 100%;
+    margin: auto;
+    display: block;
+}
+
+#submission {
+    max-height: 200px;
+    max-width: 300px;
 }
 
 .side {

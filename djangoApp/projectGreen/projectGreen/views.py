@@ -18,7 +18,6 @@ from projectGreen.models import ActiveChallenge, Submission
 
 @csrf_exempt
 def uploadphoto(request):
-     if request.method == "POST":
         if request.user.is_authenticated:
             upload=request.FILES["upload_pic"]
             picture_bytes = b""
@@ -33,15 +32,6 @@ def uploadphoto(request):
             submission_time=datetime.datetime.now())
             newSubmission.save()
         return redirect('/home/')
-        """
-        data=json.loads(request.body)
-        print(data)
-        img_data = data["img"]
-        img_data = base64.b64decode(img_data.split(",")[1])
-        with open(str(request.user)+".png", "wb") as fh:
-            fh.write(img_data)
-        return HttpResponse({"success":"true"})
-        """
 
 
 def home(request):
@@ -99,13 +89,16 @@ def challenge(request):
         return HttpResponse(template.render(context, request))
     
 
-def camera(request):
-    if is_mobile(request):
-        template = loader.get_template('camera/camera.html')
-    else:
-        template = loader.get_template('camera/upload-photo.html')
+def submit(request):
     context = {}
-    return HttpResponse(template.render(context, request))
+    if request.user.is_authenticated:
+        template = loader.get_template('camera/submit.html')  
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+    
 
 def is_mobile(request):
     MOBILE_AGENT_RE=re.compile(r".*(iphone|mobile|androidtouch)",re.IGNORECASE)
