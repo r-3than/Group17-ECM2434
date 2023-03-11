@@ -62,11 +62,11 @@ def home(request):
                     submission_time_form = submission.submission_time.strftime("%B %d, %H:%M")
             else:
                 submission_time_form = submission.submission_time.strftime("%H:%M")
-
+            photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
             # Dictionary structure to pass to template 
             submissions_info[submission.id] = {'submission_username': submission.username,
                                                'submission_time': submission_time_form,
-                                               'submission_photo': submission.photo_bytes,
+                                               'submission_photo': photo_b64,
                                                'submission_upvote_count': submission.get_upvote_count()
                                             }
         

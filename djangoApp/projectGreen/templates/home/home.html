@@ -45,9 +45,9 @@
                     <div class="row">
                         <div class="side"></div>
                         <div class="centre">
-                            <div class="icon rounded-circle">T</div>
+                            <div class="icon rounded-circle">{{info.submission_username|make_list|first| capfirst}}</div>
                             <div class="img rounded-5">
-                                <img src="{% static 'img/Post1.jpg' %}">
+                                <img src="{{ info.submission_photo }}">
                             </div>
                         </div>
                         <div class="side interactions">
