@@ -58,6 +58,7 @@ def home(request):
             current_date = date.today().strftime("%d:%m:%Y")
             current_year = date.today().strftime("%Y")
 
+
             # Only display submission year if different from current year
             if submission_year != current_year:
                 submission_time_form = submission.submission_time.strftime("%B %d, %Y")
@@ -71,11 +72,14 @@ def home(request):
                     submission_time_form = submission.submission_time.strftime("%B %d, %H:%M")
             else:
                 submission_time_form = submission.submission_time.strftime("%H:%M")
-
+            if submission.photo_bytes != None:
+                photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
+            else:
+                photo_b64 = "data:image/png;base64,"
             # Dictionary structure to pass to template 
             submissions_info[submission.id] = {'submission_username': submission.username,
                                                'submission_time': submission_time_form,
-                                               'submission_photo': submission.photo_bytes,
+                                               'submission_photo': photo_b64,
                                                'submission_upvote_count': submission.get_upvote_count()
                                             }
         
@@ -122,7 +126,7 @@ def is_mobile(request):
         return True
     else:
         return False
-        
+
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names
 def specific_group_access(request):
