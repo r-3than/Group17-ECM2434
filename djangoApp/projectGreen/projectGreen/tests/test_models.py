@@ -238,3 +238,56 @@ class SubmissionTestCase(TestCase):
         submission.create_upvote(voter_username='cd123')
         submission.create_upvote(voter_username='bc123') # Create upvotes
         self.assertEqual(submission.get_upvote_count(), 2)
+
+class UpvoteTestCase(TestCase):
+    def setUp(self):
+        user = User(username='ab123', password='unsecure_password')
+        user.save()
+        user2 = User(username='bc123', password='unsecure_password')
+        user2.save()
+        user3 = User(username='cd123', password='unsecure_password')
+        user3.save()
+        challenge = Challenge(description='test challenge', time_for_challenge='20')
+        challenge.save()
+        activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
+        activechallenge.save()
+        submission = Submission(username='ab123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
+        submission.save()
+        upvote = Upvote(submission=submission, voter_username='bc123')
+        upvote.save()
+        upvote = Upvote(submission=submission, voter_username='cd123')
+        upvote.save()
+
+    def test_remove_upvote(self):
+        Profile.recalculate_user_points_by_username('ab123')
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 24)
+        self.assertEqual(len(Upvote.objects.all()), 2)
+
+        # Remove upvote with delete_instance = False
+        upvote = Upvote.objects.get(voter_username='bc123')
+        upvote.remove_upvote(delete_instance=False)
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 22) # Points should be removed
+        self.assertEqual(len(Upvote.objects.all()), 2) # Upvote should still exist
+
+        # Remove upvote with delete_instance = True
+        upvote = Upvote.objects.get(voter_username='cd123')
+        upvote.remove_upvote(delete_instance=True)
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 20) # Points should be removed
+        self.assertEqual(len(Upvote.objects.all()), 1) # Upvote should still exist
+
+    def test_reinstate_upvote(self):
+        Profile.recalculate_user_points_by_username('ab123')
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 24)
+        self.assertEqual(len(Upvote.objects.all()), 2)
+
+        upvote = Upvote.objects.get(voter_username='bc123')
+        upvote.remove_upvote(delete_instance=False)
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 22) # Points should be removed
+        upvote.reinstate_upvote()
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 24) # Points should be reinstated
