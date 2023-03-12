@@ -3,7 +3,7 @@ import datetime
 import pytz
 from django.test import TestCase
 from django.contrib.auth.models import User
-from projectGreen.models import Profile, Challenge, ActiveChallenge, Submission, Upvote
+from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote
 
 class ProfileTestCase(TestCase):
     def setUp(self):
@@ -38,6 +38,62 @@ class ProfileTestCase(TestCase):
         profile.add_points(10)
         self.assertEqual(profile.points, 20, 'add_points failed')
 
+class FriendTestCase(TestCase):
+    def setUp(self):
+        for un in ['ab123','abc123','bc123']:
+            user = User(username=un, password='unsecure_password')
+            user.save()
+        pending_friend = Friend(left_username='ab123',right_username='abc123',pending=True)
+        pending_friend.save() # from ab123 to abc123
+        friend = Friend(left_username='ab123',right_username='bc123',pending=False)
+        friend.save()
+
+    def test_get_pending_friends(self):
+        pending_friend_usernames = Friend.get_pending_friend_usernames('abc123')
+        self.assertEqual(['ab123'], pending_friend_usernames)
+        pending_friend_usernames = Friend.get_pending_friend_usernames('ab123')
+        self.assertEqual([], pending_friend_usernames)
+
+    def test_get_friends(self):
+        friend_usernames = Friend.get_friend_usernames('ab123')
+        self.assertEqual(['bc123'], friend_usernames)
+
+    def test_create_friend_request(self):
+        # attempts to create friend connection between non-existient users
+        Friend.create_friend_request('cd123','ef123')
+        with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - neither user exists'):
+            Friend.objects.get(left_username='cd123',right_username='ef123')
+        with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - neither user exists'):
+            Friend.objects.get(left_username='ef123',right_username='cd123')
+        # attempts to create friend connection between existient and non-existient users
+        Friend.create_friend_request('ab123','ef123')
+        with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - to non-existient user'):
+            Friend.objects.get(left_username='ab123',right_username='ef123')
+        with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - to non-existient user (reverse)'):
+            Friend.objects.get(left_username='ef123',right_username='ab123')
+        # reverse direction
+        Friend.create_friend_request('ef123','ab123')
+        with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - from non-existient user (reverse)'):
+            Friend.objects.get(left_username='ab123',right_username='ef123')
+        with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - from non-existient user'):
+            Friend.objects.get(left_username='ef123',right_username='ab123')
+
+        # removes manual friend reqest (from setUp)
+        f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        f.delete()
+        self.assertEqual([], Friend.get_pending_friend_usernames('ab123'))
+        self.assertEqual([], Friend.get_pending_friend_usernames('abc123'))
+        
+        # creates friend request using class method and accepts
+        Friend.create_friend_request('ab123','abc123')
+        f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        f.pending = False
+        f.save()
+        self.assertEqual([], Friend.get_pending_friend_usernames('ab123'), 'residual friend request')
+        self.assertEqual([], Friend.get_pending_friend_usernames('abc123'), 'residual friend request')
+        self.assertEqual(['bc123','abc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
+        self.assertEqual(['ab123'], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
+        self.assertEqual(['ab123'], Friend.get_friend_usernames('bc123'), 'bc123 friend list incorrect')
 
 class ActiveChallengeTestCase(TestCase):
     def setUp(self):
@@ -58,28 +114,21 @@ class ActiveChallengeTestCase(TestCase):
 
 class SubmissionTestCase(TestCase):
     def setUp(self):
-        user = User(username='ab123', password='unsecure_password')
-        user.save()
-        user = User(username='abc123', password='unsecure_password')
-        user.save()
-        user2 = User(username='bc123', password='unsecure_password')
-        user2.save()
-        user3 = User(username='cd123', password='unsecure_password')
-        user3.save()
-        user4 = User(username='ef123', password='unsecure_password')
-        user4.save()
+        for un in ['ab123','abc123','bc123','cd123','ef123']:
+            user = User(username=un, password='unsecure_password')
+            user.save()
         challenge = Challenge(description='test challenge', time_for_challenge='20')
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
-        submission = Submission(username='ab123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
-        submission.save()
-        submission2 = Submission(username='abc123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
-        submission2.save()
-        reported_submission = Submission(username='bc123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True)
-        reported_submission.save()
-        reviewed_submission = Submission(username='cd123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reviewed=True)
-        reviewed_submission.save()
+        for un in ['ab123','abc123']:
+            submission = Submission(username=un, active_challenge=activechallenge,
+                                    submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
+            submission.save()
+        for un in ['bc123','cd123']:
+            reported_submission = Submission(username=un, active_challenge=activechallenge,
+                                            submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True)
+            reported_submission.save()
 
     def test_get_minutes_late(self):
         submission = Submission.objects.get(username='ab123')

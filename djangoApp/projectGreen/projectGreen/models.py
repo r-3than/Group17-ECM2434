@@ -2,6 +2,9 @@ from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime as dt
 import math
+import logging
+
+LOGGER = logging.getLogger(__name__)
 
 USERNAME_MAX_LENGTH = 20
 SCORES = {'submission':10, 'upvote':{'given':1, 'recieved':2}}
@@ -135,24 +138,37 @@ class Friend(models.Model):
         Creates a pending pair such that the left is the user sending the request
         and the right is the user recieving the request
         '''
+        # checks that users exist
         try:
+            User.objects.get(username=from_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(from_username))
+            return
+        try:
+            User.objects.get(username=to_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(to_username))
+            return
+        
+        try: # check if friend object already exists
             f = Friend.objects.get(left_username=from_username, right_username=to_username)
             if f.pending:
-                print('friend request from {} to {} is still pending.'.format(from_username, to_username))
+                LOGGER.warning('friend request from {} to {} is still pending.'.format(from_username, to_username))
             else:
-                print('{} and {} are already friends.'.format(from_username, to_username))
+                LOGGER.warning('{} and {} are already friends.'.format(from_username, to_username))
+            return
         except Friend.DoesNotExist:
-            try:
-                f = Friend.objects.get(left_username=to_username, right_username=from_username)
-                if f.pending:
-                    #print('friend request from {} to {} is still pending.'.format(to_username, from_username))
-                    f.pending = False
-                    f.save()
-                else:
-                    print('{} and {} are already friends.'.format(from_username, to_username))
-            except:
-                f = Friend(left_username=from_username, right_username=to_username, pending=True)
+            pass
+        try: # check if friend object already exists (alternate direction)
+            f = Friend.objects.get(left_username=to_username, right_username=from_username)
+            if f.pending:
+                f.pending = False
                 f.save()
+            else:
+                LOGGER.warning('{} and {} are already friends.'.format(from_username, to_username))
+        except Friend.DoesNotExist: # creates friend object
+            f = Friend(left_username=from_username, right_username=to_username, pending=True)
+            f.save()
 
     @classmethod
     def get_pending_friend_usernames(cls, username: str) -> list[str]:
@@ -160,7 +176,7 @@ class Friend(models.Model):
         Fetchs all friend connections to a user flagged as pending
         i.e. outstanding friend requests
         '''
-        friend_requests = Friend.objects.filter(right_username=username)
+        friend_requests = Friend.objects.filter(right_username=username, pending=True)
         return [f.left_username for f in friend_requests]
 
     @classmethod
@@ -237,9 +253,9 @@ class Submission(models.Model):
         '''
         date = self.active_challenge.date.strftime('%Y-%m-%d')
         if self.reported:
-            print('{}\'s post on {} has already been reported.'.format(self.username, date))
+            LOGGER.warning('{}\'s post on {} has already been reported.'.format(self.username, date))
         elif self.reviewed:
-            print('{}\'s post on {} has been reviewed.'.format(self.username, date))
+            LOGGER.warning('{}\'s post on {} has been reviewed.'.format(self.username, date))
         else:
             self.remove_submission(False)
             self.reported = True
@@ -252,9 +268,9 @@ class Submission(models.Model):
         '''
         date = self.active_challenge.date.strftime('%Y-%m-%d')
         if not self.reported:
-            print('{}\'s post on {} has not been reported.'.format(self.username, date))
+            LOGGER.warning('{}\'s post on {} has not been reported.'.format(self.username, date))
         elif self.reviewed:
-            print('{}\'s post on {} has already been reviewed.'.format(self.username, date))
+            LOGGER.warning('{}\'s post on {} has already been reviewed.'.format(self.username, date))
         else:
             self.reported = False if is_suitable else True
             self.reviewed = True
