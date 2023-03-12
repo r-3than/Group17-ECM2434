@@ -2,7 +2,9 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote
 from datetime import datetime
+import logging
 
+LOGGER = logging.getLogger('django')
 
 @admin.action(description='Publish challenge')
 def publish_challenge(modeladmin, request, queryset):
@@ -21,7 +23,7 @@ def publish_challenge(modeladmin, request, queryset):
         try:
             user.email_user('Time to BeGreen!',message, 'djangotestemail31@gmail.com')
         except:
-            print("Message to ", user.email, "failed to send.")
+            LOGGER.error("Message to ", user.email, "failed to send.")
 
 
 @admin.action(description='Resynchronise Points')

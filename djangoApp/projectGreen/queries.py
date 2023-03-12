@@ -1,3 +1,9 @@
+'''
+DEPRECATED (for security reasons)
+These are residual functions from the initial pure SQL database - models.py is now being used.
+The Queries class should still be usable with the correct input queries for the new database structure.
+'''
+
 import sqlite3
 
 DATABASE_PATH = "db.sqlite3"
@@ -27,6 +33,7 @@ class Queries:
 		connection.close()
 
 
+# The following functions are deprecated - more specifically, the queries are insecure.
 def add_user(email, name, superuser):
 	username = email.split('@')
 	query = "INSERT INTO Users VALUES ('"+ email + "','" + username[0] + "','" + name + "','" + superuser + "');"
