@@ -1,6 +1,9 @@
-# TEMPORARY FILE FOR TESTING PURPOSES
-
 '''
+DEPRECATED (by redundancy)
+The email_user() functionality provided by the inbuilt
+django.contrib.auth.models.User model is now used.
+
+Original file docstring:
 Emails through SMTP
 Works with a test email address (djangotestemail31@gmail.com)
 Password is an "App Password" (used by gmail)
