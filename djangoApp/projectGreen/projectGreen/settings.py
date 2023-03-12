@@ -26,6 +26,44 @@ SECRET_KEY = 'django-insecure-*f-8r*xtx6mljgv8pdcp^^)z&y&80r1p_iyf!y_lf=*0600$ca
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file_app': {
+            'class': 'logging.FileHandler',
+            'filename': 'projectGreen_log.log',
+            'formatter': 'simple',
+        },
+        'file_global': {
+            'class': 'logging.FileHandler',
+            'filename': 'django_debug.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'projectGreen.models': {
+            'level': 'WARNING',
+            'handlers': ['file_app'],
+        },
+        'django': {
+            'level': 'DEBUG',
+            'handlers': ['file_global'],
+            'propogate': True,
+        },
+    },
+    'formatters': {
+        'simple': {
+            'format': '{asctime} [{levelname}]: {message}',
+            'style': '{',
+        },
+        'verbose': {
+            'format': '{asctime} [{name} {levelname} IN {module}]: {message}',
+            'style': '{',
+        },
+    },
+}
+
 ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com","localhost"]
 CSRF_TRUSTED_ORIGINS = ['https://projectgreen.grayitsolutions.com',"http://localhost:8000"]
 
