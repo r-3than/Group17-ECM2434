@@ -43,7 +43,7 @@ LOGGING = {
     },
     'loggers': {
         'projectGreen.models': {
-            'level': 'WARNING',
+            'level': 'INFO',
             'handlers': ['file_app'],
         },
         'django': {
@@ -198,3 +198,5 @@ STATICFILES_DIRS = (
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
+
+PROFANITY_FILTER_SOURCE_URL = 'https://www.cs.cmu.edu/~biglou/resources/bad-words.txt'

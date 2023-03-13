@@ -3,26 +3,35 @@ from django.contrib.auth.models import User
 from datetime import datetime as dt
 import math
 import logging
+import urllib.request
+from projectGreen.settings import PROFANITY_FILTER_SOURCE_URL
 
 LOGGER = logging.getLogger(__name__)
 
 USERNAME_MAX_LENGTH = 20
-SCORES = {'submission':10, 'upvote':{'given':1, 'recieved':2}}
+SCORES = {'submission':20, 'upvote':{'given':1, 'recieved':2}, 'comment':{'given':5, 'recieved':8}}
 
-def punctuality_scaling(time_for_challenge: int, minutes_late: int):
+def punctuality_scaling(time_for_challenge: int, minutes_late: int) -> int:
     '''
     Used to scale points based on "lateness" of submission
     max ~= sqrt(time_for_challenge); min = 1
     '''
     return round(math.sqrt(max(time_for_challenge-minutes_late, 0)+1))
 
+def load_profanity_file() -> list[str]:
+    url_stream = urllib.request.urlopen(PROFANITY_FILTER_SOURCE_URL)
+    LOGGER.info('loaded profanity file from {}'.format(PROFANITY_FILTER_SOURCE_URL))
+    return [line.decode().strip('\n') for line in url_stream.readlines()]
+
+WORDS_TO_FILTER = load_profanity_file()
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField(default=0)
     number_of_submissions_removed = models.IntegerField(default=0)
+    number_of_comments_removed = models.IntegerField(default=0)
 
-    def user_data(self, fetch: bool=True, delete: bool=False):
+    def user_data(self, fetch: bool=True, delete: bool=False) -> dict:
         '''
         Can fetch all data related to a single user
         Will delete all this data if delete flag is set
@@ -33,9 +42,12 @@ class Profile(models.Model):
         data['friends'] = Friend.objects.filter(left_username=u.username) + Friend.objects.filter(right_username=u.username)
         data['submissions'] = Submission.objects.filter(user=u)
         data['upvotes']['given'] = Upvote.objects.filter(voter_username=u.username)
+        data['comments']['given'] = Comment.objects.filter(comment_username=u.username)
         data['upvotes']['recieved'] = []
+        data['comments']['recieved'] = []
         for sub in data['submissions']:
             data['upvotes']['recieved'].append(sub.get_upvotes())
+            data['comments']['recieved'].append(sub.get_comments())
         if delete:
             for sub in data['submissions']:
                 sub.remove_submission()
@@ -101,7 +113,7 @@ class Profile(models.Model):
         for sub in submissions:
             if sub.reported:
                 continue
-            points += int(SCORES['submission'] * sub.get_punctuality_scaling())
+            points += SCORES['submission'] * sub.get_punctuality_scaling()
         Profile.set_points_by_username(username, points)
 
     def recalculate_user_points(self):
@@ -119,7 +131,7 @@ class Profile(models.Model):
         for sub in submissions:
             if sub.reported:
                 continue
-            points += int(SCORES['submission'] * sub.get_punctuality_scaling())
+            points += SCORES['submission'] * sub.get_punctuality_scaling()
         self.user.profile.set_points(points)
 
     verbose_name = 'Profile'
@@ -189,6 +201,18 @@ class Friend(models.Model):
         friends_right = Friend.objects.filter(right_username=username, pending=False)
         all_friends = friends + [friend.left_username for friend in friends_right]
         return all_friends
+    
+    @classmethod
+    def get_friend_post_count(cls, username: str, active_challenge: 'ActiveChallenge') -> int:
+        friend_usernames = Friend.get_friend_usernames(username)
+        valid_submissions = []
+        for un in friend_usernames:
+            try:
+                s = Submission.objects.get(username=un, active_challenge=active_challenge, reported=False)
+                valid_submissions.append(s)
+            except Submission.DoesNotExist:
+                pass
+        return len(valid_submissions)
 
     verbose_name = 'Friend'
     verbose_name_plural = 'Friends'
@@ -199,7 +223,6 @@ class Friend(models.Model):
 class Challenge(models.Model):
     description = models.CharField(max_length=200)
     time_for_challenge = models.IntegerField(default=0)
-
 
     verbose_name = 'Challenge'
     verbose_name_plural = 'Challenges'
@@ -218,7 +241,11 @@ class ActiveChallenge(models.Model):
         s = Submission(username=username, active_challenge=self, submission_time=submission_time)
         if create_submission_instance:
             s.save()
-        Profile.add_points_by_username(username, int(SCORES['submission']*s.get_punctuality_scaling()))                           
+        Profile.add_points_by_username(username, SCORES['submission']*s.get_punctuality_scaling())                         
+
+    @classmethod
+    def get_last_active_challenge(cls) -> 'ActiveChallenge':
+        return ActiveChallenge.objects.latest('date')
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -294,19 +321,23 @@ class Submission(models.Model):
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
-            Profile.add_points_by_username(self.username, -int(points_to_remove))
+            Profile.add_points_by_username(self.username, -points_to_remove)
             for upvote in self.get_upvotes():
                 upvote.remove_upvote(delete_instance)
+            for comment in self.get_comments():
+                comment.remove_comment(delete_instance)
         if delete_instance: self.delete()
 
-    def reinstate_submission(self): # TODO implement this fix
+    def reinstate_submission(self):
         '''
         Adds points associated with a submission back (used after submission review)
         '''
         points = SCORES['submission'] * self.get_punctuality_scaling()
-        Profile.add_points_by_username(self.username, int(points))
+        Profile.add_points_by_username(self.username, points)
         for upvote in self.get_upvotes():
             upvote.reinstate_upvote()
+        for comment in self.get_comments():
+            comment.reinstate_comment()
 
     def create_upvote(self, voter_username: str, create_upvote_instance: bool=True):
         '''
@@ -317,18 +348,44 @@ class Submission(models.Model):
             u.save()
         Profile.add_points_by_username(self.username, SCORES['upvote']['recieved'])
         Profile.add_points_by_username(voter_username, SCORES['upvote']['given'])
+
+    def create_comment(self, comment_username: str, comment_content: str, create_comment_instance: bool=True):
+        '''
+        Creates comment object for this submission in database and syncronises points
+        '''
+        u = Comment(submission=self, comment_username=comment_username, content=comment_content)
+        if create_comment_instance:
+            u.save()
+        Profile.add_points_by_username(self.username, SCORES['comment']['recieved'])
+        Profile.add_points_by_username(comment_username, SCORES['comment']['given'])
+        if u.inappropriate_language_filter():
+            u.report_comment()
         
-    def get_upvotes(self) -> list:
+    def get_upvotes(self) -> list['Upvote']:
         '''
         Gets list of Upvotes for this submission
         '''
         return Upvote.objects.filter(submission=self)
+    
+    def get_comments(self) -> list['Comment']:
+        '''
+        Gets list of Comments for this submission
+        Reported comments are excluded from this list
+        '''
+        return Comment.objects.filter(submission=self, reported=False)
     
     def get_upvote_count(self) -> int:
         '''
         Gets the number of Upvotes for a submission
         '''
         return len(self.get_upvotes())
+    
+    def get_comment_count(self) -> int:
+        '''
+        Gets the number of Comments for a submission
+        Reported comments are excluded from this count
+        '''
+        return len(self.get_comments(False))
 
     verbose_name = 'Submission'
     verbose_name_plural = 'Submissions'
@@ -352,7 +409,7 @@ class Upvote(models.Model):
             Profile.add_points_by_username(self.submission.username, -SCORES['upvote']['recieved'])
         if delete_instance: self.delete()
 
-    def reinstate_upvote(self): # TODO implement this fix
+    def reinstate_upvote(self):
         '''
         Adds points from an upvote back (used after submission review)
         '''
@@ -363,3 +420,77 @@ class Upvote(models.Model):
     verbose_name_plural = 'Upvotes'
     class Meta:
         db_table = 'Upvotes'
+
+class Comment(models.Model):
+    submission = models.ForeignKey(Submission, models.CASCADE, null=True)
+    comment_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+    content = models.CharField(max_length=256)
+    reported = models.BooleanField(default=False)
+    reviewed = models.BooleanField(default=False)
+
+    def report_comment(self):
+        '''
+        Marks a comment as reported - it will not be
+        displayed on a post while reported == True
+        A comment cannot be re-reported (once reviewed)
+        Points are updated accordingly
+        '''
+        date = self.submission.active_challenge.date.strftime('%Y-%m-%d')
+        if self.reported:
+            LOGGER.warning('{}\'s comment on {}\' post (on {}) has already been reported.'.format(self.comment_username, self.submission.username, date))
+        elif self.reviewed:
+            LOGGER.warning('{}\'s comment on {}\' post (on {}) has been reviewed.'.format(self.comment_username, self.submission.username, date))
+        else:
+            self.remove_comment(False)
+            self.reported = True
+            self.save()
+
+    def review_comment(self, is_suitable: bool):
+        '''
+        Sets reported to False if the comment is deemed suitable and points are reinstated
+        Otherwise, the comment is deleted, and their "removed comment" count is incremented
+        '''
+        date = self.submission.active_challenge.date.strftime('%Y-%m-%d')
+        if not self.reported:
+            LOGGER.warning('{}\'s comment on {}\' post (on {}) has not been reported.'.format(self.comment_username, self.submission.username, date))
+        elif self.reviewed:
+            LOGGER.warning('{}\'s comment on {}\' post (on {}) has already been reviewed.'.format(self.comment_username, self.submission.username, date))
+        else:
+            self.reported = False if is_suitable else True
+            self.reviewed = True
+            self.save()
+            if is_suitable:
+                self.reinstate_comment()
+            else:
+                u = User.objects.get(username=self.username)
+                try:
+                    p = Profile.objects.get(user=u)
+                    p.number_of_comments_removed += 1
+                except Profile.DoesNotExist:
+                    p = Profile(user=u, number_of_comments_removed=1)
+                p.save()
+                self.delete()
+
+    def remove_comment(self, delete_instance: bool=True):
+        '''
+        Removes comment object from database (conditional flag) and synchronises points
+        '''
+        if not self.submission.reported or not self.reported:
+            Profile.add_points_by_username(self.comment_username, -SCORES['comment']['given'])
+            Profile.add_points_by_username(self.submission.username, -SCORES['comment']['recieved'])
+        if delete_instance: self.delete()
+
+    def reinstate_comment(self):
+        '''
+        Adds points from an comment back (used after submission review)
+        '''
+        if not self.reported:
+            Profile.add_points_by_username(self.comment_username, SCORES['comment']['given'])
+            Profile.add_points_by_username(self.submission.username, SCORES['comment']['recieved'])
+
+    def inappropriate_language_filter(self) -> bool:
+        for word in WORDS_TO_FILTER:
+            if word in self.content:
+                LOGGER.warning('flagged inappropriate word "{}" in {}\'s comment'.format(word, self.comment_username))
+                return True
+        return False
