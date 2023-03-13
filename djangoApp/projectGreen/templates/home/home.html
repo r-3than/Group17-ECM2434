@@ -55,7 +55,13 @@
                                 <img id="upvote{{info.submission_id}}" class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
                                 <script>
                                     upvotebutton = document.getElementById("upvote{{info.submission_id}}");
+                                    var has_liked = "{{info.submission_has_liked}}";
+                                    console.log(has_liked);
+                                    if ("{{info.submission_has_liked}}" == "1"){
+                                        upvotebutton.src = "{% static 'img/Upvote-Solid.svg' %}";
+                                    }
                                     upvotebutton.onclick = function(){
+                                        document.getElementById("upvote{{info.submission_id}}").src = "{% static 'img/Upvote-Solid.svg' %}"
                                         var submission_id = "{{info.submission_id}}";
                                         var url = window.location.protocol + '//' + location.host + "/like_submission/";
                                         fetch(url, {

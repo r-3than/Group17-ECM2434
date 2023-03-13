@@ -95,11 +95,18 @@ def home(request):
             else:
                 photo_b64 = "data:image/png;base64,"
             # Dictionary structure to pass to template 
+            checker = Upvote.objects.filter(voter_username=request.user.username,
+                submission_id=submission.id)
+            if len(checker) >= 1:
+                has_liked = 1
+            else:
+                has_liked = 0
             submissions_info[submission.id] = {
                                                'submission_id' :submission.id,
                                                'submission_username': submission.username,
                                                'submission_time': submission_time_form,
                                                'submission_photo': photo_b64,
+                                               'submission_has_liked': has_liked,
                                                'submission_upvote_count': submission.get_upvote_count()
                                             }
         
