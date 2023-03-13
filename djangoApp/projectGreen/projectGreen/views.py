@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import ActiveChallenge, Submission
+from projectGreen.models import ActiveChallenge, Submission, Upvote
 
 
 
@@ -41,6 +41,24 @@ def uploadphoto(request):
             fh.write(img_data)
         return HttpResponse({"success":"true"})
         """
+
+@csrf_exempt
+def like_submission(request):
+     if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            submission_id = data["submission_id"]
+            checker = Upvote.objects.filter(voter_username=request.user.username,
+                submission_id=submission_id)
+            if len(checker) < 1:
+                new_upvote = Upvote(
+                    voter_username=request.user.username,
+                    submission_id=submission_id
+                )
+                new_upvote.save()
+            else:
+                checker.delete()
+        return redirect('/home/')
 
 
 def home(request):
@@ -77,7 +95,9 @@ def home(request):
             else:
                 photo_b64 = "data:image/png;base64,"
             # Dictionary structure to pass to template 
-            submissions_info[submission.id] = {'submission_username': submission.username,
+            submissions_info[submission.id] = {
+                                               'submission_id' :submission.id,
+                                               'submission_username': submission.username,
                                                'submission_time': submission_time_form,
                                                'submission_photo': photo_b64,
                                                'submission_upvote_count': submission.get_upvote_count()

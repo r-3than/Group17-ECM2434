@@ -52,7 +52,28 @@
                         </div>
                         <div class="side interactions">
                             <div>
-                                <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
+                                <img id="upvote{{info.submission_id}}" class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
+                                <script>
+                                    upvotebutton = document.getElementById("upvote{{info.submission_id}}");
+                                    upvotebutton.onclick = function(){
+                                        var submission_id = "{{info.submission_id}}";
+                                        var url = window.location.protocol + '//' + location.host + "/like_submission/";
+                                        fetch(url, {
+                                            method: "POST",
+                                            credentials: "include",
+                                            headers: {
+                                            Accept: "application/json",
+                                            "Content-Type": "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                                submission_id: submission_id,
+                                            }),
+                                        })
+                                            .then((response) => response.json())
+                                            .then((response) => console.log(JSON.stringify(response)));
+                                    };
+
+                                </script>
                             </div>
                             <div>{{ info.submission_upvote_count }}</div>
                             <div>
