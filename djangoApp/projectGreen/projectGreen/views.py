@@ -58,7 +58,7 @@ def like_submission(request):
                 new_upvote.save()
             else:
                 checker.delete()
-        return redirect('/home/')
+        return HttpResponse({"success":"true"})
 
 
 def home(request):
