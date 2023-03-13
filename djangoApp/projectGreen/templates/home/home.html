@@ -15,10 +15,10 @@
             <div class="side">
                 <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#myModal">
                     Menu
-                  </button>
+                </button>
             </div>
             <div class="title centre">
-                <a class="title">BeGreen</a>
+                <a class="title" href="{% url 'home' %}">BeGreen</a>
                 <br>
                 <a class="subtitle">Today's challenge: Visit the Coast!</a>
             </div>
@@ -44,7 +44,7 @@
             
                     <!-- Modal body -->
                     <div class="modal-body links">
-                        <a href="">Submission History</a> <br>
+                        <a href="{% url 'account' %}">Submission History</a> <br>
                         <a href="">Friends' Submissions</a> <br>
                         <a href="">University Submissions</a> <br>
                         <a href="">University Green Policy</a>
@@ -58,7 +58,7 @@
         <main class="row">
               <div class="side left">
                 <div class="links rounded-5">
-                    <a href="">Submission History</a>
+                    <a href="{% url 'account' %}">Submission History</a>
                     <a href="">Friends' Submissions</a>
                     <a href="">University Submissions</a>
                     <a href="">University Green Policy</a>
