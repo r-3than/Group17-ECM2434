@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import ActiveChallenge, Submission, Upvote
+from projectGreen.models import ActiveChallenge, Profile, Submission, Upvote
 
 
 
@@ -98,6 +98,9 @@ def home(request):
                 has_liked = 1
             else:
                 has_liked = 0
+            profileObj = Profile.objects.filter(id=request.user.id).first()
+            user_points = str(profileObj.points)
+            context["user_points"] = user_points
             submissions_info[submission.id] = {
                                                'submission_id' :submission.id,
                                                'submission_username': submission.username,
