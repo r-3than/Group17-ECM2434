@@ -130,8 +130,46 @@ def post(request):
     
 def account(request):
     context = {}
+
     if request.user.is_authenticated:
-        template = loader.get_template('home/account.html')  
+        template = loader.get_template('home/account.html')
+
+        # Get the user submissions from most recent
+        submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
+
+        start_month = int(submissions.first().submission_time.strftime("%m"))
+        end_month = int(submissions.last().submission_time.strftime("%m"))
+
+        # Initialise list of empty lists for each month
+        submissions_by_month = [[]] * (end_month - start_month + 1)
+
+        for submission in submissions:
+
+            # Get date
+            submission_date = submission.submission_time.strftime("%d/%m/%Y")
+            submission_month = int(submission.submission_time.strftime("%m"))
+
+            print(submission_date)
+
+            submission_time_form = submission_date
+
+            if submission.photo_bytes != None:
+                photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
+            else:
+                photo_b64 = "data:image/png;base64,"
+
+            # Nested list structure to pass to template 
+            submissions_by_month[submission_month - start_month].append({'submission_username': submission.username,
+                                               'submission_time': submission_time_form,
+                                               'submission_photo': photo_b64,
+                                               'submission_upvote_count': submission.get_upvote_count()
+                                                })
+        
+        context['months'] = submissions_by_month
+
+        print(len(submissions_by_month))
+        print(len(submissions_by_month[0]))
+
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")

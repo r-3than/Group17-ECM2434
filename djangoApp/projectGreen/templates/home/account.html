@@ -88,99 +88,49 @@
 
                 <!-- Accordion Below -->
                 <div class="accordion" id="accordionExample">
-
-                    <!-- Item 1 -->
-                    <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingOne">
-                        <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="true" aria-controls="collapseOne">
-                        February
-                        </button>
-                    </h2>
-                    <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
-                        <div class="accordion-body">
-                            <div class="post rounded-5">
-                                <div class="header row">
-                                    <div class="user">User</div>
-                                    <div class="time">Date</div>
-                                </div>
-                                <div class="row">
-                                    <div class="side"></div>
-                                    <div class="centre">
-                                        <div class="icon rounded-circle">O</div>
-                                        <div class="img rounded-5">
-                                            <img src="{{ info.submission_photo }}">
-                                        </div>
-                                    </div>
-                                    <div class="side interactions">
-                                        <div>
-                                            <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
-                                        </div>
-                                        <div>0</div>
-                                        <div>
-                                            <img src="{% static 'img/Comment.svg' %}">
-                                        </div>
-                                        <div>0</div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="break"></div>
+                    {% for month in months %}
+                
+                        <!-- Month Accordion -->
+                        <div class="accordion-item">
+                        <h2 class="accordion-header" id="headingTwo">
+                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
+                            March
+                            </button>
+                        </h2>
+                        <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
                             <div class="accordion-body">
-                                <div class="post rounded-5">
-                                    <div class="header row">
-                                        <div class="user">User</div>
-                                        <div class="time">Date</div>
-                                    </div>
-                                    <div class="row">
-                                        <div class="side"></div>
-                                        <div class="centre">
-                                            <div class="icon rounded-circle">O</div>
-                                            <div class="img rounded-5">
-                                                <img src="{{ info.submission_photo }}">
+                                {% for info in month %}
+                                    <div class="post rounded-5">
+                                        <div class="header row">
+                                            <div class="user">{{ info.submission_username }}</div>
+                                            <div class="time">{{ info.submission_time }}</div>
+                                        </div>
+                                        <div class="row">
+                                            <div class="side"></div>
+                                            <div class="centre">
+                                                <div class="icon rounded-circle">{{info.submission_username|make_list|first| capfirst}}</div>
+                                                <div class="img rounded-5">
+                                                    <img src="{{ info.submission_photo }}">
+                                                </div>
+                                            </div>
+                                            <div class="side interactions">
+                                                <div>
+                                                    <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
+                                                </div>
+                                                <div>{{ info.submission_upvote_count }}</div>
+                                                <div>
+                                                    <img src="{% static 'img/Comment.svg' %}">
+                                                </div>
+                                                <div>0</div>
                                             </div>
                                         </div>
-                                        <div class="side interactions">
-                                            <div>
-                                                <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
-                                            </div>
-                                            <div>0</div>
-                                            <div>
-                                                <img src="{% static 'img/Comment.svg' %}">
-                                            </div>
-                                            <div>0</div>
-                                        </div>
                                     </div>
-                                </div>
-                                <div class="break"></div>
+                                    <div class="break"></div>
+                                {% endfor %}
+                            </div>
                         </div>
                     </div>
-                    </div>
-
-                    <!-- Item 2 -->
-                    <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingTwo">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo" aria-expanded="false" aria-controls="collapseTwo">
-                        March
-                        </button>
-                    </h2>
-                    <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
-                        <div class="accordion-body">
-                        </div>
-                    </div>
-                    </div>
-
-                    <!-- Item 3 -->
-                    <div class="accordion-item">
-                    <h2 class="accordion-header" id="headingThree">
-                        <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseThree" aria-expanded="false" aria-controls="collapseThree">
-                        April
-                        </button>
-                    </h2>
-                    <div id="collapseThree" class="accordion-collapse collapse" aria-labelledby="headingThree" data-bs-parent="#accordionExample">
-                        <div class="accordion-body">
-                        </div>
-                    </div>
-                    </div>
-                </div>
+                {% endfor %}
 
                 <div class="side"></div>
             </div>
