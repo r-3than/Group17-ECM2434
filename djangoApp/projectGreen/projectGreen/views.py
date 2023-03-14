@@ -41,6 +41,16 @@ def uploadphoto(request):
             fh.write(img_data)
         return HttpResponse({"success":"true"})
         """
+@csrf_exempt
+def flag_submission(request):
+     if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            submission_id = data["submission_id"]
+            submssionObj=Submission.objects.filter(id=submission_id).first()
+            submssionObj.report_submission()
+
+        return HttpResponse({"success":"true"})
 
 @csrf_exempt
 def like_submission(request):
@@ -66,7 +76,7 @@ def home(request):
         submissions_info = {}
 
         # List the submissions from most recent
-        submissions = Submission.objects.all().order_by('-submission_time')
+        submissions = Submission.objects.filter(reported=False).order_by('-submission_time')
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")

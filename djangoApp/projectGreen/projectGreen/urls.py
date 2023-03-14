@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from projectGreen.views import home,challenge, like_submission,submit,uploadphoto, specific_group_access
+from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access
 
 urlpatterns = [
     path('', challenge, ),
@@ -23,6 +23,7 @@ urlpatterns = [
     path('submit/',submit),
     path('uploadphoto/',uploadphoto),
     path('like_submission/',like_submission),
+    path('flag_submission/',flag_submission),
     path('specific_group_access', specific_group_access, ),
     path('admin/', admin.site.urls),
     path('microsoft_authentication/', include('microsoft_authentication.urls')),
