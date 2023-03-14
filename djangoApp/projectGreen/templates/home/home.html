@@ -37,7 +37,7 @@
               </div>
               <div class="centre">
                 {% for submission, info in submissions.items %}
-                <div class="post rounded-5">
+                <div id="post{{info.submission_id}}" class="post rounded-5">
                     <div class="header row">
                         <div class="user">{{ info.submission_username }}</div>
                         <div class="time">{{ info.submission_time }}</div>
@@ -113,6 +113,7 @@
                                             document.getElementById("flag{{info.submission_id}}").src = "{% static 'img/Flag-Solid.svg' %}";
                                            
                                         }
+                                        document.getElementById("post{{info.submission_id}}").style.display="none";
                                         
                                         var submission_id = "{{info.submission_id}}";
                                         
