@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import ActiveChallenge, Submission
+from projectGreen.models import ActiveChallenge, Profile, Submission, Upvote
 
 
 
@@ -41,6 +41,21 @@ def uploadphoto(request):
             fh.write(img_data)
         return HttpResponse({"success":"true"})
         """
+
+@csrf_exempt
+def like_submission(request):
+     if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            submission_id = data["submission_id"]
+            checker = Upvote.objects.filter(voter_username=request.user.username,
+                submission_id=submission_id)
+            if len(checker) < 1:
+                SubmissionObj = Submission.objects.filter(id=submission_id).first()
+                SubmissionObj.create_upvote(request.user.username)
+            else:
+                checker.first().remove_upvote()
+        return HttpResponse({"success":"true"})
 
 
 def home(request):
@@ -77,11 +92,23 @@ def home(request):
             else:
                 photo_b64 = "data:image/png;base64,"
             # Dictionary structure to pass to template 
-            submissions_info[submission.id] = {'submission_username': submission.username,
+            checker = Upvote.objects.filter(voter_username=request.user.username,
+                submission_id=submission.id)
+            if len(checker) >= 1:
+                has_liked = 1
+            else:
+                has_liked = 0
+            profileObj = Profile.objects.filter(id=request.user.id).first()
+            user_points = str(profileObj.points)
+            context["user_points"] = user_points
+            submissions_info[submission.id] = {
+                                               'submission_id' :submission.id,
+                                               'submission_username': submission.username,
                                                'submission_time': submission_time_form,
                                                'submission_photo': photo_b64,
                                                'submission_upvote_count': submission.get_upvote_count(),
-                                               'submission_comment_count': submission.get_comment_count()
+                                               'submission_comment_count': submission.get_comment_count(),
+                                               'submission_has_liked': has_liked,
                                             }
         
         context['submissions'] = submissions_info

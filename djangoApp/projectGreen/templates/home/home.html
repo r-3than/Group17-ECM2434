@@ -22,7 +22,7 @@
                     <div style="height: 80%; padding-left: 50%;">
                         <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
                     </div>
-                    <div class="points">Score: 312</div>
+                    <div class="points">Score: {{ user_points }}</div>
                 </div>
             </div>
         </header>
@@ -52,9 +52,46 @@
                         </div>
                         <div class="side interactions">
                             <div>
-                                <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
+                                <img id="upvote{{info.submission_id}}" class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
+                                <script>
+                                    upvotebutton = document.getElementById("upvote{{info.submission_id}}");
+                                    upvotecount = document.getElementById("upvotetext{{info.submission_id}}");
+                                    var has_liked = "{{info.submission_has_liked}}";
+                                    console.log(has_liked);
+                                    if ("{{info.submission_has_liked}}" == "1"){
+                                        upvotebutton.src = "{% static 'img/Upvote-Solid.svg' %}";
+                                    }
+                                    upvotebutton.onclick = function(){
+                                        if (document.getElementById("upvote{{info.submission_id}}").src.includes("Solid")){
+                                            document.getElementById("upvote{{info.submission_id}}").src="{% static 'img/Upvote-Clear.svg' %}";
+                                            document.getElementById("upvotetext{{info.submission_id}}").innerHTML=(parseInt(document.getElementById("upvotetext{{info.submission_id}}").innerHTML)-1);
+                                        }
+                                        else{
+                                            document.getElementById("upvote{{info.submission_id}}").src = "{% static 'img/Upvote-Solid.svg' %}";
+                                            document.getElementById("upvotetext{{info.submission_id}}").innerHTML=(parseInt(document.getElementById("upvotetext{{info.submission_id}}").innerHTML)+1);
+                                        }
+                                        
+                                        var submission_id = "{{info.submission_id}}";
+                                        
+                                        var url = window.location.protocol + '//' + location.host + "/like_submission/";
+                                        fetch(url, {
+                                            method: "POST",
+                                            credentials: "include",
+                                            headers: {
+                                            Accept: "application/json",
+                                            "Content-Type": "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                                submission_id: submission_id,
+                                            }),
+                                        })
+                                            .then((response) => response.json())
+                                            .then((response) => console.log(JSON.stringify(response)));
+                                    };
+
+                                </script>
                             </div>
-                            <div>{{ info.submission_upvote_count }}</div>
+                            <div id="upvotetext{{info.submission_id}}">{{ info.submission_upvote_count }}</div>
                             <div>
                                 <img src="{% static 'img/Comment.svg' %}">
                             </div>

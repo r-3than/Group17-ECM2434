@@ -1,6 +1,8 @@
+import base64
 from django.contrib import admin
 from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
+from django.utils.html import format_html
 from datetime import datetime
 import logging
 
@@ -103,7 +105,8 @@ class SubmissionAdmin(admin.ModelAdmin):
     @admin.display(description='Photo')
     def get_submission(self, submission) -> str:
         if submission.photo_bytes != None:
-            return 'data:image/png;base64,${decoded}'.format(decoded=submission.photo_bytes.decode)
+            photo_url=base64.b64encode(submission.photo_bytes).decode("utf-8")
+            return format_html("<img src='data:image/png;base64,{decoded}'>".format(decoded=photo_url))
         else:
             return '[no image found]'
 
