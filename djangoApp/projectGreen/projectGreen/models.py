@@ -311,12 +311,13 @@ class Submission(models.Model):
         time_for_challenge = self.active_challenge.challenge.time_for_challenge
         return punctuality_scaling(time_for_challenge, self.get_minutes_late())
 
-    def report_submission(self):
+    def report_submission(self) -> bool:
         '''
         Marks a submission as reported - it will not be
         displayed in the feed while reported == True
         A post cannot be re-reported (once reviewed)
         Points are updated accordingly
+        Returns False if post has already been reported/reviewed
         '''
         date = self.active_challenge.date.strftime('%Y-%m-%d')
         if self.reported:
@@ -327,11 +328,14 @@ class Submission(models.Model):
             self.remove_submission(False)
             self.reported = True
             self.save()
+            return True
+        return False
 
-    def review_submission(self, is_suitable: bool):
+    def review_submission(self, is_suitable: bool) -> bool:
         '''
         Sets reported to False if the post is deemed suitable and points are reinstated
         Otherwise, the submission is deleted, and their "removed submissions" count is incremented
+        Returns False if the post is either not reported, or already reviewed
         '''
         date = self.active_challenge.date.strftime('%Y-%m-%d')
         if not self.reported:
@@ -353,11 +357,14 @@ class Submission(models.Model):
                     p = Profile(user=u, number_of_submissions_removed=1)
                 p.save()
                 self.delete()
+            return True
+        return False
 
-    def remove_submission(self, delete_instance: bool=True):
+    def remove_submission(self, delete_instance: bool=True) -> bool:
         '''
         Removes submission object, as well as associated upvote objects,
         from database (conditional flag) and synchronises points
+        Returns False if post is reported (points do not change)
         '''
         if not self.reported:
             points_to_remove = SCORES['submission'] * self.get_punctuality_scaling()
@@ -367,6 +374,7 @@ class Submission(models.Model):
             for comment in self.get_comments():
                 comment.remove_comment(delete_instance)
         if delete_instance: self.delete()
+        return not self.reported
 
     def reinstate_submission(self):
         '''
@@ -379,19 +387,27 @@ class Submission(models.Model):
         for comment in self.get_comments():
             comment.reinstate_comment()
 
-    def create_upvote(self, voter_username: str, create_upvote_instance: bool=True):
+    def create_upvote(self, voter_username: str, create_upvote_instance: bool=True) -> bool:
         '''
         Creates upvote object for this submission in database and syncronises points
+        CREATING UPVOTE ON REPORTED SUBMISSION WILL LIKELY CAUSE POINTS DESYNC
+        Returns False if the upvote already exists
         '''
-        u = Upvote(submission=self, voter_username=voter_username)
-        if create_upvote_instance:
-            u.save()
-        Profile.add_points_by_username(self.username, SCORES['upvote']['recieved'])
-        Profile.add_points_by_username(voter_username, SCORES['upvote']['given'])
+        try:
+            Upvote.objects.get(submission=self, voter_username=voter_username)
+            return False
+        except Upvote.DoesNotExist:
+            u = Upvote(submission=self, voter_username=voter_username)
+            if create_upvote_instance:
+                u.save()
+            Profile.add_points_by_username(self.username, SCORES['upvote']['recieved'])
+            Profile.add_points_by_username(voter_username, SCORES['upvote']['given'])
+            return True
 
-    def create_comment(self, comment_username: str, comment_content: str, create_comment_instance: bool=True):
+    def create_comment(self, comment_username: str, comment_content: str, create_comment_instance: bool=True) -> bool:
         '''
         Creates comment object for this submission in database and syncronises points
+        Returns False if comment was flagged for profanity
         '''
         u = Comment(submission=self, comment_username=comment_username, content=comment_content)
         if create_comment_instance:
@@ -400,6 +416,9 @@ class Submission(models.Model):
         Profile.add_points_by_username(comment_username, SCORES['comment']['given'])
         if u.inappropriate_language_filter():
             u.report_comment()
+            return False
+        else:
+            return True
         
     def get_upvotes(self) -> list['Upvote']:
         '''
@@ -440,14 +459,16 @@ class Upvote(models.Model):
     submission = models.ForeignKey(Submission, models.CASCADE, null=True)
     voter_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
 
-    def remove_upvote(self, delete_instance: bool=True):
+    def remove_upvote(self, delete_instance: bool=True) -> bool:
         '''
         Removes upvote object from database (conditional flag) and synchronises points
+        Returns False if associated post is reported (points do not change)
         '''
         if not self.submission.reported:
             Profile.add_points_by_username(self.voter_username, -SCORES['upvote']['given'])
             Profile.add_points_by_username(self.submission.username, -SCORES['upvote']['recieved'])
         if delete_instance: self.delete()
+        return not self.submission.reported
 
     def reinstate_upvote(self):
         '''
@@ -468,12 +489,13 @@ class Comment(models.Model):
     reported = models.BooleanField(default=False)
     reviewed = models.BooleanField(default=False)
 
-    def report_comment(self):
+    def report_comment(self) -> bool:
         '''
         Marks a comment as reported - it will not be
         displayed on a post while reported == True
         A comment cannot be re-reported (once reviewed)
         Points are updated accordingly
+        Returns False if comment has already been reported/reviewed
         '''
         date = self.submission.active_challenge.date.strftime('%Y-%m-%d')
         if self.reported:
@@ -484,11 +506,14 @@ class Comment(models.Model):
             self.remove_comment(False)
             self.reported = True
             self.save()
+            return True
+        return False
 
-    def review_comment(self, is_suitable: bool):
+    def review_comment(self, is_suitable: bool) -> bool:
         '''
         Sets reported to False if the comment is deemed suitable and points are reinstated
         Otherwise, the comment is deleted, and their "removed comment" count is incremented
+        Returns False if the comment is either not reported, or already reviewed
         '''
         date = self.submission.active_challenge.date.strftime('%Y-%m-%d')
         if not self.reported:
@@ -510,23 +535,30 @@ class Comment(models.Model):
                     p = Profile(user=u, number_of_comments_removed=1)
                 p.save()
                 self.delete()
+            return True
+        return False
 
-    def remove_comment(self, delete_instance: bool=True):
+    def remove_comment(self, delete_instance: bool=True) -> bool:
         '''
         Removes comment object from database (conditional flag) and synchronises points
+        Returns False if either the submission or comment is reported (points do not change)
         '''
-        if not self.submission.reported or not self.reported:
+        condition = not (self.submission.reported or self.reported)
+        if condition:
             Profile.add_points_by_username(self.comment_username, -SCORES['comment']['given'])
             Profile.add_points_by_username(self.submission.username, -SCORES['comment']['recieved'])
         if delete_instance: self.delete()
+        return condition
 
-    def reinstate_comment(self):
+    def reinstate_comment(self) -> bool:
         '''
         Adds points from an comment back (used after submission review)
+        Returns False if either the comment is reported (points do not change)
         '''
         if not self.reported:
             Profile.add_points_by_username(self.comment_username, SCORES['comment']['given'])
             Profile.add_points_by_username(self.submission.username, SCORES['comment']['recieved'])
+        return not self.reported
 
     def inappropriate_language_filter(self) -> bool:
         '''

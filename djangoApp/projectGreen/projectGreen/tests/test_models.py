@@ -128,10 +128,12 @@ class SubmissionTestCase(TestCase):
             submission = Submission(username=un, active_challenge=activechallenge,
                                     submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
             submission.save()
-        for un in ['bc123','cd123']:
-            reported_submission = Submission(username=un, active_challenge=activechallenge,
-                                            submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True)
-            reported_submission.save()
+        reported_submission = Submission(username='bc123', active_challenge=activechallenge,
+                                        submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True)
+        reported_submission.save()
+        reviewed_submission = Submission(username='cd123', active_challenge=activechallenge,
+                                            submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reviewed=True)
+        reviewed_submission.save()
 
     def test_user_has_submitted(self):
         pass
@@ -154,11 +156,11 @@ class SubmissionTestCase(TestCase):
 
     def test_report_submission(self):
         already_reported = Submission.objects.get(username='bc123')
-        already_reported.report_submission()
+        self.assertFalse(already_reported.report_submission())
         self.assertEqual(Submission.objects.get(username='bc123'), already_reported)
 
         already_reviewed = Submission.objects.get(username='cd123')
-        already_reviewed.report_submission()
+        self.assertFalse(already_reviewed.report_submission())
         self.assertEqual(Submission.objects.get(username='cd123'), already_reviewed)
 
         Profile.recalculate_user_points_by_username('ab123')
@@ -170,12 +172,12 @@ class SubmissionTestCase(TestCase):
 
     def test_review_submission(self):
         not_reported = Submission.objects.get(username='ab123')
-        not_reported.review_submission(is_suitable=True)
+        self.assertFalse(not_reported.review_submission(is_suitable=True))
         self.assertEqual(Submission.objects.get(username='ab123'), not_reported)
         self.assertFalse(not_reported.reported)
 
         already_reviewed = Submission.objects.get(username='cd123')
-        already_reviewed.review_submission(is_suitable=True)
+        self.assertFalse(already_reviewed.review_submission(is_suitable=True))
         self.assertEqual(Submission.objects.get(username='cd123'), already_reviewed)
         self.assertFalse(already_reviewed.reported)
 
@@ -274,21 +276,27 @@ class SubmissionTestCase(TestCase):
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # 2 upvotes recieved
         submission.report_submission()
-        for un in ['ab123','bc123','cd123']:
+        for un in ['ab123','bc123']:
             profile = Profile.objects.get(user__username=un)
-            self.assertEqual(profile.points, 0) # 0pts because submission reported
+            self.assertEqual(profile.points, 0)
+        profile = Profile.objects.get(user__username='cd123')
+        sub = Submission.objects.get(username='cd123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling())
         submission.reinstate_submission()
+        # check residual scores
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # Reinstated points
-        for un in ['bc123','cd123']:
-            profile = Profile.objects.get(user__username=un)
-            self.assertEqual(profile.points, SCORES['upvote']['given'])
+        profile = Profile.objects.get(user__username='bc123')
+        self.assertEqual(profile.points, SCORES['upvote']['given'])
+        profile = Profile.objects.get(user__username='cd123')
+        sub = Submission.objects.get(username='cd123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['given'])
 
     def test_create_upvote(self):
         Profile.recalculate_user_points_by_username('ab123')
         submission = Submission.objects.get(username='ab123')
-        submission.create_upvote('cd123') # Create upvote
+        self.assertTrue(submission.create_upvote('cd123')) # Create upvote
         self.assertEqual(submission.get_upvote_count(), 1)
         self.assertEqual(len(Upvote.objects.all()), 1) # Check upvote exists
         profile = Profile.objects.get(user__username='ab123')
@@ -316,7 +324,7 @@ class SubmissionTestCase(TestCase):
     def test_create_comment(self):
         Profile.recalculate_user_points_by_username('ab123')
         submission = Submission.objects.get(username='ab123')
-        submission.create_comment('cd123', 'test comment') # Create comment
+        self.assertTrue(submission.create_comment('cd123', 'test comment')) # Create comment
         self.assertEqual(submission.get_comment_count(), 1)
         self.assertEqual(len(Comment.objects.all()), 1) # Check comment exists
         profile = Profile.objects.get(user__username='ab123')
@@ -453,7 +461,7 @@ class CommentTestCase(TestCase):
         self.assertEqual(profile.points, SCORES['submission']*submission.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
         # attempt to create comment containing profane language
         inappropriate_comment = ''.join([WORDS_TO_FILTER[i] for i in [16, 32, 64]])
-        submission.create_comment('cd123', inappropriate_comment)
+        self.assertFalse(submission.create_comment('cd123', inappropriate_comment))
         self.assertEqual(2, submission.get_comment_count()) # only non-reported fetched
         comment = Comment.objects.get(comment_username='cd123', content=inappropriate_comment)
         self.assertTrue(comment.reported)
