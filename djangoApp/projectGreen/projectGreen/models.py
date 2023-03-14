@@ -9,7 +9,7 @@ from projectGreen.settings import PROFANITY_FILTER_SOURCE_URL
 LOGGER = logging.getLogger(__name__)
 
 USERNAME_MAX_LENGTH = 20
-SCORES = {'submission':20, 'upvote':{'given':1, 'recieved':2}, 'comment':{'given':5, 'recieved':8}}
+SCORES = {'submission':20, 'upvote':{'given':1, 'recieved':4}, 'comment':{'given':3, 'recieved':12}}
 
 def punctuality_scaling(time_for_challenge: int, minutes_late: int) -> int:
     '''
@@ -237,6 +237,7 @@ class ActiveChallenge(models.Model):
     def create_submission(self, username: str, submission_time: dt, create_submission_instance: bool=True):
         '''
         Creates submission object associated with this challenge in database and syncronises points
+        Throws django.db.utils.IntegrityError if submission already exists.
         '''
         s = Submission(username=username, active_challenge=self, submission_time=submission_time)
         if create_submission_instance:
@@ -246,6 +247,15 @@ class ActiveChallenge(models.Model):
     @classmethod
     def get_last_active_challenge(cls) -> 'ActiveChallenge':
         return ActiveChallenge.objects.latest('date')
+    
+    @classmethod
+    def user_has_submitted(cls, username: str) -> bool:
+        ac = ActiveChallenge.get_last_active_challenge()
+        try:
+            Submission.objects.get(username=username, active_challenge=ac)
+            return True
+        except Submission.DoesNotExist:
+            return False
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'

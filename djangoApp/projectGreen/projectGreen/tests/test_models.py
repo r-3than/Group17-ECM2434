@@ -3,7 +3,7 @@ import datetime
 import pytz
 from django.test import TestCase
 from django.contrib.auth.models import User
-from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote
+from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, SCORES
 
 class ProfileTestCase(TestCase):
     def setUp(self):
@@ -117,7 +117,7 @@ class SubmissionTestCase(TestCase):
         for un in ['ab123','abc123','bc123','cd123','ef123']:
             user = User(username=un, password='unsecure_password')
             user.save()
-        challenge = Challenge(description='test challenge', time_for_challenge='20')
+        challenge = Challenge(description='test challenge', time_for_challenge=20)
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
@@ -139,6 +139,12 @@ class SubmissionTestCase(TestCase):
         submission = Submission.objects.get(username='ab123')
         scaled_points = submission.get_punctuality_scaling()
         self.assertEqual(scaled_points, 2)
+        submission_on_time = Submission(username='ef123', active_challenge=submission.active_challenge,
+                                    submission_time=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC))
+        self.assertEqual(submission_on_time.get_punctuality_scaling(), 5)
+        submission_late = Submission(username='ef123', active_challenge=submission.active_challenge,
+                                    submission_time=datetime.datetime(2023,3,9,10,30,0,0,pytz.UTC))
+        self.assertEqual(submission_late.get_punctuality_scaling(), 1)
 
     def test_report_submission(self):
         already_reported = Submission.objects.get(username='bc123')
@@ -150,46 +156,50 @@ class SubmissionTestCase(TestCase):
         self.assertEqual(Submission.objects.get(username='cd123'), already_reviewed)
 
         Profile.recalculate_user_points_by_username('ab123')
-        profile = Profile.objects.get(user__username='ab123')
         submission = Submission.objects.get(username='ab123')
         submission.report_submission()
         profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(profile.points, 0)
-        assert(submission.reported)
+        self.assertTrue(submission.reported)
 
     def test_review_submission(self):
         not_reported = Submission.objects.get(username='ab123')
         not_reported.review_submission(is_suitable=True)
         self.assertEqual(Submission.objects.get(username='ab123'), not_reported)
-        assert(not not_reported.reported)
+        self.assertFalse(not_reported.reported)
 
         already_reviewed = Submission.objects.get(username='cd123')
         already_reviewed.review_submission(is_suitable=True)
         self.assertEqual(Submission.objects.get(username='cd123'), already_reviewed)
-        assert(not already_reviewed.reported)
+        self.assertFalse(already_reviewed.reported)
 
+        # testing reporting and aproving submission
         Profile.recalculate_user_points_by_username('ab123')
         profile = Profile.objects.get(user__username='ab123')
         submission = Submission.objects.get(username='ab123')
         submission.report_submission()
         profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 0)
         submission.review_submission(is_suitable=True)
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 20)
-        assert(submission.reviewed)
-        assert(not submission.reported)
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling())
+        self.assertTrue(submission.reviewed)
+        self.assertFalse(submission.reported)
 
+        # testing reporting and denying submission
         Profile.recalculate_user_points_by_username('abc123')
         profile = Profile.objects.get(user__username='abc123')
         submission = Submission.objects.get(username='abc123')
         submission.report_submission()
         profile = Profile.objects.get(user__username='abc123')
+        self.assertEqual(profile.points, 0)
         submission.review_submission(is_suitable=False)
         profile = Profile.objects.get(user__username='abc123')
         self.assertEqual(profile.points, 0)
         self.assertEqual(profile.number_of_submissions_removed, 1)
-        assert(submission.reviewed)
-        assert(submission.reported)
+        self.assertTrue(submission.reviewed)
+        self.assertTrue(submission.reported)
 
     def test_remove_submission(self):
         # Remove submission with delete_instance = False
@@ -197,7 +207,8 @@ class SubmissionTestCase(TestCase):
         not_reported = Submission.objects.get(username='ab123')
         not_reported.create_upvote(voter_username='bc123') # Create upvote for the submission
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 22) # Check profile points
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved']) # Check profile points
         not_reported.remove_submission(delete_instance=False) # Remove submission
         self.assertEqual(not_reported.get_upvote_count(), 1) # Upvotes should not be deleted
         profile = Profile.objects.get(user__username='ab123')
@@ -208,7 +219,8 @@ class SubmissionTestCase(TestCase):
         not_reported = Submission.objects.get(username='abc123')
         not_reported.create_upvote(voter_username='bc123') # Create upvote for the submission
         profile = Profile.objects.get(user__username='abc123')
-        self.assertEqual(profile.points, 22) # Check profile points
+        sub = Submission.objects.get(username='abc123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved']) # Check profile points
         self.assertEqual(len(Submission.objects.all()), 4) # Check total number of submissions
         not_reported = Submission.objects.get(username='abc123')
         not_reported.remove_submission(delete_instance=True) # Remove submission
@@ -222,12 +234,12 @@ class SubmissionTestCase(TestCase):
         reported = Submission.objects.get(username='bc123')
         reported.create_upvote(voter_username='ab123') # Create upvote for the submission
         profile = Profile.objects.get(user__username='bc123')
-        self.assertEqual(profile.points, 3) # 2pt for receiving an upvote, 1pt for upvoting another submission
+        self.assertEqual(profile.points, sum(SCORES['upvote'].values())) # for receiving an upvote, and for upvoting another submission
         self.assertEqual(len(Submission.objects.all()), 3) # Check total number of submissions
         reported.remove_submission(delete_instance=False) # Remove submission
         self.assertEqual(reported.get_upvote_count(), 1) # Upvotes should not be deleted
         profile = Profile.objects.get(user__username='bc123')
-        self.assertEqual(profile.points, 3) # Points should be not be removed
+        self.assertEqual(profile.points, sum(SCORES['upvote'].values())) # Points should be not change
         self.assertEqual(len(Submission.objects.all()), 3) # Check total number of submissions
 
         # Remove submission with reported flag set to True and delete_instance = True
@@ -236,30 +248,36 @@ class SubmissionTestCase(TestCase):
         reported.save() # Create new reported submission (not removed)
         Profile.recalculate_user_points_by_username('ef123')
         reported = Submission.objects.get(username='ef123')
-        reported.create_upvote(voter_username='ab123') # Create upvote for the submission
+        Upvote(submission=reported, voter_username='ab123').save() # Create upvote for the submission
         profile = Profile.objects.get(user__username='ef123')
-        self.assertEqual(profile.points, 2) # Submission reported - only 2pts for upvote
+        self.assertEqual(profile.points, 0) # Submission reported - no points
         self.assertEqual(len(Submission.objects.all()), 4) # Check total number of submissions
         reported = Submission.objects.get(username='ef123')
         reported.remove_submission(delete_instance=True) # Remove submission
         self.assertEqual(len(Submission.objects.all()), 3) # Check total number of submissions
-        Profile.recalculate_user_points_by_username('ef123')
         profile = Profile.objects.get(user__username='ef123')
-        self.assertEqual(profile.points, 0) # Points should be removed
+        self.assertEqual(profile.points, 0)
 
     def test_reinstate_submission(self):
-        Profile.recalculate_user_points_by_username('ab123')
+        for un in ['ab123','bc123','cd123']:
+            Profile.recalculate_user_points_by_username(un)
         submission = Submission.objects.get(username='ab123')
         submission.create_upvote(voter_username='cd123')
         submission.create_upvote(voter_username='bc123') # Create upvotes for the submission
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 24) # 0pts because submission reported
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # 2 upvotes recieved
         submission.report_submission()
-        profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 0) # 0pts because submission reported
+        for un in ['ab123','bc123','cd123']:
+            profile = Profile.objects.get(user__username=un)
+            self.assertEqual(profile.points, 0) # 0pts because submission reported
         submission.reinstate_submission()
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 24) # Reinstated points
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # Reinstated points
+        for un in ['bc123','cd123']:
+            profile = Profile.objects.get(user__username=un)
+            self.assertEqual(profile.points, SCORES['upvote']['given'])
 
     def test_create_upvote(self):
         Profile.recalculate_user_points_by_username('ab123')
@@ -268,9 +286,10 @@ class SubmissionTestCase(TestCase):
         self.assertEqual(submission.get_upvote_count(), 1)
         self.assertEqual(len(Upvote.objects.all()), 1) # Check upvote exists
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 22) # Check received upvote points
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved']) # Check received upvote points
         profile = Profile.objects.get(user__username='cd123')
-        self.assertEqual(profile.points, 1) # Check given upvote points
+        self.assertEqual(profile.points, SCORES['upvote']['given']) # Check given upvote points
 
     def test_get_upvotes(self):
         submission = Submission.objects.get(username='ab123')
@@ -290,53 +309,70 @@ class SubmissionTestCase(TestCase):
 
 class UpvoteTestCase(TestCase):
     def setUp(self):
-        user = User(username='ab123', password='unsecure_password')
-        user.save()
-        user2 = User(username='bc123', password='unsecure_password')
-        user2.save()
-        user3 = User(username='cd123', password='unsecure_password')
-        user3.save()
+        for un in ['ab123','bc123','cd123']:
+            user = User(username=un, password='unsecure_password')
+            user.save()
         challenge = Challenge(description='test challenge', time_for_challenge='20')
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
         submission = Submission(username='ab123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
         submission.save()
-        upvote = Upvote(submission=submission, voter_username='bc123')
-        upvote.save()
-        upvote = Upvote(submission=submission, voter_username='cd123')
-        upvote.save()
+        for un in ['bc123','cd123']:
+            upvote = Upvote(submission=submission, voter_username=un)
+            upvote.save()
 
     def test_remove_upvote(self):
-        Profile.recalculate_user_points_by_username('ab123')
+        for un in ['ab123','bc123','cd123']:
+            Profile.recalculate_user_points_by_username(un)
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 24)
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved'])
+        for un in ['bc123','cd123']:
+            profile = Profile.objects.get(user__username=un)
+            self.assertEqual(profile.points, SCORES['upvote']['given'])
         self.assertEqual(len(Upvote.objects.all()), 2)
 
         # Remove upvote with delete_instance = False
         upvote = Upvote.objects.get(voter_username='bc123')
         upvote.remove_upvote(delete_instance=False)
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 22) # Points should be removed
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved']) # Points should be removed
+        profile = Profile.objects.get(user__username='bc123')
+        self.assertEqual(profile.points, 0)
         self.assertEqual(len(Upvote.objects.all()), 2) # Upvote should still exist
 
         # Remove upvote with delete_instance = True
         upvote = Upvote.objects.get(voter_username='cd123')
         upvote.remove_upvote(delete_instance=True)
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 20) # Points should be removed
-        self.assertEqual(len(Upvote.objects.all()), 1) # Upvote should still exist
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()) # Points should be removed
+        profile = Profile.objects.get(user__username='cd123')
+        self.assertEqual(profile.points, 0)
+        self.assertEqual(len(Upvote.objects.all()), 1) # previous upvote should still exist
 
     def test_reinstate_upvote(self):
         Profile.recalculate_user_points_by_username('ab123')
+        Profile.recalculate_user_points_by_username('bc123')
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 24)
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved'])
+        profile = Profile.objects.get(user__username='bc123')
+        self.assertEqual(profile.points, SCORES['upvote']['given'])
         self.assertEqual(len(Upvote.objects.all()), 2)
 
         upvote = Upvote.objects.get(voter_username='bc123')
         upvote.remove_upvote(delete_instance=False)
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 22) # Points should be removed
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved']) # Points should be removed
+        profile = Profile.objects.get(user__username='bc123')
+        self.assertEqual(profile.points, 0)
         upvote.reinstate_upvote()
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, 24) # Points should be reinstated
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # Points should be reinstated
+        profile = Profile.objects.get(user__username='bc123')
+        self.assertEqual(profile.points, SCORES['upvote']['given'])
