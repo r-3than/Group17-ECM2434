@@ -80,7 +80,8 @@ def home(request):
             submissions_info[submission.id] = {'submission_username': submission.username,
                                                'submission_time': submission_time_form,
                                                'submission_photo': photo_b64,
-                                               'submission_upvote_count': submission.get_upvote_count()
+                                               'submission_upvote_count': submission.get_upvote_count(),
+                                               'submission_comment_count': submission.get_comment_count()
                                             }
         
         context['submissions'] = submissions_info
