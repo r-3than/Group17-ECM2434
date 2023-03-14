@@ -3,7 +3,7 @@ import datetime
 import pytz
 from django.test import TestCase
 from django.contrib.auth.models import User
-from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, SCORES
+from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment, SCORES, WORDS_TO_FILTER
 
 class ProfileTestCase(TestCase):
     def setUp(self):
@@ -99,7 +99,7 @@ class ActiveChallengeTestCase(TestCase):
     def setUp(self):
         user = User(username='ab123', password='unsecure_password')
         user.save()
-        challenge = Challenge(description='test challenge', time_for_challenge='20')
+        challenge = Challenge(description='test challenge', time_for_challenge=20)
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
@@ -111,6 +111,9 @@ class ActiveChallengeTestCase(TestCase):
         submission = Submission.objects.get(username='ab123')
         self.assertEqual(submission.submission_time, datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), 'create_submission failed')
         self.assertEqual(submission.username, 'ab123', 'create_submission failed')
+
+    def test_get_last_active_challenge(self):
+        pass
 
 class SubmissionTestCase(TestCase):
     def setUp(self):
@@ -129,6 +132,9 @@ class SubmissionTestCase(TestCase):
             reported_submission = Submission(username=un, active_challenge=activechallenge,
                                             submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True)
             reported_submission.save()
+
+    def test_user_has_submitted(self):
+        pass
 
     def test_get_minutes_late(self):
         submission = Submission.objects.get(username='ab123')
@@ -205,7 +211,7 @@ class SubmissionTestCase(TestCase):
         # Remove submission with delete_instance = False
         Profile.recalculate_user_points_by_username('ab123')
         not_reported = Submission.objects.get(username='ab123')
-        not_reported.create_upvote(voter_username='bc123') # Create upvote for the submission
+        not_reported.create_upvote('bc123') # Create upvote for the submission
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved']) # Check profile points
@@ -217,7 +223,7 @@ class SubmissionTestCase(TestCase):
         # Remove submission with delete_instance = True
         Profile.recalculate_user_points_by_username('abc123')
         not_reported = Submission.objects.get(username='abc123')
-        not_reported.create_upvote(voter_username='bc123') # Create upvote for the submission
+        not_reported.create_upvote('bc123') # Create upvote for the submission
         profile = Profile.objects.get(user__username='abc123')
         sub = Submission.objects.get(username='abc123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved']) # Check profile points
@@ -232,7 +238,7 @@ class SubmissionTestCase(TestCase):
         # Remove submission with reported flag set to True and delete_instance = False
         Profile.recalculate_user_points_by_username('bc123')
         reported = Submission.objects.get(username='bc123')
-        reported.create_upvote(voter_username='ab123') # Create upvote for the submission
+        reported.create_upvote('ab123') # Create upvote for the submission
         profile = Profile.objects.get(user__username='bc123')
         self.assertEqual(profile.points, sum(SCORES['upvote'].values())) # for receiving an upvote, and for upvoting another submission
         self.assertEqual(len(Submission.objects.all()), 3) # Check total number of submissions
@@ -262,8 +268,8 @@ class SubmissionTestCase(TestCase):
         for un in ['ab123','bc123','cd123']:
             Profile.recalculate_user_points_by_username(un)
         submission = Submission.objects.get(username='ab123')
-        submission.create_upvote(voter_username='cd123')
-        submission.create_upvote(voter_username='bc123') # Create upvotes for the submission
+        submission.create_upvote('cd123')
+        submission.create_upvote('bc123') # Create upvotes for the submission
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # 2 upvotes recieved
@@ -282,7 +288,7 @@ class SubmissionTestCase(TestCase):
     def test_create_upvote(self):
         Profile.recalculate_user_points_by_username('ab123')
         submission = Submission.objects.get(username='ab123')
-        submission.create_upvote(voter_username='cd123') # Create upvote
+        submission.create_upvote('cd123') # Create upvote
         self.assertEqual(submission.get_upvote_count(), 1)
         self.assertEqual(len(Upvote.objects.all()), 1) # Check upvote exists
         profile = Profile.objects.get(user__username='ab123')
@@ -293,8 +299,8 @@ class SubmissionTestCase(TestCase):
 
     def test_get_upvotes(self):
         submission = Submission.objects.get(username='ab123')
-        submission.create_upvote(voter_username='cd123')
-        submission.create_upvote(voter_username='bc123') # Create upvotes
+        submission.create_upvote('cd123')
+        submission.create_upvote('bc123') # Create upvotes
         upvote1 = Upvote.objects.get(voter_username='cd123')
         upvote2 = Upvote.objects.get(voter_username='bc123')
         self.assertEqual(len(submission.get_upvotes()), 2)
@@ -303,24 +309,59 @@ class SubmissionTestCase(TestCase):
 
     def test_get_upvote_count(self):
         submission = Submission.objects.get(username='ab123')
-        submission.create_upvote(voter_username='cd123')
-        submission.create_upvote(voter_username='bc123') # Create upvotes
+        submission.create_upvote('cd123')
+        submission.create_upvote('bc123') # Create upvotes
         self.assertEqual(submission.get_upvote_count(), 2)
+
+    def test_create_comment(self):
+        Profile.recalculate_user_points_by_username('ab123')
+        submission = Submission.objects.get(username='ab123')
+        submission.create_comment('cd123', 'test comment') # Create comment
+        self.assertEqual(submission.get_comment_count(), 1)
+        self.assertEqual(len(Comment.objects.all()), 1) # Check comment exists
+        profile = Profile.objects.get(user__username='ab123')
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['comment']['recieved']) # Check received comment points
+        profile = Profile.objects.get(user__username='cd123')
+        self.assertEqual(profile.points, SCORES['comment']['given']) # Check given upvote points
+
+    def test_get_comments(self):
+        submission = Submission.objects.get(username='ab123')
+        submission.create_comment('bc123', 'test comment')
+        submission.create_comment('cd123', 'another test comment') # Create comments
+        submission.create_comment('ef123', '****, reported comment ')
+        reported_comment = Comment.objects.get(comment_username='ef123')
+        reported_comment.reported = True
+        reported_comment.save()
+        comments = submission.get_comments()
+        self.assertEqual(1, len(comments.filter(comment_username='bc123')), 'missing comment')
+        self.assertEqual(1, len(comments.filter(comment_username='cd123')), 'missing comment')
+        self.assertEqual(0, len(comments.filter(comment_username='ef123')), 'fetched reported comment')
+        self.assertEqual(len(comments), 2)
+
+    def test_get_comment_count(self):
+        submission = Submission.objects.get(username='ab123')
+        submission.create_comment('bc123', 'test comment')
+        submission.create_comment('cd123', 'another test comment') # Create comments
+        submission.create_comment('ef123', '****, reported comment ')
+        reported_comment = Comment.objects.get(comment_username='ef123')
+        reported_comment.reported = True
+        reported_comment.save()
+        self.assertEqual(submission.get_comment_count(), 2, 'get_comment_count failed')
 
 class UpvoteTestCase(TestCase):
     def setUp(self):
         for un in ['ab123','bc123','cd123']:
             user = User(username=un, password='unsecure_password')
             user.save()
-        challenge = Challenge(description='test challenge', time_for_challenge='20')
+        challenge = Challenge(description='test challenge', time_for_challenge=20)
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
         submission = Submission(username='ab123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
         submission.save()
         for un in ['bc123','cd123']:
-            upvote = Upvote(submission=submission, voter_username=un)
-            upvote.save()
+            submission.create_upvote(un)
 
     def test_remove_upvote(self):
         for un in ['ab123','bc123','cd123']:
@@ -376,3 +417,48 @@ class UpvoteTestCase(TestCase):
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # Points should be reinstated
         profile = Profile.objects.get(user__username='bc123')
         self.assertEqual(profile.points, SCORES['upvote']['given'])
+
+class CommentTestCase(TestCase):
+    def setUp(self):
+        for un in ['ab123','bc123','cd123']:
+            user = User(username=un, password='unsecure_password')
+            user.save()
+        challenge = Challenge(description='test challenge', time_for_challenge=20)
+        challenge.save()
+        activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
+        activechallenge.save()
+        submission = Submission(username='ab123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
+        submission.save()
+        for un in ['bc123','cd123']:
+            submission.create_comment(un, 'test comment from {}'.format(un))
+
+    def test_report_comment(self):
+        pass
+
+    def test_review_comment(self):
+        pass
+
+    def test_remove_comment(self):
+        pass
+
+    def test_reinstate_comment(self):
+        pass
+    
+    def test_inappropriate_language_filter(self):
+        Profile.recalculate_user_points_by_username('ab123')
+        Profile.recalculate_user_points_by_username('cd123')
+        submission = Submission.objects.get(username='ab123')
+        self.assertEqual(2, submission.get_comment_count(), 'incorrect inital comment count')
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*submission.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
+        # attempt to create comment containing profane language
+        inappropriate_comment = ''.join([WORDS_TO_FILTER[i] for i in [16, 32, 64]])
+        submission.create_comment('cd123', inappropriate_comment)
+        self.assertEqual(2, submission.get_comment_count()) # only non-reported fetched
+        comment = Comment.objects.get(comment_username='cd123', content=inappropriate_comment)
+        self.assertTrue(comment.reported)
+        self.assertEqual(0, len(submission.get_comments().filter(comment_username='cd123', content=inappropriate_comment)))
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*submission.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
+        profile = Profile.objects.get(user__username='cd123')
+        self.assertEqual(profile.points, SCORES['comment']['given']) # only points for one comment

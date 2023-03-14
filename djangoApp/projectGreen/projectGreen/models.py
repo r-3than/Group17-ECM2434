@@ -19,9 +19,13 @@ def punctuality_scaling(time_for_challenge: int, minutes_late: int) -> int:
     return round(math.sqrt(max(time_for_challenge-minutes_late, 0)+1))
 
 def load_profanity_file() -> list[str]:
+    '''
+    Loads list of profane words from the provided source URL
+    Note that changing the source may require an alteration to the current formatting
+    '''
     url_stream = urllib.request.urlopen(PROFANITY_FILTER_SOURCE_URL)
     LOGGER.info('loaded profanity file from {}'.format(PROFANITY_FILTER_SOURCE_URL))
-    return [line.decode().strip('\n') for line in url_stream.readlines()]
+    return [line.decode().strip('\n') for line in url_stream.readlines()][1:]
 
 WORDS_TO_FILTER = load_profanity_file()
 
@@ -105,10 +109,17 @@ class Profile(models.Model):
         Interactions are only counted / points are only assigned for non-reported submissions
         '''
         points = 0
+        # upvote points
         upvotes_given = Upvote.objects.filter(voter_username=username, submission__reported=False)
         points += len(upvotes_given)*SCORES['upvote']['given']
         upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
         points += len(upvotes_recieved)*SCORES['upvote']['recieved']
+        # comment points
+        comments_given = Comment.objects.filter(comment_username=username, submission__reported=False, reported=False)
+        points += len(comments_given)*SCORES['comment']['given']
+        comments_recieved = Comment.objects.filter(submission__username=username, submission__reported=False, reported=False)
+        points += len(comments_recieved)*SCORES['comment']['recieved']
+        # submission points
         submissions = Submission.objects.filter(username=username)
         for sub in submissions:
             if sub.reported:
@@ -123,10 +134,17 @@ class Profile(models.Model):
         '''
         username = self.user.username
         points = 0
+        # upvote points
         upvotes_given = Upvote.objects.filter(voter_username=username, submission__reported=False)
         points += len(upvotes_given)*SCORES['upvote']['given']
         upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
         points += len(upvotes_recieved)*SCORES['upvote']['recieved']
+        # comment points
+        comments_given = Comment.objects.filter(comment_username=username, submission__reported=False, reported=False)
+        points += len(comments_given)*SCORES['comment']['given']
+        comments_recieved = Comment.objects.filter(submission__username=username, submission__reported=False, reported=False)
+        points += len(comments_recieved)*SCORES['comment']['recieved']
+        # submission points
         submissions = Submission.objects.filter(username=username)
         for sub in submissions:
             if sub.reported:
@@ -204,6 +222,9 @@ class Friend(models.Model):
     
     @classmethod
     def get_friend_post_count(cls, username: str, active_challenge: 'ActiveChallenge') -> int:
+        '''
+        Counts the number of friends who have posted for the given challenge
+        '''
         friend_usernames = Friend.get_friend_usernames(username)
         valid_submissions = []
         for un in friend_usernames:
@@ -246,16 +267,10 @@ class ActiveChallenge(models.Model):
 
     @classmethod
     def get_last_active_challenge(cls) -> 'ActiveChallenge':
+        '''
+        Returns the most recent (current) ActiveChallenge object
+        '''
         return ActiveChallenge.objects.latest('date')
-    
-    @classmethod
-    def user_has_submitted(cls, username: str) -> bool:
-        ac = ActiveChallenge.get_last_active_challenge()
-        try:
-            Submission.objects.get(username=username, active_challenge=ac)
-            return True
-        except Submission.DoesNotExist:
-            return False
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -270,6 +285,18 @@ class Submission(models.Model):
     reviewed = models.BooleanField(default=False)
     photo_bytes = models.BinaryField(null=True)
 
+    @classmethod
+    def user_has_submitted(cls, username: str) -> bool:
+        '''
+        Checks if a user has submitted for the most recent challenge
+        '''
+        ac = ActiveChallenge.get_last_active_challenge()
+        try:
+            Submission.objects.get(username=username, active_challenge=ac)
+            return True
+        except Submission.DoesNotExist:
+            return False
+
     def get_minutes_late(self) -> int:
         '''
         Calculates time from when the challenge was set to when the submission was made
@@ -278,6 +305,9 @@ class Submission(models.Model):
         return late.total_seconds() // 60
     
     def get_punctuality_scaling(self) -> float:
+        '''
+        Value used to scale the points awarded for a submission
+        '''
         time_for_challenge = self.active_challenge.challenge.time_for_challenge
         return punctuality_scaling(time_for_challenge, self.get_minutes_late())
 
@@ -395,7 +425,7 @@ class Submission(models.Model):
         Gets the number of Comments for a submission
         Reported comments are excluded from this count
         '''
-        return len(self.get_comments(False))
+        return len(self.get_comments())
 
     verbose_name = 'Submission'
     verbose_name_plural = 'Submissions'
@@ -499,6 +529,10 @@ class Comment(models.Model):
             Profile.add_points_by_username(self.submission.username, SCORES['comment']['recieved'])
 
     def inappropriate_language_filter(self) -> bool:
+        '''
+        Flags inappropriate words based on WORDS_TO_FILTER; called by create_comment
+        May flag false positives; hence comment is reported not removed
+        '''
         for word in WORDS_TO_FILTER:
             if word in self.content:
                 LOGGER.warning('flagged inappropriate word "{}" in {}\'s comment'.format(word, self.comment_username))
