@@ -1,2 +1,16 @@
 http://127.0.0.1:8000/ will not work due to how azure is setup use
 http://localhost:8000/ instead
+
+Please remove django-microsoft-authentication
+From global or your venv
+pip3 uninstall django-microsoft-authentication
+
+I needed to change some code in it when creating the users and it will now be stored locally
+
+To get all requirements/dependencies:
+    "cd djangoApp/projectGreen"
+    "pip install -r requirements.txt"
+
+Creating/modifying models from the admin page (when testing):
+Django signal callbacks cannot reconcile points flow with admin page modifications.
+Any changes made in the admin interface will require all user's points to be resynchronized.

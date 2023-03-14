@@ -10,6 +10,7 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
+import os
 from pathlib import Path
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -25,8 +26,46 @@ SECRET_KEY = 'django-insecure-*f-8r*xtx6mljgv8pdcp^^)z&y&80r1p_iyf!y_lf=*0600$ca
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'file_app': {
+            'class': 'logging.FileHandler',
+            'filename': 'projectGreen_log.log',
+            'formatter': 'simple',
+        },
+        'file_global': {
+            'class': 'logging.FileHandler',
+            'filename': 'django_debug.log',
+            'formatter': 'verbose',
+        },
+    },
+    'loggers': {
+        'projectGreen.models': {
+            'level': 'WARNING',
+            'handlers': ['file_app'],
+        },
+        'django': {
+            'level': 'DEBUG',
+            'handlers': ['file_global'],
+            'propogate': True,
+        },
+    },
+    'formatters': {
+        'simple': {
+            'format': '{asctime} [{levelname}]: {message}',
+            'style': '{',
+        },
+        'verbose': {
+            'format': '{asctime} [{name} {levelname} IN {module}]: {message}',
+            'style': '{',
+        },
+    },
+}
 
+ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com","localhost"]
+CSRF_TRUSTED_ORIGINS = ['https://projectgreen.grayitsolutions.com',"http://localhost:8000"]
 
 # Application definition
 
@@ -38,6 +77,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'django.contrib.sites',
+    'projectGreen'
 ]
 
 MIDDLEWARE = [
@@ -70,6 +110,13 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'projectGreen.wsgi.application'
 
+# Email Settings
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_PORT = 587
+EMAIL_HOST_USER = 'djangotestemail31@gmail.com'  
+EMAIL_HOST_PASSWORD = 'nrsrhztfmmwyqzey'
 
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
@@ -101,16 +148,17 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+broadcastURL = "http://localhost:8000" # makes it easier when hosting so i can just change this url
 
 
 MICROSOFT = {
     "app_id": "24bdff02-06db-48b9-b65a-da869ccd651d",
     "app_secret": "mXr8Q~b8BO9E9gI~Lv38QCFcO2G45Rc27nv6AajQ",
-    "redirect": "http://localhost:8000/microsoft_authentication/callback",
+    "redirect": broadcastURL+"/microsoft_authentication/callback",
     "scopes": ["user.read"],
     "authority": "https://login.microsoftonline.com/common",  # or using tenant "https://login.microsoftonline.com/{tenant}",
     "valid_email_domains": ["exeter.ac.uk"],
-    "logout_uri": "http://localhost:8000/"
+    "logout_uri": broadcastURL
 }
 
 LOGIN_URL = "/microsoft_authentication/login"
@@ -139,6 +187,10 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+
+STATICFILES_DIRS = (
+    os.path.join(BASE_DIR, "static"),
+)
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
