@@ -51,13 +51,10 @@ def like_submission(request):
             checker = Upvote.objects.filter(voter_username=request.user.username,
                 submission_id=submission_id)
             if len(checker) < 1:
-                new_upvote = Upvote(
-                    voter_username=request.user.username,
-                    submission_id=submission_id
-                )
-                new_upvote.save()
+                SubmissionObj = Submission.objects.filter(submission_id=submission_id)
+                SubmissionObj.create_upvote(request.user.username)
             else:
-                checker.delete()
+                checker.remove_upvote()
         return HttpResponse({"success":"true"})
 
 
