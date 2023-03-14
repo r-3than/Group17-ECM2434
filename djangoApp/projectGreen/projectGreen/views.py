@@ -54,7 +54,7 @@ def like_submission(request):
                 SubmissionObj = Submission.objects.filter(id=submission_id).first()
                 SubmissionObj.create_upvote(request.user.username)
             else:
-                checker.remove_upvote()
+                checker.first().remove_upvote()
         return HttpResponse({"success":"true"})
 
 
