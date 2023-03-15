@@ -6,6 +6,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 
 from microsoft_authentication.auth.auth_decorators import microsoft_login_required
+from django.contrib.auth.models import User
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
 import base64 , json
@@ -87,6 +88,10 @@ def home(request):
                     submission_time_form = submission.submission_time.strftime("%B %d, %H:%M")
             else:
                 submission_time_form = submission.submission_time.strftime("%H:%M")
+
+            # Get the display name of the user who made the submission
+            user = User.objects.get(username=submission.username)
+            user_display_name = user.first_name
             if submission.photo_bytes != None:
                 photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
             else:
@@ -102,7 +107,8 @@ def home(request):
             user_points = str(profileObj.points)
             context["user_points"] = user_points
             submissions_info[submission.id] = {
-                                               'submission_id' :submission.id,
+                                               'submission_id': submission.id,
+                                               'submission_user_displayname': user_display_name,
                                                'submission_username': submission.username,
                                                'submission_time': submission_time_form,
                                                'submission_photo': photo_b64,
