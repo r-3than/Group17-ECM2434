@@ -83,7 +83,6 @@ def home(request):
             current_date = date.today().strftime("%d:%m:%Y")
             current_year = date.today().strftime("%Y")
 
-
             # Only display submission year if different from current year
             if submission_year != current_year:
                 submission_time_form = submission.submission_time.strftime("%B %d, %Y")
@@ -109,6 +108,7 @@ def home(request):
             else:
                 has_liked = 0
             profileObj = Profile.objects.filter(id=request.user.id).first()
+            has_reviewed = submission.reviewed
             user_points = str(profileObj.points)
             context["user_points"] = user_points
             submissions_info[submission.id] = {
@@ -117,6 +117,7 @@ def home(request):
                                                'submission_time': submission_time_form,
                                                'submission_photo': photo_b64,
                                                'submission_has_liked': has_liked,
+                                               'submission_has_reviewed': has_reviewed,
                                                'submission_upvote_count': submission.get_upvote_count()
                                             }
         
