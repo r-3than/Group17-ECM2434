@@ -152,6 +152,16 @@ def submit(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
     
+def post(request):
+    context = {}
+    if request.user.is_authenticated:
+        template = loader.get_template('home/post.html')  
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+    
 
 def is_mobile(request):
     MOBILE_AGENT_RE=re.compile(r".*(iphone|mobile|androidtouch)",re.IGNORECASE)

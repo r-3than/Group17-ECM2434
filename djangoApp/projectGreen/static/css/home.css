@@ -79,6 +79,10 @@ div.account {
     font-size: 15px;
 }
 
+.trigger-menu {
+    display: none;   
+}
+
 main {
     height: auto;
     width: auto;
