@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import ActiveChallenge, Profile, Submission, Upvote
+from projectGreen.models import ActiveChallenge, Profile, Submission, Upvote, Friend
 
 
 
@@ -45,7 +45,7 @@ def uploadphoto(request):
 
 @csrf_exempt
 def like_submission(request):
-     if request.method == "POST":
+    if request.method == "POST":
         if request.user.is_authenticated:
             data=json.loads(request.body)
             submission_id = data["submission_id"]
@@ -125,6 +125,80 @@ def home(request):
         print("Not signed in")
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
+    
+
+def friends_feed(request):
+    context = {}
+    if request.user.is_authenticated:
+        template = loader.get_template('home/home.html')
+
+        submissions_info = {}
+
+        # List the user's friends' usernames
+        friends = Friend.get_friend_usernames(request.user.username)
+
+        # List the submissions from most recent
+        submissions = Submission.objects.all().order_by('-submission_time')
+        for submission in submissions:
+            if submission.username in friends:
+
+                submission_date = submission.submission_time.strftime("%d:%m:%Y")
+                submission_year = submission.submission_time.strftime("%Y")
+                current_date = date.today().strftime("%d:%m:%Y")
+                current_year = date.today().strftime("%Y")
+
+
+                # Only display submission year if different from current year
+                if submission_year != current_year:
+                    submission_time_form = submission.submission_time.strftime("%B %d, %Y")
+                # Only display submission date if different from current date
+                elif submission_date != current_date:
+                    # Display "Yesterday" if submission is from previous day
+                    if current_date == (submission.submission_time + timedelta(days = 1)).strftime("%d:%m:%Y"):
+                        submission_time_form = submission.submission_time.strftime("Yesterday, %H:%M")
+                    # Display actual date otherwise
+                    else:
+                        submission_time_form = submission.submission_time.strftime("%B %d, %H:%M")
+                else:
+                    submission_time_form = submission.submission_time.strftime("%H:%M")
+
+                # Get the display name of the user who made the submission
+                user = User.objects.get(username=submission.username)
+                user_display_name = user.first_name
+                if submission.photo_bytes != None:
+                    photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
+                else:
+                    photo_b64 = "data:image/png;base64,"
+                # Dictionary structure to pass to template 
+                checker = Upvote.objects.filter(voter_username=request.user.username,
+                    submission_id=submission.id)
+                if len(checker) >= 1:
+                    has_liked = 1
+                else:
+                    has_liked = 0
+                Profile.recalculate_user_points_by_username(submission.username)
+                profileObj = Profile.objects.filter(id=request.user.id).first()
+                user_points = str(profileObj.points)
+                context["user_points"] = user_points
+                submissions_info[submission.id] = {
+                                                'submission_id': submission.id,
+                                                'submission_user_displayname': user_display_name,
+                                                'submission_username': submission.username,
+                                                'submission_time': submission_time_form,
+                                                'submission_photo': photo_b64,
+                                                'submission_upvote_count': submission.get_upvote_count(),
+                                                'submission_comment_count': submission.get_comment_count(),
+                                                'submission_has_liked': has_liked,
+                                                }
+        
+        context['submissions'] = submissions_info
+
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+
     
 def challenge(request):
     context = {}
