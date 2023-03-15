@@ -18,7 +18,7 @@ from projectGreen.models import ActiveChallenge, Profile, Submission, Upvote
 
 @csrf_exempt
 def uploadphoto(request):
-     if request.method == "POST":
+    if request.method == "POST":
         if request.user.is_authenticated:
             upload=request.FILES["upload_pic"]
             picture_bytes = b""
@@ -103,6 +103,7 @@ def home(request):
                 has_liked = 1
             else:
                 has_liked = 0
+            Profile.recalculate_user_points_by_username(submission.username)
             profileObj = Profile.objects.filter(id=request.user.id).first()
             user_points = str(profileObj.points)
             context["user_points"] = user_points
