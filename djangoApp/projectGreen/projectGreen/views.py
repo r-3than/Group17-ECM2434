@@ -161,6 +161,14 @@ def submit(request):
     context = {}
     if request.user.is_authenticated:
         template = loader.get_template('camera/submit.html')  
+        CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")
