@@ -1,12 +1,14 @@
+
 '''
 Main Author:
     TN - Full admin views
 Sub-Author:
     LB - Initial Challenge model view; code review
 '''
-
+import base64
 from django.contrib import admin
 from django.contrib.auth.models import User
+from django.utils.html import format_html
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
 from datetime import datetime
 import logging
@@ -135,7 +137,8 @@ class SubmissionAdmin(admin.ModelAdmin):
     def get_submission(self, submission) -> str:
         ''' Fixed by ER '''
         if submission.photo_bytes != None:
-            return 'data:image/png;base64,${decoded}'.format(decoded=submission.photo_bytes.decode)
+            photo_url=base64.b64encode(submission.photo_bytes).decode("utf-8")
+            return format_html("<img src='data:image/png;base64,{decoded}'>".format(decoded=photo_url))
         else:
             return '[no image found]'
 
