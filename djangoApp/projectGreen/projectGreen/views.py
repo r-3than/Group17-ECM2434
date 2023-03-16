@@ -134,10 +134,13 @@ def challenge(request):
     if request.user.is_authenticated:
         template = loader.get_template('home/challenge.html')
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = CurrentChallenge.challenge.description
-        profileObj = Profile.objects.filter(id=request.user.id).first()
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        
+        #profileObj = Profile.objects.filter(user__id=request.user.id).first()
+        profileObj = Profile.get_profile(request.user.username)
+        #user_points = str(profileObj.points)
         user_points = str(profileObj.points)
-        postCount= Friend.get_friend_post_count(profileObj.username)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
         context["user_points"] = user_points
         context["post_count"] = postCount
 
