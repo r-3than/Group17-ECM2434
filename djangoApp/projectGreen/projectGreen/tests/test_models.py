@@ -15,6 +15,9 @@ class ProfileTestCase(TestCase):
     def setUp(self):
         user = User(username='js123', password='unsecure_password')
         user.save()
+
+    def test_user_data(self):
+        pass
     
     def test_recalc_user_points(self):
         Profile.set_points_by_username('js123', 0)
@@ -43,6 +46,9 @@ class ProfileTestCase(TestCase):
         self.assertEqual(profile.points, 10, 'add_points_by_username failed')
         profile.add_points(10)
         self.assertEqual(profile.points, 20, 'add_points failed')
+
+    def test_get_profile(self):
+        pass
 
 class FriendTestCase(TestCase):
     def setUp(self):
@@ -155,7 +161,7 @@ class SubmissionTestCase(TestCase):
                                     submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
             submission.save()
         reported_submission = Submission(username='bc123', active_challenge=activechallenge,
-                                        submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True)
+                                        submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True, reported_by='ab123')
         reported_submission.save()
         reviewed_submission = Submission(username='cd123', active_challenge=activechallenge,
                                             submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reviewed=True)
@@ -190,19 +196,20 @@ class SubmissionTestCase(TestCase):
 
     def test_report_submission(self):
         already_reported = Submission.objects.get(username='bc123')
-        self.assertFalse(already_reported.report_submission())
+        self.assertFalse(already_reported.report_submission('ab123'))
         self.assertEqual(Submission.objects.get(username='bc123'), already_reported)
 
         already_reviewed = Submission.objects.get(username='cd123')
-        self.assertFalse(already_reviewed.report_submission())
+        self.assertFalse(already_reviewed.report_submission('ab123'))
         self.assertEqual(Submission.objects.get(username='cd123'), already_reviewed)
 
         Profile.recalculate_user_points_by_username('ab123')
         submission = Submission.objects.get(username='ab123')
-        submission.report_submission()
+        submission.report_submission('bc123')
         profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(profile.points, 0)
         self.assertTrue(submission.reported)
+        self.assertEqual(submission.reported_by, 'bc123')
 
     def test_review_submission(self):
         not_reported = Submission.objects.get(username='ab123')
@@ -219,10 +226,12 @@ class SubmissionTestCase(TestCase):
         Profile.recalculate_user_points_by_username('ab123')
         profile = Profile.objects.get(user__username='ab123')
         submission = Submission.objects.get(username='ab123')
-        submission.report_submission()
+        submission.report_submission('ef123')
         profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(profile.points, 0)
         submission.review_submission(is_suitable=True)
+        profile = Profile.objects.get(user__username='ef123')
+        self.assertEqual(profile.number_of_false_reports, 1)
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling())
@@ -233,10 +242,12 @@ class SubmissionTestCase(TestCase):
         Profile.recalculate_user_points_by_username('abc123')
         profile = Profile.objects.get(user__username='abc123')
         submission = Submission.objects.get(username='abc123')
-        submission.report_submission()
+        submission.report_submission('ab123')
         profile = Profile.objects.get(user__username='abc123')
         self.assertEqual(profile.points, 0)
         submission.review_submission(is_suitable=False)
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.number_of_false_reports, 0)
         profile = Profile.objects.get(user__username='abc123')
         self.assertEqual(profile.points, 0)
         self.assertEqual(profile.number_of_submissions_removed, 1)
@@ -309,7 +320,7 @@ class SubmissionTestCase(TestCase):
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # 2 upvotes recieved
-        submission.report_submission()
+        submission.report_submission('cd123')
         for un in ['ab123','bc123']:
             profile = Profile.objects.get(user__username=un)
             self.assertEqual(profile.points, 0)
@@ -388,6 +399,7 @@ class SubmissionTestCase(TestCase):
         submission.create_comment('ef123', '****, reported comment ')
         reported_comment = Comment.objects.get(comment_username='ef123')
         reported_comment.reported = True
+        reported_comment.reported_by = 'ab123'
         reported_comment.save()
         self.assertEqual(submission.get_comment_count(), 2, 'get_comment_count failed')
 
@@ -479,6 +491,7 @@ class CommentTestCase(TestCase):
         submission.create_comment('ef123', 'this is a reported commment')
         c = Comment.objects.get(comment_username='ef123')
         c.reported = True
+        c.reported_by = 'ab123'
         c.save()
 
     def test_report_comment(self):
@@ -492,13 +505,13 @@ class CommentTestCase(TestCase):
         already_reported = Comment.objects.get(comment_username='ef123')
         self.assertTrue(already_reported.reported)
         # attempt to report
-        self.assertFalse(already_reported.report_comment())
+        self.assertFalse(already_reported.report_comment('ab123'))
         profile = Profile.objects.get(user__username='ef123')
         self.assertEqual(profile.points, 0) # no points for reported comment
 
         already_reviewed = Comment.objects.get(comment_username='cd123')
         # attempt to report a reviewed comment
-        self.assertFalse(already_reviewed.report_comment())
+        self.assertFalse(already_reviewed.report_comment('ab123'))
         profile = Profile.objects.get(user__username='cd123')
         self.assertEqual(profile.points, SCORES['comment']['given'])
         profile = Profile.objects.get(user__username='bc123')
@@ -508,10 +521,11 @@ class CommentTestCase(TestCase):
         # reporting valid comment
         Profile.recalculate_user_points_by_username('bc123')
         comment = Comment.objects.get(comment_username='bc123')
-        comment.report_comment()
+        comment.report_comment('ab123')
         profile = Profile.objects.get(user__username='bc123')
         self.assertEqual(profile.points, 0)
         self.assertTrue(comment.reported)
+        self.assertEqual(comment.reported_by, 'ab123')
 
         ## repeat for reported submission
         
@@ -526,8 +540,11 @@ class CommentTestCase(TestCase):
 
         # reviewing valid comment with is_suitable = True
         comment = Comment.objects.get(comment_username='ef123')
+        reporting_username = comment.reported_by
         self.assertTrue(comment.reported)
         self.assertTrue(comment.review_comment(True))
+        profile = Profile.objects.get(user__username=reporting_username)
+        self.assertEqual(profile.number_of_false_reports, 1)
         profile = Profile.objects.get(user__username='cd123')
         self.assertEqual(profile.points, SCORES['comment']['given'])
         sub = Submission.objects.get(username='ab123')
@@ -553,7 +570,21 @@ class CommentTestCase(TestCase):
         ## repeat for reported submission
 
     def test_remove_comment(self):
-        pass
+        # remove comment with delete_instance = False
+        Profile.recalculate_user_points_by_username('ab123')
+        profile = Profile.objects.get(user__username='ab123')
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
+        comment = Comment.objects.get(comment_username='bc123')
+        comment.remove_comment(False)
+        self.assertEqual(sub.get_comment_count(), 2) # comments should still exist
+        # points should be removed
+        profile = Profile.objects.get(user__username='ab123')
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['comment']['recieved'])
+        
+        Profile.recalculate_user_points_by_username('ab123')
+
 
     def test_reinstate_comment(self):
         pass

@@ -166,7 +166,7 @@ class Profile(models.Model):
         Ensures profile exists and fetches it
         '''
         Profile.add_points_by_username(username, 0)
-        return Profile.objects.get(username=username)
+        return Profile.objects.get(user__username=username)
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
@@ -445,7 +445,7 @@ class Submission(models.Model):
         Profile.add_points_by_username(self.username, SCORES['comment']['recieved'])
         Profile.add_points_by_username(comment_username, SCORES['comment']['given'])
         if u.inappropriate_language_filter():
-            u.report_comment()
+            u.report_comment('admin')
             return False
         else:
             return True
@@ -558,12 +558,13 @@ class Comment(models.Model):
             self.save()
             if is_suitable:
                 self.reinstate_comment()
-                p = Profile.get_profile(self.reported_by)
-                try:
-                    p.number_of_false_reports += 1
-                except :
-                    p.number_of_false_reports = 1
-                p.save()
+                if self.reported_by != 'admin':
+                    p = Profile.get_profile(self.reported_by)
+                    try:
+                        p.number_of_false_reports += 1
+                    except :
+                        p.number_of_false_reports = 1
+                    p.save()
             else:
                 u = User.objects.get(username=self.comment_username)
                 try:

@@ -1,3 +1,10 @@
+'''
+Main Author:
+    TN - Full admin views
+Sub-Author:
+    LB - Initial Challenge model view; code review
+'''
+
 from django.contrib import admin
 from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
@@ -126,6 +133,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     
     @admin.display(description='Photo')
     def get_submission(self, submission) -> str:
+        ''' Fixed by ER '''
         if submission.photo_bytes != None:
             return 'data:image/png;base64,${decoded}'.format(decoded=submission.photo_bytes.decode)
         else:
