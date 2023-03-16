@@ -15,13 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access
+from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access, post, account, friends
 
 urlpatterns = [
     path('', challenge, ),
     path('home/', home, name='home'),
-    path('submit/',submit,name="camera"),
+    path('submit/',submit,name='submit'),
     path('uploadphoto/',uploadphoto),
+    path('post/',post, name='post'),
+    path('account/',account, name='account'),
+    path('friends/',friends, name='friends'),
     path('like_submission/',like_submission),
     path('flag_submission/',flag_submission),
     path('specific_group_access', specific_group_access, ),
