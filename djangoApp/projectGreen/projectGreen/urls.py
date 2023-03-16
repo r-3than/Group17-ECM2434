@@ -20,7 +20,7 @@ from projectGreen.views import flag_submission, home,challenge, like_submission,
 urlpatterns = [
     path('', challenge, ),
     path('home/', home, name='home'),
-    path('submit/',submit),
+    path('submit/',submit,name="camera"),
     path('uploadphoto/',uploadphoto),
     path('like_submission/',like_submission),
     path('flag_submission/',flag_submission),

@@ -30,8 +30,11 @@
             <br>
             <a class="subtitle">Today's Challenge: {{active_challenge}}</a>
           </div>
-          <form class="form-signin m-auto mt-2" action="{% url 'home' %}">
+          <form class="form-signin m-auto mt-2" action="{% url 'camera' %}">
             <button class="w-100 btn btn-lg btn-primary mb-3" style="background-color:#003c3c" type="submit">Post Now</button>
+          </form>
+          <form class="form-signin m-auto mt-2" action="{% url 'home' %}">
+            <button class="w-100 btn btn-lg btn-primary mb-3" style="background-color:#003c3c" type="submit">Go to feed</button>
             <p class="friends">{{post_count}} friends have already posted</p>
           </form>
         </main>
