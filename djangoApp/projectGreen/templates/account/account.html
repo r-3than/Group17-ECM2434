@@ -68,7 +68,15 @@
                     <a href="">Friends' Submissions</a>
                     <a href="">University Submissions</a>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
-                    <button type="button" class="btn btn-danger" style="width: 100%; height: 50px;">Delete Account</button>
+                    <form action="{% url 'deleteAccount' %}" method="post">
+                        {% csrf_token %}
+                        <!-- <input style="display: none;"
+                            type="text"
+                            id="username"
+                            name="username"
+                            value="{{user.username}}" /> -->
+                        <button type="submit" class="btn btn-danger" style="width: 100%; height: 50px;">Delete Account</button>
+                    </form>
                 </div>
             </div>
 
@@ -143,5 +151,10 @@
             </div>
             <div class="side"></div>
           </main>
+          <script>
+            function deleteAccount() {
+                
+            }
+          </script>
     </body>
 </html>

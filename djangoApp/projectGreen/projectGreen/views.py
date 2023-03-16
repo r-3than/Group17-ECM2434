@@ -6,12 +6,13 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 
 from microsoft_authentication.auth.auth_decorators import microsoft_login_required
+from django.contrib.auth import logout
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import ActiveChallenge, Submission, Profile
+from projectGreen.models import ActiveChallenge, Submission, Friend, Profile
 
 
 
@@ -128,6 +129,8 @@ def post(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
     
+
+'''Loads the accounts page'''
 def account(request):
     context = {}
 
@@ -170,16 +173,35 @@ def account(request):
         print("Not signed in")
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
+    
+'''Deletes the specified account'''
+def deleteAccount(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            print("Found profiles:", len(Profile.objects.values_list()))
+            for x in Profile.objects.all():
+                print(x.user.username)
+            try:
+                accountObj = Profile.objects.filter(user__username=request.user.username).first()
+                accountObj.user_data(fetch=False, delete=True)
+                logout(request)
+                return redirect('')
+            except Exception as e:
+                print(str(e))
+                return redirect('/account/')
 
+
+
+'''Loads the friends page'''
 def friends(request):
     context = {}
 
     if request.user.is_authenticated:
         template = loader.get_template('account/friends.html')
 
-        #friends = Profile.user_data(request.user)['friends']
+        friends = Friend.get_friend_usernames(request.user.username)
 
-        #context['friends'] = friends
+        context['friends'] = friends
 
         return HttpResponse(template.render(context, request))
     else:
@@ -187,6 +209,16 @@ def friends(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
     
+'''Creates a pending friend request'''
+def addFriend(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                recipient = request.POST.get("friend_name")
+                Friend.create_friend_request(request.user.username, recipient)
+            finally:
+                return redirect('/friends/')
+
 
 def is_mobile(request):
     MOBILE_AGENT_RE=re.compile(r".*(iphone|mobile|androidtouch)",re.IGNORECASE)

@@ -55,8 +55,11 @@
 
                         Add Friend:
                         <div class="add-friend rounded-3">
-                            <textarea class="rounded-3" name="" id="friend-name" cols="30" rows="1"></textarea>
-                            <button type="button" class="btn btn-outline-success" style="width: 95px;">Add Friend</button>
+                            <form action="" method="post">
+                                {% csrf_token %}
+                                <input  class="rounded-3" type="text" name="friend-name" id="friend-name">
+                                <button type="submit" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
+                            </form>
                         </div>
                     </div>
             
@@ -75,8 +78,11 @@
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
 
                     <div class="add-friend rounded-3">
-                        <textarea class="rounded-3" name="" id="friend-name" cols="30" rows="1"></textarea>
-                        <button type="button" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
+                        <form action="" method="post">
+                            {% csrf_token %}
+                            <input  class="rounded-3" type="text" name="friend-name" id="friend-name">
+                            <button type="submit" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -101,21 +107,88 @@
                     </div>
                 </div>
 
-                <div class="friends-list">
+                <div class="row" style="padding: 0px 15px;">
+                    <button class="filter btn btn-dark" id="setCurrent">Current Friends</button>
+                    <button class="filter btn btn-dark" id="setOutgoing" >Sent Requests</button>
+                    <button class="filter btn btn-dark" id="setIncoming">Incoming Requests</button>
+                </div>
+
+                <div class="friends-list" id="current" style="display: flex;">
+                    {% for friend in friends.items %}
+
+                        <div class="friend row rounded-3">
+                            <div class="side left">
+                                <div class="icon rounded-circle">{{friend.username|make_list|first| capfirst}}</div>
+                            </div>
+                            <div class="centre">
+                                <div>{{friend.username}}</div>
+                            </div>
+                            <div class="side right">
+                                <button type="button" class="btn btn-outline-danger" style="width: 95px;">Remove Friend</button>
+                            </div>
+                        </div>
+
+                    {% endfor %}
+                </div>
+                <div class="friends-list" id="outgoing" style="display: none;">
                     <div class="friend row rounded-3">
                         <div class="side left">
-                            <div class="icon rounded-circle">T</div>
+                            <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
                         </div>
                         <div class="centre">
-                            <div>Username</div>
+                            <div>{{user.username}}</div>
                         </div>
                         <div class="side right">
-                            <button type="button" class="btn btn-outline-danger" style="width: 95px;">Remove Friend</button>
+                            <button type="button" class="btn btn-outline-danger" style="width: 95px; height: 50px;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+                <div class="friends-list" id="incoming" style="display: none;">
+                    <div class="friend row rounded-3">
+                        <div class="side left">
+                            <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                        </div>
+                        <div class="centre">
+                            <div>{{user.username}}</div>
+                        </div>
+                        <div class="side right">
+                            <button type="button" class="btn btn-outline-success" style="width: 95px; height: 50px; margin-right: 5px;">Accept</button>
+                            <button type="button" class="btn btn-outline-danger" style="width: 95px; height: 50px;">Decline</button>
                         </div>
                     </div>
                 </div>
             </div>
             <div class="side"></div>
           </main>
+          <script>
+            let current = document.getElementById("current");
+            let outgoing = document.getElementById("outgoing");
+            let incoming = document.getElementById("incoming");
+
+            document.getElementById("setCurrent").addEventListener("click", displayCurrent);
+            document.getElementById("setOutgoing").addEventListener("click", displayOutgoing);
+            document.getElementById("setIncoming").addEventListener("click", displayIncoming);
+
+            function displayCurrent() {
+                current.setAttribute("style", "display: flex;");
+                outgoing.setAttribute("style", "display: none;");
+                incoming.setAttribute("style", "display: none;");
+                console.log("set current");
+            }
+
+            function displayOutgoing() {
+                current.style.display = "none";
+                outgoing.style.display = "flex";
+                incoming.style.display = "none";
+                console.log("set outgoing");
+            }
+
+            function displayIncoming() {
+                current.setAttribute("style", "display: none;");
+                outgoing.setAttribute("style", "display: none;");
+                incoming.setAttribute("style", "display: flex;");
+                console.log("set incoming");
+            }
+          </script>
     </body>
 </html>
