@@ -81,8 +81,8 @@ class UserAdmin(admin.ModelAdmin):
         return Friend.get_friend_usernames(user.username)
     
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ['get_username', 'points', 'number_of_submissions_removed', 'number_of_comments_removed']
-    ordering = ['number_of_submissions_removed', 'number_of_comments_removed']
+    list_display = ['get_username', 'points', 'number_of_submissions_removed', 'number_of_comments_removed', 'number_of_false_reports']
+    ordering = ['number_of_submissions_removed', 'number_of_comments_removed', 'number_of_false_reports']
     actions = [recalculate_points]
 
     @admin.display(description='username')

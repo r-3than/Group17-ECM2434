@@ -41,6 +41,7 @@ class Profile(models.Model):
     points = models.IntegerField(default=0)
     number_of_submissions_removed = models.IntegerField(default=0)
     number_of_comments_removed = models.IntegerField(default=0)
+    number_of_false_reports = models.IntegerField(default=0)
 
     def user_data(self, fetch: bool=True, delete: bool=False) -> dict:
         '''
@@ -303,6 +304,7 @@ class Submission(models.Model):
     active_challenge = models.ForeignKey(ActiveChallenge, models.CASCADE, null=True)
     submission_time = models.DateTimeField('Submission Time', null=True)
     reported = models.BooleanField(default=False)
+    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, null=True)
     reviewed = models.BooleanField(default=False)
     photo_bytes = models.BinaryField(null=True)
 
@@ -332,7 +334,7 @@ class Submission(models.Model):
         time_for_challenge = self.active_challenge.challenge.time_for_challenge
         return punctuality_scaling(time_for_challenge, self.get_minutes_late())
 
-    def report_submission(self) -> bool:
+    def report_submission(self, reporter_username: str) -> bool:
         '''
         Marks a submission as reported - it will not be
         displayed in the feed while reported == True
@@ -348,6 +350,7 @@ class Submission(models.Model):
         else:
             self.remove_submission(False)
             self.reported = True
+            self.reported_by = reporter_username
             self.save()
             return True
         return False
@@ -369,6 +372,12 @@ class Submission(models.Model):
             self.save()
             if is_suitable:
                 self.reinstate_submission()
+                p = Profile.get_profile(self.reported_by)
+                try:
+                    p.number_of_false_reports += 1
+                except :
+                    p.number_of_false_reports = 1
+                p.save()
             else:
                 u = User.objects.get(username=self.username)
                 try:
@@ -508,9 +517,10 @@ class Comment(models.Model):
     comment_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     content = models.CharField(max_length=256)
     reported = models.BooleanField(default=False)
+    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, null=True)
     reviewed = models.BooleanField(default=False)
 
-    def report_comment(self) -> bool:
+    def report_comment(self, reporter_username: str) -> bool:
         '''
         Marks a comment as reported - it will not be
         displayed on a post while reported == True
@@ -526,6 +536,7 @@ class Comment(models.Model):
         else:
             self.remove_comment(False)
             self.reported = True
+            self.reported_by = reporter_username
             self.save()
             return True
         return False
@@ -547,6 +558,12 @@ class Comment(models.Model):
             self.save()
             if is_suitable:
                 self.reinstate_comment()
+                p = Profile.get_profile(self.reported_by)
+                try:
+                    p.number_of_false_reports += 1
+                except :
+                    p.number_of_false_reports = 1
+                p.save()
             else:
                 u = User.objects.get(username=self.comment_username)
                 try:
