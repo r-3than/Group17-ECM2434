@@ -86,13 +86,13 @@ class ProfileTestCase(TestCase):
             }
         }
         u_data = p.user_data()
-        self.assertEqual(data_populated['profile'], u_data['profile'])
-        self.assertSetEqual(data_populated['friends_set'], u_data['friends_set'])
-        self.assertSetEqual(data_populated['submissions'], u_data['submissions'])
-        self.assertSetEqual(data_populated['upvotes']['given'], u_data['upvotes']['given'])
-        self.assertSetEqual(data_populated['upvotes']['recieved'], u_data['upvotes']['recieved'])
-        self.assertSetEqual(data_populated['comments']['given'], u_data['comments']['given'])
-        self.assertSetEqual(data_populated['comments']['recieved'], u_data['comments']['recieved'])
+        self.assertEqual(data_populated['profile'], u_data['profile'], 'fetched profile/user incorrect')
+        self.assertSetEqual(data_populated['friends_set'], u_data['friends_set'], 'fetched friends incorrect')
+        self.assertSetEqual(data_populated['submissions'], u_data['submissions'], 'fetched submissions incorrect')
+        self.assertSetEqual(data_populated['upvotes']['given'], u_data['upvotes']['given'], 'fetched given upvotes incorrect')
+        self.assertSetEqual(data_populated['upvotes']['recieved'], u_data['upvotes']['recieved'], 'fetched recieved upvotes incorrect')
+        self.assertSetEqual(data_populated['comments']['given'], u_data['comments']['given'], 'fetched given comments incorrect')
+        self.assertSetEqual(data_populated['comments']['recieved'], u_data['comments']['recieved'], 'fetched recieved comments incorrect')
 
         # delete user
         p.user_data(delete=True)
@@ -220,11 +220,11 @@ class ActiveChallengeTestCase(TestCase):
         activechallenge3 = ActiveChallenge(date=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), challenge=c)
         activechallenge3.save()
         latest_challenge = ActiveChallenge.get_last_active_challenge()
-        self.assertEqual(activechallenge, latest_challenge)
+        self.assertEqual(activechallenge, latest_challenge, 'fetched incorrect challenge')
         activechallenge4 = ActiveChallenge(date=datetime.datetime(2023,3,9,10,45,0,0,pytz.UTC), challenge=c)
         activechallenge4.save() # new latest
         latest_challenge = ActiveChallenge.get_last_active_challenge()
-        self.assertEqual(activechallenge4, latest_challenge)
+        self.assertEqual(activechallenge4, latest_challenge, 'didnt fetch new challenge')
 
     def test_get_challenge_description(self):
         activechallenge = ActiveChallenge.objects.get(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC))
@@ -272,10 +272,10 @@ class SubmissionTestCase(TestCase):
         self.assertEqual(scaled_points, 2)
         submission_on_time = Submission(username='ef123', active_challenge=submission.active_challenge,
                                     submission_time=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC))
-        self.assertEqual(submission_on_time.get_punctuality_scaling(), 5)
+        self.assertEqual(submission_on_time.get_punctuality_scaling(), 5, 'on time scaling incorrect')
         submission_late = Submission(username='ef123', active_challenge=submission.active_challenge,
                                     submission_time=datetime.datetime(2023,3,9,10,30,0,0,pytz.UTC))
-        self.assertEqual(submission_late.get_punctuality_scaling(), 1)
+        self.assertEqual(submission_late.get_punctuality_scaling(), 1, 'late scaling incorrect')
 
     def test_report_submission(self):
         already_reported = Submission.objects.get(username='bc123')
@@ -508,7 +508,7 @@ class UpvoteTestCase(TestCase):
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved'])
         for un in ['bc123','cd123']:
             profile = Profile.objects.get(user__username=un)
-            self.assertEqual(profile.points, SCORES['upvote']['given'])
+            self.assertEqual(profile.points, SCORES['upvote']['given'], 'points desync')
         self.assertEqual(len(Upvote.objects.all()), 2)
 
         # Remove upvote with delete_instance = False
@@ -516,7 +516,7 @@ class UpvoteTestCase(TestCase):
         upvote.remove_upvote(delete_instance=False)
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
-        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved']) # Points should be removed
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved'], 'points not removed') # Points should be removed
         profile = Profile.objects.get(user__username='bc123')
         self.assertEqual(profile.points, 0)
         self.assertEqual(len(Upvote.objects.all()), 2) # Upvote should still exist
@@ -526,7 +526,7 @@ class UpvoteTestCase(TestCase):
         upvote.remove_upvote(delete_instance=True)
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
-        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()) # Points should be removed
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling(),  'points not removed') # Points should be removed
         profile = Profile.objects.get(user__username='cd123')
         self.assertEqual(profile.points, 0)
         self.assertEqual(len(Upvote.objects.all()), 1) # previous upvote should still exist
@@ -545,13 +545,13 @@ class UpvoteTestCase(TestCase):
         upvote.remove_upvote(delete_instance=False)
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
-        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved']) # Points should be removed
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['upvote']['recieved'], 'points not removed') # Points should be removed
         profile = Profile.objects.get(user__username='bc123')
         self.assertEqual(profile.points, 0)
         upvote.reinstate_upvote()
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
-        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # Points should be reinstated
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved'], 'points not reinstated') # Points should be reinstated
         profile = Profile.objects.get(user__username='bc123')
         self.assertEqual(profile.points, SCORES['upvote']['given'])
 
@@ -590,13 +590,13 @@ class CommentTestCase(TestCase):
         already_reported = Comment.objects.get(submission=sub, comment_username='ef123')
         self.assertTrue(already_reported.reported)
         # attempt to report
-        self.assertFalse(already_reported.report_comment('ab123'))
+        self.assertFalse(already_reported.report_comment('ab123'), 'reported comment should not be reportable')
         profile = Profile.objects.get(user__username='ef123')
-        self.assertEqual(profile.points, 0) # no points for reported comment
+        self.assertEqual(profile.points, 0, 'reported comment should not give points') # no points for reported comment
 
         already_reviewed = Comment.objects.get(submission=sub, comment_username='cd123')
         # attempt to report a reviewed comment
-        self.assertFalse(already_reviewed.report_comment('ab123'))
+        self.assertFalse(already_reviewed.report_comment('ab123'), 'reviewed comment should not be reportable')
         profile = Profile.objects.get(user__username='cd123')
         self.assertEqual(profile.points, SCORES['comment']['given'])
         profile = Profile.objects.get(user__username='bc123')
@@ -622,7 +622,7 @@ class CommentTestCase(TestCase):
         # attempt to report
         self.assertFalse(already_reported.report_comment('ef123'))
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, current_points) # points unchanged
+        self.assertEqual(profile.points, current_points, 'points desync') # points unchanged
 
         already_reviewed = Comment.objects.get(submission=sub, comment_username='cd123')
         # attempt to report a reviewed comment
@@ -643,10 +643,10 @@ class CommentTestCase(TestCase):
         sub = Submission.objects.get(username='ab123')
         already_reviewed = Comment.objects.get(submission=sub, comment_username='cd123')
         # attempt to review comment after review
-        self.assertFalse(already_reviewed.review_comment(True))
-        self.assertFalse(already_reviewed.review_comment(False))
+        self.assertFalse(already_reviewed.review_comment(True), 'reviewed comment should not be reviewable')
+        self.assertFalse(already_reviewed.review_comment(False), 'reviewed comment should not be reviewable')
         profile = Profile.objects.get(user__username='cd123')
-        self.assertEqual(profile.points, SCORES['comment']['given'])
+        self.assertEqual(profile.points, SCORES['comment']['given'], 'points desync')
 
         # reviewing valid comment with is_suitable = True
         comment = Comment.objects.get(submission=sub, comment_username='ef123')
@@ -654,7 +654,7 @@ class CommentTestCase(TestCase):
         self.assertTrue(comment.reported)
         self.assertTrue(comment.review_comment(True))
         profile = Profile.objects.get(user__username=reporting_username)
-        self.assertEqual(profile.number_of_false_reports, 1)
+        self.assertEqual(profile.number_of_false_reports, 1, 'false report counter not incremented')
         profile = Profile.objects.get(user__username='cd123')
         self.assertEqual(profile.points, SCORES['comment']['given'])
         sub = Submission.objects.get(username='ab123')
@@ -672,7 +672,7 @@ class CommentTestCase(TestCase):
         self.assertTrue(comment.review_comment(False))
         profile = Profile.objects.get(user__username='ef123')
         self.assertEqual(profile.points, 0)
-        self.assertEqual(1, profile.number_of_comments_removed)
+        self.assertEqual(1, profile.number_of_comments_removed, 'removed comment counter not incremented')
 
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(2, sub.get_comment_count())
@@ -698,7 +698,7 @@ class CommentTestCase(TestCase):
         profile = Profile.objects.get(user__username=reporting_username)
         self.assertEqual(profile.number_of_false_reports, 1)
         profile = Profile.objects.get(user__username='ab123')
-        self.assertEqual(profile.points, current_points+SCORES['comment']['given'])
+        self.assertEqual(profile.points, current_points+SCORES['comment']['given'], 'points desync')
         sub = Submission.objects.get(username='cd123')
         self.assertEqual(2, sub.get_comment_count())
         # reviewing valid comment with is_suitable = False
@@ -713,7 +713,7 @@ class CommentTestCase(TestCase):
         self.assertTrue(comment.review_comment(False))
         profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(current_points, profile.points)
-        self.assertEqual(1, profile.number_of_comments_removed)
+        self.assertEqual(1, profile.number_of_comments_removed, 'removed comment counter not incremented')
     
     def test_remove_comment(self):
         # remove comment with delete_instance = False
@@ -850,12 +850,12 @@ class CommentTestCase(TestCase):
         self.assertEqual(profile.points, SCORES['submission']*submission.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
         # attempt to create comment containing profane language
         inappropriate_comment = ''.join([WORDS_TO_FILTER[i] for i in [16, 32, 64]])
-        self.assertFalse(submission.create_comment('cd123', inappropriate_comment))
+        self.assertFalse(submission.create_comment('cd123', inappropriate_comment), 'profanity in comment was not flagged')
         self.assertEqual(2, submission.get_comment_count()) # only non-reported fetched
         comment = Comment.objects.get(comment_username='cd123', content=inappropriate_comment)
-        self.assertTrue(comment.reported)
+        self.assertTrue(comment.reported, 'inappropriate comment was not auto-reported')
         self.assertEqual(0, len(submission.get_comments().filter(comment_username='cd123', content=inappropriate_comment)))
         profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*submission.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
         profile = Profile.objects.get(user__username='cd123')
-        self.assertEqual(profile.points, SCORES['comment']['given']) # only points for one comment
+        self.assertEqual(profile.points, SCORES['comment']['given'], 'points should not be assigned for reported comment') # only points for one comment
