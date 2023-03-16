@@ -41,6 +41,11 @@ def recalculate_points(modeladmin, request, queryset):
     for user in queryset:
         Profile.recalculate_user_points_by_username(user.username)
 
+@admin.action(description='Resynchronise Points')
+def recalculate_points_from_profile(modeladmin, request, queryset):
+    for profile in queryset:
+        profile.recalculate_user_points()
+
 @admin.action(description='Report Submission(s)')
 def report_submission(modeladmin, request, queryset):
     for submission in queryset:
@@ -92,7 +97,7 @@ class UserAdmin(admin.ModelAdmin):
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ['get_username', 'points', 'number_of_submissions_removed', 'number_of_comments_removed', 'number_of_false_reports']
     ordering = ['number_of_submissions_removed', 'number_of_comments_removed', 'number_of_false_reports']
-    actions = [recalculate_points]
+    actions = [recalculate_points_from_profile]
 
     @admin.display(description='username')
     def get_username(self, profile) -> str:
