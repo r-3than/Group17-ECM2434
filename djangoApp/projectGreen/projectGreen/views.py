@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import ActiveChallenge, Profile, Submission, Upvote
+from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Upvote
 
 
 
@@ -133,6 +133,14 @@ def challenge(request):
     context = {}
     if request.user.is_authenticated:
         template = loader.get_template('home/challenge.html')
+        CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = CurrentChallenge.challenge.description
+        profileObj = Profile.objects.filter(id=request.user.id).first()
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.username)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
+
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")
