@@ -1,3 +1,10 @@
+
+'''
+Main Author:
+    TN - Full admin views
+Sub-Author:
+    LB - Initial Challenge model view; code review
+'''
 import base64
 from django.contrib import admin
 from django.contrib.auth.models import User
@@ -16,6 +23,7 @@ def publish_challenge(modeladmin, request, queryset):
         print('Challenge has already been set today')
         return
     except ActiveChallenge.DoesNotExist:
+        ActiveChallenge.objects.all().is_expired = True
         ac = ActiveChallenge(date=datetime.now(), challenge=queryset[0])
         ac.save()
 
@@ -48,6 +56,21 @@ def deny_submission(modeladmin, request, queryset):
     for submission in queryset:
         submission.review_submission(False)
 
+@admin.action(description='Report Comment(s)')
+def report_comment(modeladmin, request, queryset):
+    for comment in queryset:
+        comment.report_comment()
+
+@admin.action(description='Approve Comment(s)')
+def approve_comment(modeladmin, request, queryset):
+    for comment in queryset:
+        comment.review_comment(True)
+
+@admin.action(description='Remove Comment(s)')
+def deny_comment(modeladmin, request, queryset):
+    for comment in queryset:
+        comment.review_comment(False)
+
 class ProfileInline(admin.StackedInline):
     model = Profile
     can_delete = False
@@ -65,6 +88,15 @@ class UserAdmin(admin.ModelAdmin):
     @admin.display(ordering='', description='Friends')
     def get_friends(self, user) -> list[str]:
         return Friend.get_friend_usernames(user.username)
+    
+class ProfileAdmin(admin.ModelAdmin):
+    list_display = ['get_username', 'points', 'number_of_submissions_removed', 'number_of_comments_removed', 'number_of_false_reports']
+    ordering = ['number_of_submissions_removed', 'number_of_comments_removed', 'number_of_false_reports']
+    actions = [recalculate_points]
+
+    @admin.display(description='username')
+    def get_username(self, profile) -> str:
+        return profile.user.username
 
 class ChallengesAdmin(admin.ModelAdmin):
     list_display = ['id', 'description']
@@ -87,11 +119,10 @@ class ActiveChallengesAdmin(admin.ModelAdmin):
     @admin.display(ordering='challenge__time_for_challenge', description='time_for_challenge')
     def get_time_for_challenge(self, active_challenge) -> int:
         return active_challenge.challenge.time_for_challenge
-
-
+    
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ['username', 'get_challenge_date', 'submission_time', 'get_minutes_late', 'get_submission', 'reported', 'reviewed']
-    ordering = ['username']
+    ordering = ['-reported', 'reviewed', 'username']
     actions = [report_submission, approve_submission, deny_submission]
 
     @admin.display(ordering='challenge__challenge_date', description='challenge_date')
@@ -104,6 +135,7 @@ class SubmissionAdmin(admin.ModelAdmin):
     
     @admin.display(description='Photo')
     def get_submission(self, submission) -> str:
+        ''' Fixed by ER '''
         if submission.photo_bytes != None:
             photo_url=base64.b64encode(submission.photo_bytes).decode("utf-8")
             return format_html("<img src='data:image/png;base64,{decoded}'>".format(decoded=photo_url))
@@ -121,18 +153,22 @@ class UpvoteAdmin(admin.ModelAdmin):
     
 class CommentAdmin(admin.ModelAdmin):
     list_display = ['get_submission', 'comment_username', 'content', 'reported', 'reviewed']
-    ordering = ['comment_username']
-    actions = []
+    ordering = ['-reported', 'reviewed', 'comment_username']
+    actions = [report_comment, approve_comment, deny_comment]
 
     @admin.display(ordering='submission__submission', description='submission')
     def get_submission(self, comment) -> Submission:
         return comment.submission
 
+
 admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
-admin.site.register(Challenge, ChallengesAdmin)
+admin.site.register(Profile, ProfileAdmin)
+admin.site.register(User, UserAdmin) # no view for game master
+admin.site.register(Challenge, ChallengesAdmin) # game master retains modification perms
 admin.site.register(ActiveChallenge, ActiveChallengesAdmin)
 admin.site.register(Submission, SubmissionAdmin)
-admin.site.register(Upvote, UpvoteAdmin)
+admin.site.register(Upvote, UpvoteAdmin) # no view for game master
 admin.site.register(Comment, CommentAdmin)
-admin.site.register(Friend)
+admin.site.register(Friend) # no view for game master
+# otherwise, game master can view but not modify
+# admin has all perms

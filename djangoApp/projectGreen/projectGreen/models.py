@@ -1,3 +1,10 @@
+'''
+Main Author:
+    TN - Models and points system
+Sub-Author:
+    LB - Challenge model helper functions; overall code review
+'''
+
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime as dt
@@ -34,6 +41,7 @@ class Profile(models.Model):
     points = models.IntegerField(default=0)
     number_of_submissions_removed = models.IntegerField(default=0)
     number_of_comments_removed = models.IntegerField(default=0)
+    number_of_false_reports = models.IntegerField(default=0)
 
     def user_data(self, fetch: bool=True, delete: bool=False) -> dict:
         '''
@@ -151,6 +159,14 @@ class Profile(models.Model):
                 continue
             points += SCORES['submission'] * sub.get_punctuality_scaling()
         self.user.profile.set_points(points)
+
+    @classmethod
+    def get_profile(cls, username: str) -> 'Profile':
+        '''
+        Ensures profile exists and fetches it
+        '''
+        Profile.add_points_by_username(username, 0)
+        return Profile.objects.get(user__username=username)
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
@@ -271,6 +287,12 @@ class ActiveChallenge(models.Model):
         Returns the most recent (current) ActiveChallenge object
         '''
         return ActiveChallenge.objects.latest('date')
+    
+    def get_challenge_description(self) -> str:
+        '''
+        Returns the challenge description asociated with an ActiveChallenge object
+        '''
+        return self.challenge.description
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -282,6 +304,7 @@ class Submission(models.Model):
     active_challenge = models.ForeignKey(ActiveChallenge, models.CASCADE, null=True)
     submission_time = models.DateTimeField('Submission Time', null=True)
     reported = models.BooleanField(default=False)
+    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, null=True)
     reviewed = models.BooleanField(default=False)
     photo_bytes = models.BinaryField(null=True)
 
@@ -311,7 +334,7 @@ class Submission(models.Model):
         time_for_challenge = self.active_challenge.challenge.time_for_challenge
         return punctuality_scaling(time_for_challenge, self.get_minutes_late())
 
-    def report_submission(self) -> bool:
+    def report_submission(self, reporter_username: str) -> bool:
         '''
         Marks a submission as reported - it will not be
         displayed in the feed while reported == True
@@ -327,6 +350,7 @@ class Submission(models.Model):
         else:
             self.remove_submission(False)
             self.reported = True
+            self.reported_by = reporter_username
             self.save()
             return True
         return False
@@ -348,6 +372,12 @@ class Submission(models.Model):
             self.save()
             if is_suitable:
                 self.reinstate_submission()
+                p = Profile.get_profile(self.reported_by)
+                try:
+                    p.number_of_false_reports += 1
+                except :
+                    p.number_of_false_reports = 1
+                p.save()
             else:
                 u = User.objects.get(username=self.username)
                 try:
@@ -415,7 +445,7 @@ class Submission(models.Model):
         Profile.add_points_by_username(self.username, SCORES['comment']['recieved'])
         Profile.add_points_by_username(comment_username, SCORES['comment']['given'])
         if u.inappropriate_language_filter():
-            u.report_comment()
+            u.report_comment('admin')
             return False
         else:
             return True
@@ -487,9 +517,10 @@ class Comment(models.Model):
     comment_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     content = models.CharField(max_length=256)
     reported = models.BooleanField(default=False)
+    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, null=True)
     reviewed = models.BooleanField(default=False)
 
-    def report_comment(self) -> bool:
+    def report_comment(self, reporter_username: str) -> bool:
         '''
         Marks a comment as reported - it will not be
         displayed on a post while reported == True
@@ -505,6 +536,7 @@ class Comment(models.Model):
         else:
             self.remove_comment(False)
             self.reported = True
+            self.reported_by = reporter_username
             self.save()
             return True
         return False
@@ -526,8 +558,15 @@ class Comment(models.Model):
             self.save()
             if is_suitable:
                 self.reinstate_comment()
+                if self.reported_by != 'admin':
+                    p = Profile.get_profile(self.reported_by)
+                    try:
+                        p.number_of_false_reports += 1
+                    except :
+                        p.number_of_false_reports = 1
+                    p.save()
             else:
-                u = User.objects.get(username=self.username)
+                u = User.objects.get(username=self.comment_username)
                 try:
                     p = Profile.objects.get(user=u)
                     p.number_of_comments_removed += 1
