@@ -48,7 +48,7 @@ def flag_submission(request):
             data=json.loads(request.body)
             submission_id = data["submission_id"]
             submssionObj=Submission.objects.filter(id=submission_id).first()
-            submssionObj.report_submission()
+            submssionObj.report_submission(request.user.username)
 
         return HttpResponse({"success":"true"})
 
@@ -135,10 +135,7 @@ def challenge(request):
         template = loader.get_template('home/challenge.html')
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
-        
-        #profileObj = Profile.objects.filter(user__id=request.user.id).first()
         profileObj = Profile.get_profile(request.user.username)
-        #user_points = str(profileObj.points)
         user_points = str(profileObj.points)
         postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
         context["user_points"] = user_points

@@ -26,7 +26,7 @@ def punctuality_scaling(time_for_challenge: int, minutes_late: int) -> int:
     '''
     return round(math.sqrt(max(time_for_challenge-minutes_late, 0)+1))
 
-def load_profanity_file() -> list:
+def load_profanity_file() -> list[str]:
     '''
     Loads list of profane words from the provided source URL
     Note that changing the source may require an alteration to the current formatting
@@ -220,7 +220,7 @@ class Friend(models.Model):
             f.save()
 
     @classmethod
-    def get_pending_friend_usernames(cls, username: str) -> list:
+    def get_pending_friend_usernames(cls, username: str) -> list[str]:
         '''
         Fetchs all friend connections to a user flagged as pending
         i.e. outstanding friend requests
@@ -229,7 +229,7 @@ class Friend(models.Model):
         return [f.left_username for f in friend_requests]
 
     @classmethod
-    def get_friend_usernames(cls, username: str) -> list:
+    def get_friend_usernames(cls, username: str) -> list[str]:
         '''
         Gets a list of usernames of all friends of a user
         '''
@@ -457,13 +457,13 @@ class Submission(models.Model):
         else:
             return True
         
-    def get_upvotes(self) -> list:
+    def get_upvotes(self) -> list['Upvote']:
         '''
         Gets list of Upvotes for this submission
         '''
         return Upvote.objects.filter(submission=self)
     
-    def get_comments(self) -> list:
+    def get_comments(self) -> list['Comment']:
         '''
         Gets list of Comments for this submission
         Reported comments are excluded from this list

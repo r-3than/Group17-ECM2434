@@ -92,9 +92,6 @@ def validate_email(email):
     return "@" in email and email.split("@")[1] in settings.MICROSOFT["valid_email_domains"]
 
 def username_to_email(username: str) -> str:
-    '''
-    DEORECATED do not use
-    '''
     if '@' in username:
         return username
     else:
