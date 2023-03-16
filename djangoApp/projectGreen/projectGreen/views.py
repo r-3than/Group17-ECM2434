@@ -11,7 +11,7 @@ from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import ActiveChallenge, Submission
+from projectGreen.models import ActiveChallenge, Submission, Profile
 
 
 
@@ -111,7 +111,7 @@ def camera(request):
 def submit(request):
     context = {}
     if request.user.is_authenticated:
-        template = loader.get_template('camera/submit.html')  
+        template = loader.get_template('submit/submit.html')  
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")
@@ -132,7 +132,7 @@ def account(request):
     context = {}
 
     if request.user.is_authenticated:
-        template = loader.get_template('home/account.html')
+        template = loader.get_template('account/account.html')
 
         # Get the user submissions from most recent
         submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
@@ -149,8 +149,6 @@ def account(request):
             submission_date = submission.submission_time.strftime("%d/%m/%Y")
             submission_month = int(submission.submission_time.strftime("%m"))
 
-            print(submission_date)
-
             submission_time_form = submission_date
 
             if submission.photo_bytes != None:
@@ -159,16 +157,29 @@ def account(request):
                 photo_b64 = "data:image/png;base64,"
 
             # Nested list structure to pass to template 
-            submissions_by_month[submission_month - start_month].append({'submission_username': submission.username,
-                                               'submission_time': submission_time_form,
-                                               'submission_photo': photo_b64,
-                                               'submission_upvote_count': submission.get_upvote_count()
+            submissions_by_month[submission_month - start_month].append({'username': submission.username,
+                                               'time': submission_time_form,
+                                               'photo': photo_b64,
+                                               'upvote_count': submission.get_upvote_count()
                                                 })
         
         context['months'] = submissions_by_month
 
-        print(len(submissions_by_month))
-        print(len(submissions_by_month[0]))
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+
+def friends(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        template = loader.get_template('account/friends.html')
+
+        #friends = Profile.user_data(request.user)['friends']
+
+        #context['friends'] = friends
 
         return HttpResponse(template.render(context, request))
     else:

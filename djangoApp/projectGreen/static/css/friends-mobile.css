@@ -55,7 +55,7 @@ a.subtitle {
     width: 100%;
 }
 
-div.account {
+header div.account {
     width: 200px;
     height: 100%;
     display: flex;
@@ -75,6 +75,80 @@ div.account {
     line-height: calc(height);
     font-size: clamp(30px, 6vw, 60px);
     float: right;
+}
+
+.friends-list {
+    display: flex;
+    justify-content: center;
+    margin-top: 30px;
+    height: 500px;
+    overflow-y: scroll;
+}
+
+.friend {
+    height: 100px;
+    width: 90%;
+    background-color: #191919;
+    box-shadow: 1px 5px 10px #202020;
+    color: white;
+}
+
+.friend .side {
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+
+.friend .left {
+    width: 70px;
+}
+
+.friend .right {
+    width: 30%;
+    display: flex;
+    justify-content: right;
+}
+
+.friend .centre {
+    width: calc(70% - 70px);
+    display: flex;
+    align-items: center;
+    font-size: 22px;
+    padding: 0px;
+}
+
+.friend .icon {
+    height: 60%;
+    /* width: 100%; */
+    aspect-ratio: 1/1;
+    z-index: 500;
+    background-color: var(--exeter-dark-green);
+    color: white;
+    text-align: center;
+    font-weight: 400;
+    line-height: calc(height);
+    font-size: 40px;
+}
+
+.add-friend {
+    height: 100px;
+    width: 350px;
+    margin-left: -20px;
+    background-color: #191919;
+    box-shadow: 1px 5px 10px #202020;
+    display: flex;
+    align-items: center;
+}
+
+#friend-name {
+    background-color: #191919;
+    color: inherit;
+    border: none;
+    width: 240px;
+    resize: none;
+    white-space: nowrap;
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .points {
@@ -107,6 +181,7 @@ div.account {
     font-size: 24px;
     font-weight: 500;
     line-height: 300%;
+    overflow: hidden;
 }
 
 .links a {
@@ -130,6 +205,60 @@ main .centre {
     float: left;
     width: 100%;
     height: auto;
+}
+
+.overview {
+    top:0;
+    width: 80%;
+    max-width: 474px;
+    display: block;
+    background-color: #191919;
+    height: auto;
+    box-shadow: 1px 5px 10px #202020;
+    padding-top: 20px;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 8px;
+    padding-bottom: 20px;
+    color: white;
+    text-align: center;
+}
+
+.main-pic {
+    width: fit-content;
+    height: 100px;
+    margin: auto;
+}
+
+.main-pic .icon {
+    height: 100%;
+    aspect-ratio: 1/1;
+    background-color: var(--exeter-dark-green);
+    color: white;
+    text-align: center;
+    font-weight: 400;
+    line-height: calc(height);
+    font-size: 65px;
+}
+
+.accordion-button {
+    background-color: var(--exeter-dark-green);
+    color: white;
+}
+
+.accordion {
+    background-color: var(--exeter-deep-green);
+}
+
+.accordion-item {
+    background-color: var(--exeter-deep-green);
+    border: 1px solid var(--exeter-deep-green);
+}
+
+.accordion-body {
+    overflow-y: scroll;
+    background-color: var(--exeter-deep-green);
+    max-height: 600px;
 }
 
 .post {
@@ -205,28 +334,26 @@ main .centre {
     height: 45px;
     aspect-ratio: 1/1;
     margin: 10px;
+    position: absolute;
     z-index: 500;
-    right: 0px;
+    right: 8px;
     background-color: var(--exeter-dark-green);
     color: white;
     text-align: center;
     font-weight: 400;
     line-height: 45px;
     font-size: 32px;
-    float: right;
-    position: absolute;
 }
 
 .img {
-    max-width: 100%;
-    width: fit-content;
-    height: 440px;
+    width: 100%;
+    aspect-ratio: 6/5;
     overflow: hidden;
-    margin: auto;
+    margin-top: -60px;
+    position: absolute;
+    top: 60px;
+    left: -8px;
     box-shadow: 1px 5px 12px black;
-    display: flex;
-    justify-content: center;
-    position: relative;
 }
 
 .img img {
