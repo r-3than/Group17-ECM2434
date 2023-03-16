@@ -1,3 +1,10 @@
+'''
+Main Author:
+    TN - Models and points system
+Sub-Author:
+    LB - Challenge model helper functions; overall code review
+'''
+
 from django.db import models
 from django.contrib.auth.models import User
 from datetime import datetime as dt
@@ -152,6 +159,14 @@ class Profile(models.Model):
             points += SCORES['submission'] * sub.get_punctuality_scaling()
         self.user.profile.set_points(points)
 
+    @classmethod
+    def get_profile(cls, username: str) -> 'Profile':
+        '''
+        Ensures profile exists and fetches it
+        '''
+        Profile.add_points_by_username(username, 0)
+        return Profile.objects.get(username=username)
+
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
     class Meta:
@@ -271,6 +286,12 @@ class ActiveChallenge(models.Model):
         Returns the most recent (current) ActiveChallenge object
         '''
         return ActiveChallenge.objects.latest('date')
+    
+    def get_challenge_description(self) -> str:
+        '''
+        Returns the challenge description asociated with an ActiveChallenge object
+        '''
+        return self.challenge.description
 
     verbose_name = 'ActiveChallenge'
     verbose_name_plural = 'ActiveChallenges'
@@ -527,7 +548,7 @@ class Comment(models.Model):
             if is_suitable:
                 self.reinstate_comment()
             else:
-                u = User.objects.get(username=self.username)
+                u = User.objects.get(username=self.comment_username)
                 try:
                     p = Profile.objects.get(user=u)
                     p.number_of_comments_removed += 1
