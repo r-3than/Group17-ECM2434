@@ -13,42 +13,125 @@ from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Sub
 
 class ProfileTestCase(TestCase):
     def setUp(self):
-        user = User(username='js123', password='unsecure_password')
+        user = User(username='ab123', password='unsecure_password')
         user.save()
 
     def test_user_data(self):
-        pass
+        user = User.objects.get(username='ab123')
+        p = Profile(user=user, points=100)
+        data_empty = {
+            'profile': [user, p],
+            'friends_set': set(),
+            'submissions': set(),
+            'upvotes': {
+                'given': set(),
+                'recieved': set()
+            },
+            'comments': {
+                'given': set(),
+                'recieved': set()
+            }
+        }
+        u_data = p.user_data()
+        self.assertEqual(data_empty['profile'], u_data['profile'])
+        self.assertSetEqual(data_empty['friends_set'], u_data['friends_set'])
+        self.assertSetEqual(data_empty['submissions'], u_data['submissions'])
+        self.assertSetEqual(data_empty['upvotes']['given'], u_data['upvotes']['given'])
+        self.assertSetEqual(data_empty['upvotes']['recieved'], u_data['upvotes']['recieved'])
+        self.assertSetEqual(data_empty['comments']['given'], u_data['comments']['given'])
+        self.assertSetEqual(data_empty['comments']['recieved'], u_data['comments']['recieved'])
+        # initialize env
+        for un in ['bc123', 'cd123', 'ef123']: # extra users
+            User(username=un, password='unsecure_password').save()
+        challenge = Challenge(description='test challenge', time_for_challenge=20)
+        challenge.save()
+        activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
+        activechallenge.save()
+        activechallenge.create_submission('ab123', datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC))
+        activechallenge.create_submission('bc123', datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC))
+        # outgoing
+        sub = Submission.objects.get(username='bc123')
+        sub.create_upvote('ab123')
+        up0 = Upvote.objects.get(voter_username='ab123')
+        sub.create_comment('ab123', 'hello')
+        c0 = Comment.objects.get(comment_username='ab123')
+        # incoming
+        sub = Submission.objects.get(username='ab123')
+        sub.create_upvote('bc123')
+        up1 = Upvote.objects.get(voter_username='bc123')
+        sub.create_upvote('cd123')
+        up2 = Upvote.objects.get(voter_username='cd123')
+        sub.create_comment('cd123', 'hi ab123')
+        c1 = Comment.objects.get(comment_username='cd123', content='hi ab123')
+        sub.create_comment('cd123', 'i love your post')
+        c2 = Comment.objects.get(comment_username='cd123', content='i love your post')
+        # friends
+        f1 = Friend(left_username='ab123', right_username='bc123')
+        f1.save()
+        f2 = Friend(left_username='cd123', right_username='ab123')
+        f2.save()
+        f3 = Friend(left_username='ab123', right_username='ef123', pending=True)
+        f3.save()
+        data_populated = {
+            'profile': [user, p],
+            'friends_set': {f1, f2, f3},
+            'submissions': {sub},
+            'upvotes': {
+                'given': {up0},
+                'recieved': {up1, up2}
+            },
+            'comments': {
+                'given': {c0},
+                'recieved': {c1, c2}
+            }
+        }
+        u_data = p.user_data()
+        self.assertEqual(data_populated['profile'], u_data['profile'])
+        self.assertSetEqual(data_populated['friends_set'], u_data['friends_set'])
+        self.assertSetEqual(data_populated['submissions'], u_data['submissions'])
+        self.assertSetEqual(data_populated['upvotes']['given'], u_data['upvotes']['given'])
+        self.assertSetEqual(data_populated['upvotes']['recieved'], u_data['upvotes']['recieved'])
+        self.assertSetEqual(data_populated['comments']['given'], u_data['comments']['given'])
+        self.assertSetEqual(data_populated['comments']['recieved'], u_data['comments']['recieved'])
+
+        # delete user
+        p.user_data(delete=True)
+        with self.assertRaises(User.DoesNotExist, msg='user not deleted'):
+            User.objects.get(username='ab123')
     
     def test_recalc_user_points(self):
-        Profile.set_points_by_username('js123', 0)
-        profile = Profile.objects.get(user__username='js123')
+        Profile.set_points_by_username('ab123', 0)
+        profile = Profile.objects.get(user__username='ab123')
         profile.recalculate_user_points()
         self.assertEqual(profile.points, 0, 'inital points incorrect')
         profile.delete()
 
     def test_recalc_user_points_by_username(self):
-        Profile.recalculate_user_points_by_username('js123')
-        profile = Profile.objects.get(user__username='js123')
+        Profile.recalculate_user_points_by_username('ab123')
+        profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(profile.points, 0, 'inital points incorrect')
         profile.delete()
 
     def test_set_points(self):
-        Profile.set_points_by_username('js123', 50)
-        profile = Profile.objects.get(user__username='js123')
+        Profile.set_points_by_username('ab123', 50)
+        profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(profile.points, 50, 'set_points_by_username failed')
         profile.set_points(25)
         self.assertEqual(profile.points, 25, 'add_points failed')
     
     def test_add_points(self):
-        Profile.set_points_by_username('js123', 0)
-        Profile.add_points_by_username('js123', 10)
-        profile = Profile.objects.get(user__username='js123')
+        Profile.set_points_by_username('ab123', 0)
+        Profile.add_points_by_username('ab123', 10)
+        profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(profile.points, 10, 'add_points_by_username failed')
         profile.add_points(10)
         self.assertEqual(profile.points, 20, 'add_points failed')
 
     def test_get_profile(self):
-        pass
+        user = User.objects.get(username='ab123')
+        p = Profile(user=user)
+        p.save()
+        self.assertEqual(p, Profile.get_profile('ab123'))
 
 class FriendTestCase(TestCase):
     def setUp(self):
@@ -583,12 +666,65 @@ class CommentTestCase(TestCase):
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+SCORES['comment']['recieved'])
         
+        # remove reported comment with delete_instance = True
         Profile.recalculate_user_points_by_username('ab123')
+        sub = Submission.objects.get(username='ab123')
+        self.assertTrue(sub.create_comment('bc123', 'another comment'))
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+3*SCORES['comment']['recieved'])
+        comment = Comment.objects.get(comment_username='bc123', content='another comment')
+        self.assertTrue(comment.remove_comment(True))
+        self.assertEqual(sub.get_comment_count(), 2) # comments should be removed
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
 
+        # remove reported comment with delete_instance = False
+        Profile.recalculate_user_points_by_username('ab123')
+        profile = Profile.objects.get(user__username='ab123')
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
+        comment = Comment.objects.get(comment_username='ef123')
+        comment.remove_comment(False)
+        self.assertEqual(sub.get_comment_count(), 2) # comments should still exist
+        # points should be unchanged
+        profile = Profile.objects.get(user__username='ab123')
+        sub = Submission.objects.get(username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
+        
+        # remove reported comment with delete_instance = True
+        Profile.recalculate_user_points_by_username('ab123')
+        sub = Submission.objects.get(username='ab123')
+        self.assertTrue(sub.create_comment('bc123', 'another comment'))
+        comment = Comment.objects.get(comment_username='bc123', content='another comment')
+        comment.report_comment('ef123')
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
+        self.assertFalse(comment.remove_comment(True)) # points not removed so returns false
+        self.assertEqual(sub.get_comment_count(), 2) # comments should be unchanged
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
+
+        ## repeat for reported submission
 
     def test_reinstate_comment(self):
-        pass
-    
+        for un in ['ab123','bc123','cd123','ef123']:
+            Profile.recalculate_user_points_by_username(un)
+        submission = Submission.objects.get(username='ab123')
+        self.assertTrue(submission.report_submission('ab123'))
+        profile = Profile.objects.get(user__username='ab123')
+        self.assertEqual(profile.points, 0)
+        for un in ['ab123','bc123','ef123']:
+            profile = Profile.objects.get(user__username=un)
+            self.assertEqual(profile.points, 0)
+        comment = Comment.objects.get(comment_username='ef123')
+        self.assertFalse(comment.reinstate_comment())
+        profile = Profile.objects.get(user__username='ef123')
+        self.assertEqual(profile.points, 0)
+        comment = Comment.objects.get(comment_username='bc123')
+        self.assertTrue(comment.reinstate_comment())
+        profile = Profile.objects.get(user__username='bc123')
+        self.assertEqual(profile.points, SCORES['comment']['given'])
+
     def test_inappropriate_language_filter(self):
         Profile.recalculate_user_points_by_username('ab123')
         Profile.recalculate_user_points_by_username('cd123')
