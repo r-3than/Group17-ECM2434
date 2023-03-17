@@ -53,7 +53,7 @@ def flag_submission(request):
             data=json.loads(request.body)
             submission_id = data["submission_id"]
             submssionObj=Submission.objects.filter(id=submission_id).first()
-            submssionObj.report_submission()
+            submssionObj.report_submission(request.user.username)
 
         return HttpResponse({"success":"true"})
 

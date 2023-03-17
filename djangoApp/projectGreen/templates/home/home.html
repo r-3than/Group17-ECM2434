@@ -97,7 +97,7 @@
                             </div>
                             <div>0</div>
                             <div>
-                                {% if info.submission_has_reviewed %}
+                                {% if not info.submission_has_reviewed %}
                                 <img id="flag{{info.submission_id}}" src="{% static 'img/Flag-Clear.svg' %}">
                                 <script>
                                     flagbutton = document.getElementById("flag{{info.submission_id}}");
