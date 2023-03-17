@@ -42,12 +42,39 @@ def extract_metadata(img: Image) -> dict[dict, dt]:
             out['DateTime'] = dt.strptime(date_string, '%Y:%m:%d %H:%M:%S')
     return out
 
+
 def extract_metadata_from_filepath(filepath: str) -> dict[dict, dt]:
     '''Wrapper for extract_metadata function with filepath input'''
     source_image = Image.open(filepath)
     return extract_metadata(source_image)
 
 
+def coordinates_to_decdegrees(lat:list, lon:list):
+    '''
+    Convert latitude and longitude coordinates into decimal degrees
+    '''
+    dd_latitude = lat[0] + (lat[1]/60) + (lat[2]/3600)
+    if lat[4] == "S":
+        dd_latitude = -dd_latitude
+    dd_longitude = lon[0] + (lon[1]/60) + (lon[2]/3600)
+    if lon[4] == "W":
+        dd_longitude = -dd_longitude
+    return (dd_latitude, dd_longitude)
+
+
+def process_GPS_data(img: Image):
+    data = extract_metadata(img)
+    gps_info = data['GPSInfo']
+    latitude = gps_info['GPSLatitude'] + [gps_info['GPSLatitudeRef']]
+    longitude = gps_info['GPSLongitude'] + [gps_info['GPSLongitudeRef']]
+    d_lat, d_lon = coordinates_to_decdegrees(latitude, longitude)
+    # USE GEOPY to calculate distance in models
+    
+
+source_image = Image.open('IMG_1379.jpg')
+process_GPS_data(source_image)
+
+'''
 if __name__ == '__main__':
     source_image = Image.open('IMG_1379.jpg')
     exif_data = source_image._getexif()
@@ -68,6 +95,7 @@ if __name__ == '__main__':
                 print('    {0:21}: {1}'.format(key, data[key_id]))
         else:
             print('{0:25}: {1}'.format(tag, data))
+'''
 
 """
 DateTime can be used to check if the photo was taken
