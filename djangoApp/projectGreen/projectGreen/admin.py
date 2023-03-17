@@ -23,7 +23,7 @@ def publish_challenge(modeladmin, request, queryset):
         print('Challenge has already been set today')
         return
     except ActiveChallenge.DoesNotExist:
-        ActiveChallenge.objects.all().is_expired = True
+        ActiveChallenge.objects.all().update(is_expired=True)
         ac = ActiveChallenge(date=datetime.now(), challenge=queryset[0])
         ac.save()
 

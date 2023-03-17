@@ -84,7 +84,8 @@ def home(request):
         user_points = str(profileObj.points)
         context["user_points"] = user_points
         # List the submissions from most recent
-        submissions = Submission.objects.filter(reported=False).order_by('-sum_of_interactions')
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-sum_of_interactions')
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")
@@ -155,7 +156,8 @@ def friends_feed(request):
         friends = Friend.get_friend_usernames(request.user.username)
 
         # List the submissions from most recent
-        submissions = Submission.objects.all().order_by('-submission_time')
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-submission_time')
         for submission in submissions:
             if submission.username in friends:
 
