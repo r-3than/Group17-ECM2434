@@ -268,9 +268,9 @@ class Friend(models.Model):
 class Challenge(models.Model):
     description = models.CharField(max_length=200)
     time_for_challenge = models.IntegerField(default=0)
-    latitude = models.DecimalField(max_digits=18, decimal_places=15, default=0.0)
-    longitude = models.DecimalField(max_digits=18, decimal_places=15, default=0.0)
-    allowed_distance = models.DecimalField(max_digits=18, decimal_places=15, default=0.0)
+    latitude = models.DecimalField(max_digits=16, decimal_places=8, default=0.0)
+    longitude = models.DecimalField(max_digits=16, decimal_places=8, default=0.0)
+    allowed_distance = models.DecimalField(max_digits=16, decimal_places=8, default=0.0)
 
     verbose_name = 'Challenge'
     verbose_name_plural = 'Challenges'
