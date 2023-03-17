@@ -5,6 +5,7 @@ charset-normalizer==3.0.1
 cryptography==39.0.1
 Django==4.1.7
 django-microsoft-authentication==0.1.4
+geopy==2.3.0
 idna==3.4
 msal==1.21.0
 oauthlib==3.2.2
