@@ -8,13 +8,8 @@ Sub-Author:
 import base64
 from django.contrib import admin
 from django.contrib.auth.models import User
-<<<<<<< HEAD
-from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
-from django.utils.html import format_html
-=======
 from django.utils.html import format_html
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
->>>>>>> 5c5e76bc5db9a6c8e7b91786c1bba12e7935ad2d
 from datetime import datetime
 import logging
 
