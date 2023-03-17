@@ -25,7 +25,7 @@
                     <div style="height: 80%; padding-left: 50%;">
                         <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
                     </div>
-                    <div class="points">Score: 312</div>
+                    <div class="points">Score: {{user_points}}</div>
                 </div>
             </div>
         </header>
@@ -43,10 +43,13 @@
                 capture="camera" />
               </label>
               <br>
-              <a class="subtitle">Today's Challenge: Visit the Coast!</a>
+              <a class="subtitle">Today's Challenge: {{active_challenge}}</a>
             </div>
             <button class="w-100 btn btn-lg btn-primary mb-3 mt-3" style="background-color:#003c3c" type="submit">Post</button>
-            <p class="friends">4 friends have already posted</p>
+          </form>
+          <form class="form-signin m-auto mt-2" action="{% url 'home' %}">
+            <button class="w-100 btn btn-lg btn-primary mb-3" style="background-color:#003c3c" type="submit">Go to feed</button>
+            <p class="friends">{{post_count}} friends have already posted</p>
           </form>
           <script>
             input = document.getElementById("upload_pic");
