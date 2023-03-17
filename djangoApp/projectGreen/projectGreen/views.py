@@ -23,7 +23,12 @@ def uploadphoto(request):
             picture_bytes = b""
             for data in upload:
                 picture_bytes += data
-            active_challenge = ActiveChallenge.objects.last() ## -> 
+            has_submitted = Submission.user_has_submitted(request.user.username)
+            active_challenge = ActiveChallenge.objects.last()
+            if has_submitted == True:
+                replace_submission=Submission.objects.get(username=request.user.username, active_challenge=active_challenge)
+                replace_submission.delete()
+             ## -> 
             newSubmission = Submission(username=request.user.username,
             active_challenge=active_challenge,
             reported=False,
