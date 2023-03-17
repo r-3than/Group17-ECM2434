@@ -109,13 +109,12 @@
 
                 <div class="row" style="padding: 0px 15px;">
                     <button class="filter btn btn-dark" id="setCurrent">Current Friends</button>
-                    <button class="filter btn btn-dark" id="setOutgoing" >Sent Requests</button>
+                    <!-- <button class="filter btn btn-dark" id="setOutgoing" >Sent Requests</button> -->
                     <button class="filter btn btn-dark" id="setIncoming">Incoming Requests</button>
                 </div>
 
                 <div class="friends-list" id="current" style="display: flex;">
                     {% for friend in friends.items %}
-
                         <div class="friend row rounded-3">
                             <div class="side left">
                                 <div class="icon rounded-circle">{{friend.username|make_list|first| capfirst}}</div>
@@ -127,9 +126,10 @@
                                 <button type="button" class="btn btn-outline-danger" style="width: 95px;">Remove Friend</button>
                             </div>
                         </div>
-
                     {% endfor %}
                 </div>
+
+                <!-- THIS MIGHT NOT BE USED-->
                 <div class="friends-list" id="outgoing" style="display: none;">
                     <div class="friend row rounded-3">
                         <div class="side left">
@@ -143,19 +143,23 @@
                         </div>
                     </div>
                 </div>
+
+                
                 <div class="friends-list" id="incoming" style="display: none;">
-                    <div class="friend row rounded-3">
-                        <div class="side left">
-                            <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                    {% for request in incoming.items %}
+                        <div class="friend row rounded-3">
+                            <div class="side left">
+                                <div class="icon rounded-circle">{{request.username|make_list|first| capfirst}}</div>
+                            </div>
+                            <div class="centre">
+                                <div>{{request.username}}</div>
+                            </div>
+                            <div class="side right">
+                                <button type="button" class="btn btn-outline-success" style="width: 95px; height: 50px; margin-right: 5px;">Accept</button>
+                                <button type="button" class="btn btn-outline-danger" style="width: 95px; height: 50px;">Decline</button>
+                            </div>
                         </div>
-                        <div class="centre">
-                            <div>{{user.username}}</div>
-                        </div>
-                        <div class="side right">
-                            <button type="button" class="btn btn-outline-success" style="width: 95px; height: 50px; margin-right: 5px;">Accept</button>
-                            <button type="button" class="btn btn-outline-danger" style="width: 95px; height: 50px;">Decline</button>
-                        </div>
-                    </div>
+                    {% endfor %}
                 </div>
             </div>
             <div class="side"></div>

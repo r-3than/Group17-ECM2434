@@ -190,11 +190,15 @@ def account(request):
         # Get the user submissions from most recent
         submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
 
-        start_month = int(submissions.first().submission_time.strftime("%m"))
-        end_month = int(submissions.last().submission_time.strftime("%m"))
+        try:
+            start_month = int(submissions.first().submission_time.strftime("%m"))
+            end_month = int(submissions.last().submission_time.strftime("%m"))
+            total_months = end_month - start_month + 1
+        except:
+            total_months = 0
 
         # Initialise list of empty lists for each month
-        submissions_by_month = [[]] * (end_month - start_month + 1)
+        submissions_by_month = [[]] * total_months
 
         for submission in submissions:
 
@@ -252,6 +256,10 @@ def friends(request):
         friends = Friend.get_friend_usernames(request.user.username)
 
         context['friends'] = friends
+
+        incoming = Friend.get_pending_friend_usernames(request.user.username)
+
+        context['incoming'] = incoming
 
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
