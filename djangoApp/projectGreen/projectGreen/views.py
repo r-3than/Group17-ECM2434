@@ -83,7 +83,7 @@ def home(request):
         user_points = str(profileObj.points)
         context["user_points"] = user_points
         # List the submissions from most recent
-        submissions = Submission.objects.filter(reported=False).order_by('-submission_time')
+        submissions = Submission.objects.filter(reported=False).order_by('-sum_of_interactions')
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")
