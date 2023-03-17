@@ -79,7 +79,9 @@ def home(request):
         template = loader.get_template('home/home.html')
 
         submissions_info = {}
-
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        context["user_points"] = user_points
         # List the submissions from most recent
         submissions = Submission.objects.filter(reported=False).order_by('-submission_time')
         for submission in submissions:
@@ -112,10 +114,7 @@ def home(request):
                 has_liked = 1
             else:
                 has_liked = 0
-            profileObj = Profile.objects.filter(id=request.user.id).first()
             has_reviewed = submission.reviewed
-            user_points = str(profileObj.points)
-            context["user_points"] = user_points
             submissions_info[submission.id] = {
                                                'submission_id' :submission.id,
                                                'submission_username': submission.username,
