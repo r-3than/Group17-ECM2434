@@ -1,4 +1,10 @@
 <!doctype html>
+<!--
+    Main Authors:
+        TN - Design
+        OJ - Styling
+        LB - Integration
+-->
 {% load static %}
 <html lang="en">
     <head>
@@ -15,10 +21,10 @@
             <div class="side">
                 <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#myModal">
                     Menu
-                  </button>
+                </button>
             </div>
             <div class="title centre">
-                <a class="title">BeGreen</a>
+                <a class="title" href="{% url 'home' %}">BeGreen</a>
                 <br>
                 <a class="subtitle">Today's challenge: Visit the Coast!</a>
             </div>
@@ -44,10 +50,10 @@
             
                     <!-- Modal body -->
                     <div class="modal-body links">
-                        <a href="">Submission History</a> <br>
+                        <a href="{% url 'account' %}">Submission History</a> <br>
                         <a href="">Friends' Submissions</a> <br>
                         <a href="">University Submissions</a> <br>
-                        <a href="">University Green Policy</a>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                     </div>
             
                     <!-- Modal footer -->
@@ -58,15 +64,15 @@
         <main class="row">
               <div class="side left">
                 <div class="links rounded-5">
-                    <a href="">Submission History</a>
+                    <a href="{% url 'account' %}">Submission History</a>
                     <a href="">Friends' Submissions</a>
                     <a href="">University Submissions</a>
-                    <a href="">University Green Policy</a>
+                    <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                 </div>
               </div>
               <div class="centre">
                 {% for submission, info in submissions.items %}
-                <div class="post rounded-5">
+                <div id="post{{info.submission_id}}" class="post rounded-5">
                     <div class="header row">
                         <div class="user">{{ info.submission_user_displayname }}</div>
                         <!--<div class="user"style=>{{ info.submission_username }}</div>-->
@@ -75,9 +81,9 @@
                     <div class="row">
                         <div class="side"></div>
                         <div class="centre">
-                            <div class="icon rounded-circle">{{info.submission_username|make_list|first| capfirst}}</div>
                             <div class="img rounded-5">
                                 <img src="{{ info.submission_photo }}">
+                                <div class="icon rounded-circle">{{info.submission_username|make_list|first| capfirst}}</div>
                             </div>
                         </div>
                         <div class="side interactions">
@@ -127,6 +133,7 @@
                             </div>
                             <div>{{ info.submission_comment_count }}</div>
                             <div>
+                                {% if info.submission_has_reviewed %}
                                 <img id="flag{{info.submission_id}}" src="{% static 'img/Flag-Clear.svg' %}">
                                 <script>
                                     flagbutton = document.getElementById("flag{{info.submission_id}}");
@@ -143,6 +150,7 @@
                                             document.getElementById("flag{{info.submission_id}}").src = "{% static 'img/Flag-Solid.svg' %}";
                                            
                                         }
+                                        document.getElementById("post{{info.submission_id}}").style.display="none";
                                         
                                         var submission_id = "{{info.submission_id}}";
                                         
@@ -163,6 +171,7 @@
                                     };
 
                                 </script>
+                                {% endif %}
                             </div>
                         </div>
                     </div>

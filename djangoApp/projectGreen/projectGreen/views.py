@@ -12,7 +12,7 @@ from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import ActiveChallenge, Profile, Submission, Upvote, Friend
+from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Upvote
 
 
 
@@ -42,6 +42,16 @@ def uploadphoto(request):
             fh.write(img_data)
         return HttpResponse({"success":"true"})
         """
+@csrf_exempt
+def flag_submission(request):
+     if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            submission_id = data["submission_id"]
+            submssionObj=Submission.objects.filter(id=submission_id).first()
+            submssionObj.report_submission(request.user.username)
+
+        return HttpResponse({"success":"true"})
 
 @csrf_exempt
 def like_submission(request):
@@ -67,13 +77,12 @@ def home(request):
         submissions_info = {}
 
         # List the submissions from most recent
-        submissions = Submission.objects.all().order_by('-submission_time')
+        submissions = Submission.objects.filter(reported=False).order_by('-submission_time')
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")
             current_date = date.today().strftime("%d:%m:%Y")
             current_year = date.today().strftime("%Y")
-
 
             # Only display submission year if different from current year
             if submission_year != current_year:
@@ -105,6 +114,7 @@ def home(request):
                 has_liked = 0
             Profile.recalculate_user_points_by_username(submission.username)
             profileObj = Profile.objects.filter(id=request.user.id).first()
+            has_reviewed = submission.reviewed
             user_points = str(profileObj.points)
             context["user_points"] = user_points
             submissions_info[submission.id] = {
@@ -113,9 +123,10 @@ def home(request):
                                                'submission_username': submission.username,
                                                'submission_time': submission_time_form,
                                                'submission_photo': photo_b64,
-                                               'submission_upvote_count': submission.get_upvote_count(),
                                                'submission_comment_count': submission.get_comment_count(),
                                                'submission_has_liked': has_liked,
+                                               'submission_has_reviewed': has_reviewed,
+                                               'submission_upvote_count': submission.get_upvote_count()
                                             }
         
         context['submissions'] = submissions_info
@@ -204,6 +215,14 @@ def challenge(request):
     context = {}
     if request.user.is_authenticated:
         template = loader.get_template('home/challenge.html')
+        CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
+
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")
@@ -220,7 +239,7 @@ def camera(request):
 def submit(request):
     context = {}
     if request.user.is_authenticated:
-        template = loader.get_template('camera/submit.html')  
+        template = loader.get_template('submit/submit.html')  
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")
@@ -231,6 +250,73 @@ def post(request):
     context = {}
     if request.user.is_authenticated:
         template = loader.get_template('home/post.html')  
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+    
+def account(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        template = loader.get_template('account/account.html')
+
+        # Get the user submissions from most recent
+        submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
+
+        start_month = int(submissions.first().submission_time.strftime("%m"))
+        end_month = int(submissions.last().submission_time.strftime("%m"))
+
+        # Initialise list of empty lists for each month
+        submissions_by_month = [[]] * (end_month - start_month + 1)
+
+        for submission in submissions:
+
+            # Get date
+            submission_date = submission.submission_time.strftime("%d/%m/%Y")
+            submission_month = int(submission.submission_time.strftime("%m"))
+
+            submission_time_form = submission_date
+
+            if submission.photo_bytes != None:
+                photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
+            else:
+                photo_b64 = "data:image/png;base64,"
+
+            # Nested list structure to pass to template 
+            submissions_by_month[submission_month - start_month].append({'username': submission.username,
+                                               'time': submission_time_form,
+                                               'photo': photo_b64,
+                                               'upvote_count': submission.get_upvote_count()
+                                                })
+        
+        context['months'] = submissions_by_month
+
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+
+def friends(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        template = loader.get_template('account/friends.html')
+
+        #friends = Profile.user_data(request.user)['friends']
+
+        #context['friends'] = friends
+
+        CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
         return HttpResponse(template.render(context, request))
     else:
         print("Not signed in")
