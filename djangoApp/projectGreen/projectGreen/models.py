@@ -10,7 +10,12 @@ from django.contrib.auth.models import User
 from datetime import datetime as dt
 import math
 import logging
+import base64
+import io
+from PIL import Image
 import urllib.request
+from geopy.distance import distance
+from projectGreen.extract_metadata import process_GPS_data
 from projectGreen.settings import PROFANITY_FILTER_SOURCE_URL
 
 LOGGER = logging.getLogger(__name__)
@@ -263,6 +268,9 @@ class Friend(models.Model):
 class Challenge(models.Model):
     description = models.CharField(max_length=200)
     time_for_challenge = models.IntegerField(default=0)
+    latitude = models.DecimalField(max_digits=16, decimal_places=8, default=0.0)
+    longitude = models.DecimalField(max_digits=16, decimal_places=8, default=0.0)
+    allowed_distance = models.DecimalField(max_digits=16, decimal_places=8, default=0.0)
 
     verbose_name = 'Challenge'
     verbose_name_plural = 'Challenges'
@@ -279,7 +287,10 @@ class ActiveChallenge(models.Model):
         Creates submission object associated with this challenge in database and syncronises points
         Throws django.db.utils.IntegrityError if submission already exists.
         '''
+        profile = Profile.get_profile(username)
+        lambda_user = math.log(1+len(Friend.get_friend_usernames(username)))*math.sqrt(profile.points)*SCORES['submission']
         s = Submission(username=username, active_challenge=self, submission_time=submission_time)
+        s.sum_of_interactions = lambda_user*s.get_punctuality_scaling()
         if create_submission_instance:
             s.save()
         Profile.add_points_by_username(username, SCORES['submission']*s.get_punctuality_scaling())                         
@@ -306,6 +317,7 @@ class Submission(models.Model):
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     active_challenge = models.ForeignKey(ActiveChallenge, models.CASCADE, null=True)
     submission_time = models.DateTimeField('Submission Time', null=True)
+    sum_of_interactions = models.FloatField(default=0.0)
     reported = models.BooleanField(default=False)
     reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, null=True)
     reviewed = models.BooleanField(default=False)
@@ -435,6 +447,10 @@ class Submission(models.Model):
             return False
         except Upvote.DoesNotExist:
             u = Upvote(submission=self, voter_username=voter_username)
+            profile = Profile.get_profile(voter_username)
+            lambda_user = math.log(1+len(Friend.get_friend_usernames(voter_username)))*math.sqrt(profile.points)*SCORES['upvote']['recieved']
+            self.sum_of_interactions += lambda_user*self.get_punctuality_scaling()
+            self.save()
             if create_upvote_instance:
                 u.save()
             Profile.add_points_by_username(self.username, SCORES['upvote']['recieved'])
@@ -447,6 +463,10 @@ class Submission(models.Model):
         Returns False if comment was flagged for profanity
         '''
         u = Comment(submission=self, comment_username=comment_username, content=comment_content)
+        profile = Profile.get_profile(comment_username)
+        lambda_user = math.log(1+len(Friend.get_friend_usernames(comment_username)))*math.sqrt(profile.points)*SCORES['comment']['recieved']
+        self.sum_of_interactions += lambda_user*self.get_punctuality_scaling()
+        self.save()
         if create_comment_instance:
             u.save()
         Profile.add_points_by_username(self.username, SCORES['comment']['recieved'])
@@ -483,6 +503,26 @@ class Submission(models.Model):
         '''
         return len(self.get_comments())
 
+    def location_is_valid(self) -> bool:
+
+        #Checks if a submission picture has been taken at the correct location for a challenge
+
+        challenge_lat = self.active_challenge.challenge.latitude
+        challenge_lon = self.active_challenge.challenge.longitude
+        allowed_distance = self.active_challenge.challenge.allowed_distance
+
+        if self.photo_bytes != None:
+            photo_b64 = base64.b64decode(self.photo_bytes)
+            img = Image.open(io.BytesIO(photo_b64))
+            submission_lat, submission_lon = process_GPS_data(img)
+            submission_distance_to_challenge = distance((challenge_lat, challenge_lon), (submission_lat, submission_lon)).km
+            if submission_distance_to_challenge <= allowed_distance:
+                return True
+
+        return False
+
+
+
     verbose_name = 'Submission'
     verbose_name_plural = 'Submissions'
     class Meta:
@@ -501,6 +541,10 @@ class Upvote(models.Model):
         Removes upvote object from database (conditional flag) and synchronises points
         Returns False if associated post is reported (points do not change)
         '''
+        profile = Profile.get_profile(self.voter_username)
+        lambda_user = math.log(1+len(Friend.get_friend_usernames(self.voter_username)))*math.sqrt(profile.points)*SCORES['upvote']['recieved']
+        self.submission.sum_of_interactions -= lambda_user*self.submission.get_punctuality_scaling()
+        self.submission.save()
         if not self.submission.reported:
             Profile.add_points_by_username(self.voter_username, -SCORES['upvote']['given'])
             Profile.add_points_by_username(self.submission.username, -SCORES['upvote']['recieved'])
@@ -593,6 +637,10 @@ class Comment(models.Model):
         Removes comment object from database (conditional flag) and synchronises points
         Returns False if either the submission or comment is reported (points do not change)
         '''
+        profile = Profile.get_profile(self.comment_username)
+        lambda_user = math.log(1+len(Friend.get_friend_usernames(self.comment_username)))*math.sqrt(profile.points)*SCORES['comment']['recieved']
+        self.submission.sum_of_interactions -= lambda_user*self.submission.get_punctuality_scaling()
+        self.submission.save()
         condition = not (self.submission.reported or self.reported)
         if condition:
             Profile.add_points_by_username(self.comment_username, -SCORES['comment']['given'])
