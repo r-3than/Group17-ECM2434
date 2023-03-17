@@ -9,6 +9,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
         <link href="{% static 'css/post.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
         <link href="{% static 'css/post-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
@@ -16,7 +17,11 @@
     </head>
     <body>
         <header class="row">
-            <div class="side"></div>
+            <div class="side">
+                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#myModal">
+                    Menu
+                </button>
+            </div>
             <div class="title centre">
                 <a class="title" href="{% url 'home' %}">BeGreen</a>
                 <br>
@@ -31,13 +36,37 @@
                 </div>
             </div>
         </header>
+        <!-- The Modal -->
+        <div class="modal fade" id="myModal">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content menu">
+
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h4 class="modal-title">Useful Links</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <!-- Modal body -->
+                    <div class="modal-body links">
+                        <a href="{% url 'account' %}">Submission History</a> <br>
+                        <a href="">Friends' Submissions</a> <br>
+                        <a href="">University Submissions</a> <br>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
+                    </div>
+
+                    <!-- Modal footer -->
+                    <div class="modal-footer"></div>
+                </div>
+            </div>
+        </div>    
         <main class="row">
               <div class="side left">
                 <div class="links rounded-5">
-                    <a href="">Submission History</a>
+                    <a href="{% url 'account' %}">Submission History</a>
                     <a href="">Friends' Submissions</a>
                     <a href="">University Submissions</a>
-                    <a href="">University Green Policy</a>
+                    <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                 </div>
               </div>
               <div class="centre">
@@ -51,7 +80,7 @@
                         <div class="centre">
                             <div class="icon rounded-circle">T</div>
                             <div class="img rounded-5">
-                                <img src="{% static 'img/Post1.jpg' %}">
+                                <img src="{%static 'img/Post1.jpg' %}">
                             </div>
                         </div>
                         <div class="side interactions">
@@ -72,9 +101,9 @@
                                 <div class="icon rounded-circle">T</div>
                             </div>
                             <div class="centre">
-                                <div>Username   Date</div>
+                                <div class="username">Username<span class="date">Date</span></div>
                                 <div>Content</div>
-                                <div>Reply button</div>
+                                <div class="reply">Reply</div>
                             </div>
                             <div class="side"></div>
                         </div>
@@ -83,9 +112,9 @@
                                 <div class="icon rounded-circle">O</div>
                             </div>
                             <div class="centre">
-                                <div>Username   Date</div>
+                                <div class="username">Username<span class="date">Date</span></div>
                                 <div>Content</div>
-                                <div>Reply button</div>
+                                <div class="reply">Reply</div>
                             </div>
                             <div class="side"></div>
                         </div>
