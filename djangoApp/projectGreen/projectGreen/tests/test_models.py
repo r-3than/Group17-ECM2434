@@ -7,6 +7,8 @@ Main Authors:
 import unittest
 import datetime
 import pytz
+import base64
+from PIL import Image
 from django.test import TestCase
 from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment, SCORES, WORDS_TO_FILTER
@@ -235,19 +237,27 @@ class SubmissionTestCase(TestCase):
         for un in ['ab123','abc123','bc123','cd123','ef123']:
             user = User(username=un, password='unsecure_password')
             user.save()
-        challenge = Challenge(description='test challenge', time_for_challenge=20)
+        challenge = Challenge(description='test challenge', time_for_challenge=20,
+                                latitude=50.72228531721723, longitude=-3.531841571481125,
+                                allowed_distance=20)
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
+        with open('IMG_1379.jpg', 'rb') as img_file:
+            binary_image = base64.b64encode(img_file.read())
         for un in ['ab123','abc123']:
             submission = Submission(username=un, active_challenge=activechallenge,
-                                    submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
+                                    submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC),
+                                    photo_bytes=binary_image)
             submission.save()
         reported_submission = Submission(username='bc123', active_challenge=activechallenge,
                                         submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True, reported_by='ab123')
         reported_submission.save()
+        with open('IMG_34123.jpg', 'rb') as img_file2:
+            binary_image2 = base64.b64encode(img_file2.read())
         reviewed_submission = Submission(username='cd123', active_challenge=activechallenge,
-                                            submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reviewed=True)
+                                            submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC),
+                                            photo_bytes=binary_image2, reviewed=True)
         reviewed_submission.save()
 
     def test_user_has_submitted(self):
@@ -485,6 +495,14 @@ class SubmissionTestCase(TestCase):
         reported_comment.reported_by = 'ab123'
         reported_comment.save()
         self.assertEqual(submission.get_comment_count(), 2, 'get_comment_count failed')
+
+    def test_location_is_valid(self):
+        submission = Submission.objects.get(username='ab123')
+        assert(submission.location_is_valid())
+        submission2 = Submission.objects.get(username='bc123')
+        assert(not submission2.location_is_valid())
+        #submission3 = Submission.objects.get(username='cd123')
+        #assert(not submission3.location_is_valid())
 
 class UpvoteTestCase(TestCase):
     def setUp(self):

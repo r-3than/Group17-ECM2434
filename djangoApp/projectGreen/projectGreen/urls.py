@@ -15,7 +15,7 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access, post, account, friends
+from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access, post, account, friends, friends_feed
 
 urlpatterns = [
     path('', challenge, ),
@@ -23,6 +23,7 @@ urlpatterns = [
     path('submit/',submit,name='submit'),
     path('uploadphoto/',uploadphoto),
     path('post/',post, name='post'),
+    path('friends-feed/',friends_feed, name='friends-feed'),
     path('account/',account, name='account'),
     path('friends/',friends, name='friends'),
     path('like_submission/',like_submission),

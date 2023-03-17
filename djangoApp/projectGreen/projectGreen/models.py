@@ -10,7 +10,12 @@ from django.contrib.auth.models import User
 from datetime import datetime as dt
 import math
 import logging
+import base64
+import io
+from PIL import Image
 import urllib.request
+from geopy.distance import distance
+from projectGreen.extract_metadata import process_GPS_data
 from projectGreen.settings import PROFANITY_FILTER_SOURCE_URL
 
 LOGGER = logging.getLogger(__name__)
@@ -263,6 +268,9 @@ class Friend(models.Model):
 class Challenge(models.Model):
     description = models.CharField(max_length=200)
     time_for_challenge = models.IntegerField(default=0)
+    latitude = models.DecimalField(max_digits=18, decimal_places=15, default=0.0)
+    longitude = models.DecimalField(max_digits=18, decimal_places=15, default=0.0)
+    allowed_distance = models.DecimalField(max_digits=18, decimal_places=15, default=0.0)
 
     verbose_name = 'Challenge'
     verbose_name_plural = 'Challenges'
@@ -494,6 +502,26 @@ class Submission(models.Model):
         Reported comments are excluded from this count
         '''
         return len(self.get_comments())
+
+    def location_is_valid(self) -> bool:
+
+        #Checks if a submission picture has been taken at the correct location for a challenge
+
+        challenge_lat = self.active_challenge.challenge.latitude
+        challenge_lon = self.active_challenge.challenge.longitude
+        allowed_distance = self.active_challenge.challenge.allowed_distance
+
+        if self.photo_bytes != None:
+            photo_b64 = base64.b64decode(self.photo_bytes)
+            img = Image.open(io.BytesIO(photo_b64))
+            submission_lat, submission_lon = process_GPS_data(img)
+            submission_distance_to_challenge = distance((challenge_lat, challenge_lon), (submission_lat, submission_lon)).km
+            if submission_distance_to_challenge <= allowed_distance:
+                return True
+
+        return False
+
+
 
     verbose_name = 'Submission'
     verbose_name_plural = 'Submissions'

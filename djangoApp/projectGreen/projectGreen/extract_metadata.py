@@ -67,14 +67,13 @@ def process_GPS_data(img: Image):
     gps_info = data['GPSInfo']
     latitude = gps_info['GPSLatitude'] + [gps_info['GPSLatitudeRef']]
     longitude = gps_info['GPSLongitude'] + [gps_info['GPSLongitudeRef']]
-    print(latitude, longitude)
     d_lat, d_lon = coordinates_to_decdegrees(latitude, longitude)
-    print(d_lat, d_lon)
+    return d_lat, d_lon
     # USE GEOPY to calculate distance in models
     
 
-source_image = Image.open('IMG_1379.jpg')
-process_GPS_data(source_image)
+#source_image = Image.open('IMG_1379.jpg')
+#process_GPS_data(source_image)
 
 '''
 if __name__ == '__main__':
