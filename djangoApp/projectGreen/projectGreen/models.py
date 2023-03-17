@@ -17,6 +17,7 @@ LOGGER = logging.getLogger(__name__)
 
 USERNAME_MAX_LENGTH = 20
 SCORES = {'submission':20, 'upvote':{'given':1, 'recieved':4}, 'comment':{'given':3, 'recieved':12}}
+MISCONDUCT_THRESHOLDS = {'submissions_removed':5, 'comments_removed':10, 'false_reports':10}
 
 def punctuality_scaling(time_for_challenge: int, minutes_late: int) -> int:
     '''
@@ -25,7 +26,7 @@ def punctuality_scaling(time_for_challenge: int, minutes_late: int) -> int:
     '''
     return round(math.sqrt(max(time_for_challenge-minutes_late, 0)+1))
 
-def load_profanity_file() -> list:
+def load_profanity_file() -> list[str]:
     '''
     Loads list of profane words from the provided source URL
     Note that changing the source may require an alteration to the current formatting
@@ -50,24 +51,26 @@ class Profile(models.Model):
         '''
         data = {}
         u = self.user
-        data['profile'] = self
-        data['friends'] = Friend.objects.filter(left_username=u.username) + Friend.objects.filter(right_username=u.username)
-        data['submissions'] = Submission.objects.filter(user=u)
-        data['upvotes']['given'] = Upvote.objects.filter(voter_username=u.username)
-        data['comments']['given'] = Comment.objects.filter(comment_username=u.username)
-        data['upvotes']['recieved'] = []
-        data['comments']['recieved'] = []
+        data['profile'] = [u, self]
+        data['friends_set'] = set(Friend.objects.filter(left_username=u.username)).union(list(Friend.objects.filter(right_username=u.username)))
+        data['submissions'] = set(Submission.objects.filter(username=u.username))
+        data['upvotes'] = {'given':set(), 'recieved':set()}
+        data['upvotes']['given'] = set(Upvote.objects.filter(voter_username=u.username))
+        data['comments'] = {'given':set(), 'recieved':set()}
+        data['comments']['given'] = set(Comment.objects.filter(comment_username=u.username))
         for sub in data['submissions']:
-            data['upvotes']['recieved'].append(sub.get_upvotes())
-            data['comments']['recieved'].append(sub.get_comments())
+            data['upvotes']['recieved'].update(sub.get_upvotes())
+            data['comments']['recieved'].update(sub.get_comments())
         if delete:
             for sub in data['submissions']:
                 sub.remove_submission()
             for up in data['upvotes']['given']:
                 up.remove_upvote()
-            data['friends'].delete()
-            u.delete()
-            self.delete()
+            for c in data['comments']['given']:
+                c.remove_comment()
+            for f in data['friends_set']:
+                f.delete()
+            u.delete() # profile deleted by cascade
         if fetch: return data
 
     @classmethod
@@ -217,7 +220,7 @@ class Friend(models.Model):
             f.save()
 
     @classmethod
-    def get_pending_friend_usernames(cls, username: str) -> list:
+    def get_pending_friend_usernames(cls, username: str) -> list[str]:
         '''
         Fetchs all friend connections to a user flagged as pending
         i.e. outstanding friend requests
@@ -226,7 +229,7 @@ class Friend(models.Model):
         return [f.left_username for f in friend_requests]
 
     @classmethod
-    def get_friend_usernames(cls, username: str) -> list:
+    def get_friend_usernames(cls, username: str) -> list[str]:
         '''
         Gets a list of usernames of all friends of a user
         '''
@@ -378,6 +381,8 @@ class Submission(models.Model):
                 except :
                     p.number_of_false_reports = 1
                 p.save()
+                if p.number_of_false_reports > MISCONDUCT_THRESHOLDS['false_reports']:
+                    LOGGER.info('user {} has made over {} false reports'.format(p.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
             else:
                 u = User.objects.get(username=self.username)
                 try:
@@ -386,6 +391,8 @@ class Submission(models.Model):
                 except Profile.DoesNotExist:
                     p = Profile(user=u, number_of_submissions_removed=1)
                 p.save()
+                if p.number_of_submissions_removed > MISCONDUCT_THRESHOLDS['submissions_removed']:
+                    LOGGER.info('user {} has had over {} submissions removed'.format(p.user.username, MISCONDUCT_THRESHOLDS['submissions_removed']))
                 self.delete()
             return True
         return False
@@ -450,13 +457,13 @@ class Submission(models.Model):
         else:
             return True
         
-    def get_upvotes(self) -> list:
+    def get_upvotes(self) -> list['Upvote']:
         '''
         Gets list of Upvotes for this submission
         '''
         return Upvote.objects.filter(submission=self)
     
-    def get_comments(self) -> list:
+    def get_comments(self) -> list['Comment']:
         '''
         Gets list of Comments for this submission
         Reported comments are excluded from this list
@@ -565,6 +572,8 @@ class Comment(models.Model):
                     except :
                         p.number_of_false_reports = 1
                     p.save()
+                    if p.number_of_false_reports > MISCONDUCT_THRESHOLDS['false_reports']:
+                        LOGGER.info('user {} has made over {} false reports'.format(p.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
             else:
                 u = User.objects.get(username=self.comment_username)
                 try:
@@ -573,6 +582,8 @@ class Comment(models.Model):
                 except Profile.DoesNotExist:
                     p = Profile(user=u, number_of_comments_removed=1)
                 p.save()
+                if p.number_of_comments_removed > MISCONDUCT_THRESHOLDS['comments_removed']:
+                    LOGGER.info('user {} has had over {} comments removed'.format(p.user.username, MISCONDUCT_THRESHOLDS['comments_removed']))
                 self.delete()
             return True
         return False
@@ -592,7 +603,7 @@ class Comment(models.Model):
     def reinstate_comment(self) -> bool:
         '''
         Adds points from an comment back (used after submission review)
-        Returns False if either the comment is reported (points do not change)
+        Returns False if the comment is reported (points do not change)
         '''
         if not self.reported:
             Profile.add_points_by_username(self.comment_username, SCORES['comment']['given'])
