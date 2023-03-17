@@ -3,6 +3,10 @@ Metadata extraction:
 https://www.thepythoncode.com/article/extracting-image-metadata-in-python
 GPS data decoding:
 https://stackoverflow.com/questions/19804768/interpreting-gps-info-of-exif-data-from-photo-in-python
+
+Main Authors:
+    TN - Image metadata extraction
+    LB - Geodata calculations
 """
 
 from PIL import Image
@@ -71,12 +75,8 @@ def process_GPS_data(img: Image):
     d_lat, d_lon = coordinates_to_decdegrees(latitude, longitude)
     print(d_lat, d_lon)
     # USE GEOPY to calculate distance in models
-    
 
-source_image = Image.open('IMG_1379.jpg')
-process_GPS_data(source_image)
 
-'''
 if __name__ == '__main__':
     source_image = Image.open('IMG_1379.jpg')
     exif_data = source_image._getexif()
@@ -97,7 +97,6 @@ if __name__ == '__main__':
                 print('    {0:21}: {1}'.format(key, data[key_id]))
         else:
             print('{0:25}: {1}'.format(tag, data))
-'''
 
 """
 DateTime can be used to check if the photo was taken
