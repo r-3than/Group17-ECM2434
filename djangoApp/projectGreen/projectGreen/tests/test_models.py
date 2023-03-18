@@ -243,7 +243,7 @@ class SubmissionTestCase(TestCase):
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
-        with open('IMG_1379.jpg', 'rb') as img_file:
+        with open('IMG_1379.JPG', 'rb') as img_file:
             binary_image = base64.b64encode(img_file.read())
         for un in ['ab123','abc123']:
             submission = Submission(username=un, active_challenge=activechallenge,
