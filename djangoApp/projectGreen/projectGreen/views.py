@@ -87,7 +87,13 @@ def home(request):
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
-        submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-sum_of_interactions')
+        if Submission.user_has_submitted(request.user.username):
+            user_submission = Submission.objects.filter(active_challenge=active_challenge,username=request.user.username)
+            submissions = Submission.objects.filter(active_challenge=active_challenge,reported=False).order_by('-sum_of_interactions').exclude(username=request.user.username)
+            submissions = user_submission | submissions
+        else:
+            submissions = Submission.objects.filter(active_challenge=active_challenge,reported=False).order_by('-sum_of_interactions')
+
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")
@@ -164,9 +170,15 @@ def friends_feed(request):
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
-        submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-submission_time')
+        if Submission.user_has_submitted(request.user.username):
+            user_submission = Submission.objects.filter(active_challenge=active_challenge,username=request.user.username)
+            submissions = Submission.objects.filter(active_challenge=active_challenge,reported=False).order_by('-submission_time').exclude(username=request.user.username)
+            submissions = user_submission | submissions
+        else:
+            submissions = Submission.objects.filter(active_challenge=active_challenge,reported=False).order_by('-submission_time')
+
         for submission in submissions:
-            if submission.username in friends:
+            if submission.username in friends or submission.username == request.user.username:
 
                 submission_date = submission.submission_time.strftime("%d:%m:%Y")
                 submission_year = submission.submission_time.strftime("%Y")
