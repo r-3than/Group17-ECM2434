@@ -17,26 +17,32 @@
     <body>
         <header class="row">
             <div class="side">
-                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#myModal">
+                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#menuModal">
                     Menu
                 </button>
             </div>
             <div class="title centre">
                 <a class="title" href="{% url 'home' %}">BeGreen</a>
                 <br>
-                <a class="subtitle">Today's challenge: Visit the Coast!</a>
+                <a class="subtitle">Today's challenge: {{active_challenge}}</a>
             </div>
             <div class="side">
                 <div class="account">
                     <div style="height: 80%; padding-left: 50%;">
-                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                        <div class="icon rounded-circle" id="account">{{user.username|make_list|first| capfirst}}</div>
                     </div>
-                    <div class="points">Score: 312</div>
+                    <div class="points">Score: {{user_points}}</div>
                 </div>
+                <script>
+                    account = document.getElementById("account");
+                    account.onclick = function() {
+                        location.href = "{% url 'account' %}"
+                    }
+                </script>
             </div>
         </header>
         <!-- The Modal -->
-        <div class="modal fade" id="myModal">
+        <div class="modal fade" id="menuModal">
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content menu">
             
@@ -48,15 +54,19 @@
             
                     <!-- Modal body -->
                     <div class="modal-body links">
+                        <a href="{% url 'home' %}">Home Feed</a> <br>
                         <a href="{% url 'account' %}">Submission History</a> <br>
-                        <a href="">Friends' Submissions</a> <br>
-                        <a href="">University Submissions</a> <br>
-                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
 
                         Add Friend:
                         <div class="add-friend rounded-3">
-                            <textarea class="rounded-3" name="" id="friend-name" cols="30" rows="1"></textarea>
-                            <button type="button" class="btn btn-outline-success" style="width: 95px;">Add Friend</button>
+                            <form method="post">
+                                {% csrf_token %}
+                                <input  class="rounded-3" type="text" name="friend-name" id="friend-name">
+                                <button type="submit" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
+                            </form>
                         </div>
                     </div>
             
@@ -69,14 +79,17 @@
 
             <div class="side left">
                 <div class="links rounded-5">
+                    <a href="{% url 'home' %}">Home Feed</a> <br>
                     <a href="{% url 'account' %}">Submission History</a>
-                    <a href="">Friends' Submissions</a>
-                    <a href="">University Submissions</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
-
-                    <div class="add-friend rounded-3">
-                        <textarea class="rounded-3" name="" id="friend-name" cols="30" rows="1"></textarea>
-                        <button type="button" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
+                    <div class="add-friend rounded-3 mt-4">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input  class="rounded-3" type="text" name="friend-name" id="friend-name">
+                            <button type="submit" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
+                        </form>
                     </div>
                 </div>
             </div>
@@ -90,7 +103,7 @@
                         @{{user.username}}
                     </div>
                     <div>
-                        132 Points
+                        Score: {{user_points}}
                     </div>
                     <div>
                         You joined BeGreen 3 months ago
@@ -101,21 +114,92 @@
                     </div>
                 </div>
 
-                <div class="friends-list">
+                <div class="row" style="padding: 0px 15px;">
+                    <button class="filter btn btn-dark" id="setCurrent">Current Friends</button>
+                    <!-- <button class="filter btn btn-dark" id="setOutgoing" >Sent Requests</button> -->
+                    <button class="filter btn btn-dark" id="setIncoming">Incoming Requests</button>
+                </div>
+
+                <div class="friends-list" id="current" style="display: flex;">
+                    {% for friend in friends.items %}
+                        <div class="friend row rounded-3">
+                            <div class="side left">
+                                <div class="icon rounded-circle">{{friend.username|make_list|first| capfirst}}</div>
+                            </div>
+                            <div class="centre">
+                                <div>{{friend.username}}</div>
+                            </div>
+                            <div class="side right">
+                                <button type="button" class="btn btn-outline-danger" style="width: 95px;">Remove Friend</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- THIS MIGHT NOT BE USED-->
+                <div class="friends-list" id="outgoing" style="display: none;">
                     <div class="friend row rounded-3">
                         <div class="side left">
-                            <div class="icon rounded-circle">T</div>
+                            <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
                         </div>
                         <div class="centre">
-                            <div>Username</div>
+                            <div>{{user.username}}</div>
                         </div>
                         <div class="side right">
-                            <button type="button" class="btn btn-outline-danger" style="width: 95px;">Remove Friend</button>
+                            <button type="button" class="btn btn-outline-danger" style="width: 95px; height: 50px;">Cancel</button>
                         </div>
                     </div>
+                </div>
+
+                
+                <div class="friends-list" id="incoming" style="display: none;">
+                    {% for request in incoming.items %}
+                        <div class="friend row rounded-3">
+                            <div class="side left">
+                                <div class="icon rounded-circle">{{request.username|make_list|first| capfirst}}</div>
+                            </div>
+                            <div class="centre">
+                                <div>{{request.username}}</div>
+                            </div>
+                            <div class="side right">
+                                <button type="button" class="btn btn-outline-success" style="width: 95px; height: 50px; margin-right: 5px;">Accept</button>
+                                <button type="button" class="btn btn-outline-danger" style="width: 95px; height: 50px;">Decline</button>
+                            </div>
+                        </div>
+                    {% endfor %}
                 </div>
             </div>
             <div class="side"></div>
           </main>
+          <script>
+            let current = document.getElementById("current");
+            let outgoing = document.getElementById("outgoing");
+            let incoming = document.getElementById("incoming");
+
+            document.getElementById("setCurrent").addEventListener("click", displayCurrent);
+            document.getElementById("setOutgoing").addEventListener("click", displayOutgoing);
+            document.getElementById("setIncoming").addEventListener("click", displayIncoming);
+
+            function displayCurrent() {
+                current.setAttribute("style", "display: flex;");
+                outgoing.setAttribute("style", "display: none;");
+                incoming.setAttribute("style", "display: none;");
+                console.log("set current");
+            }
+
+            function displayOutgoing() {
+                current.style.display = "none";
+                outgoing.style.display = "flex";
+                incoming.style.display = "none";
+                console.log("set outgoing");
+            }
+
+            function displayIncoming() {
+                current.setAttribute("style", "display: none;");
+                outgoing.setAttribute("style", "display: none;");
+                incoming.setAttribute("style", "display: flex;");
+                console.log("set incoming");
+            }
+          </script>
     </body>
 </html>

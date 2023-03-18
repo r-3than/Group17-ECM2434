@@ -24,7 +24,7 @@
     <main class="w-100 m-auto">
       <div class="title">
         <a class="title">BeGreen</a> <br/>
-        <a class="subtitle">Today's Challenge: Visit the Coast!</a>
+        <a class="subtitle">Today's Challenge: {{active_challenge}}</a>
       </div>
       <form class="form-signin m-auto mt-5" action="{% url 'microsoft_authentication:microsoft_authentication_login' %}">
         <button class="w-100 btn btn-lg btn-primary mb-3" style="background-color:#003c3c" type="submit">Login with SSO</button>
