@@ -7,6 +7,8 @@ Main Authors:
 import unittest
 import datetime
 import pytz
+import base64
+from PIL import Image
 from django.test import TestCase
 from django.contrib.auth.models import User
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment, SCORES, WORDS_TO_FILTER
@@ -235,7 +237,9 @@ class SubmissionTestCase(TestCase):
         for un in ['ab123','abc123','bc123','cd123','ef123']:
             user = User(username=un, password='unsecure_password')
             user.save()
-        challenge = Challenge(description='test challenge', time_for_challenge=20)
+        challenge = Challenge(description='test challenge', time_for_challenge=20,
+                                latitude=50.72228531721723, longitude=-3.531841571481125,
+                                allowed_distance=20)
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()

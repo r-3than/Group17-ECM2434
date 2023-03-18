@@ -77,7 +77,8 @@
                 {% for submission, info in submissions.items %}
                 <div id="post{{info.submission_id}}" class="post rounded-5">
                     <div class="header row">
-                        <div class="user">{{ info.submission_username }}</div>
+                        <div class="user">{{ info.submission_user_displayname }}</div>
+                        <!--<div class="user"style=>{{ info.submission_username }}</div>-->
                         <div class="time">{{ info.submission_time }}</div>
                     </div>
                     <div class="row">
@@ -133,7 +134,7 @@
                             <div>
                                 <img src="{% static 'img/Comment.svg' %}">
                             </div>
-                            <div>0</div>
+                            <div>{{ info.submission_comment_count }}</div>
                             <div>
                                 {% if not info.submission_has_reviewed %}
                                 <img id="flag{{info.submission_id}}" src="{% static 'img/Flag-Clear.svg' %}">

@@ -23,7 +23,7 @@ def publish_challenge(modeladmin, request, queryset):
         print('Challenge has already been set today')
         return
     except ActiveChallenge.DoesNotExist:
-        ActiveChallenge.objects.all().is_expired = True
+        ActiveChallenge.objects.all().update(is_expired=True)
         ac = ActiveChallenge(date=datetime.now(), challenge=queryset[0])
         ac.save()
 
@@ -104,12 +104,12 @@ class ProfileAdmin(admin.ModelAdmin):
         return profile.user.username
 
 class ChallengesAdmin(admin.ModelAdmin):
-    list_display = ['id', 'description']
+    list_display = ['id', 'description', 'time_for_challenge', 'latitude', 'longitude', 'allowed_distance']
     ordering = ['id']
     actions = [publish_challenge]
 
 class ActiveChallengesAdmin(admin.ModelAdmin):
-    list_display = ['date', 'get_challenge_id', 'get_challenge_description', 'get_time_for_challenge', 'is_expired']
+    list_display = ['date', 'get_challenge_id', 'get_challenge_description', 'get_time_for_challenge', 'get_latitude', 'get_longitude', 'get_allowed_distance', 'is_expired']
     ordering = ['date']
     actions = []
 
@@ -124,6 +124,18 @@ class ActiveChallengesAdmin(admin.ModelAdmin):
     @admin.display(ordering='challenge__time_for_challenge', description='time_for_challenge')
     def get_time_for_challenge(self, active_challenge) -> int:
         return active_challenge.challenge.time_for_challenge
+    
+    @admin.display(ordering='challenge__latitude', description='latitude')
+    def get_latitude(self, active_challenge) -> int:
+        return active_challenge.challenge.latitude
+    
+    @admin.display(ordering='challenge__longitude', description='longitude')
+    def get_longitude(self, active_challenge) -> int:
+        return active_challenge.challenge.longitude
+    
+    @admin.display(ordering='challenge__allowed_distance', description='allowed_distance')
+    def get_allowed_distance(self, active_challenge) -> int:
+        return active_challenge.challenge.allowed_distance
     
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ['username', 'get_challenge_date', 'submission_time', 'get_minutes_late', 'get_submission', 'reported', 'reviewed']
