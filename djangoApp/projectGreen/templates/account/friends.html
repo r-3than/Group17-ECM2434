@@ -17,26 +17,32 @@
     <body>
         <header class="row">
             <div class="side">
-                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#myModal">
+                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#menuModal">
                     Menu
                 </button>
             </div>
             <div class="title centre">
                 <a class="title" href="{% url 'home' %}">BeGreen</a>
                 <br>
-                <a class="subtitle">Today's challenge: Visit the Coast!</a>
+                <a class="subtitle">Today's challenge: {{active_challenge}}</a>
             </div>
             <div class="side">
                 <div class="account">
                     <div style="height: 80%; padding-left: 50%;">
-                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                        <div class="icon rounded-circle" id="account">{{user.username|make_list|first| capfirst}}</div>
                     </div>
-                    <div class="points">Score: 312</div>
+                    <div class="points">Score: {{user_points}}</div>
                 </div>
+                <script>
+                    account = document.getElementById("account");
+                    account.onclick = function() {
+                        location.href = "{% url 'account' %}"
+                    }
+                </script>
             </div>
         </header>
         <!-- The Modal -->
-        <div class="modal fade" id="myModal">
+        <div class="modal fade" id="menuModal">
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content menu">
             
@@ -48,14 +54,15 @@
             
                     <!-- Modal body -->
                     <div class="modal-body links">
+                        <a href="{% url 'home' %}">Home Feed</a> <br>
                         <a href="{% url 'account' %}">Submission History</a> <br>
-                        <a href="">Friends' Submissions</a> <br>
-                        <a href="">University Submissions</a> <br>
-                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
 
                         Add Friend:
                         <div class="add-friend rounded-3">
-                            <form action="" method="post">
+                            <form method="post">
                                 {% csrf_token %}
                                 <input  class="rounded-3" type="text" name="friend-name" id="friend-name">
                                 <button type="submit" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
@@ -96,7 +103,7 @@
                         @{{user.username}}
                     </div>
                     <div>
-                        132 Points
+                        Score: {{user_points}}
                     </div>
                     <div>
                         You joined BeGreen 3 months ago

@@ -10,8 +10,12 @@ body {
     font-family: "Inter";
 }
 
+html {
+    height: 100%;
+}
+
 body {
-    min-height: 100vh;
+    height: 100%;
     overflow-y: scroll;
 }
 
@@ -62,6 +66,10 @@ div.account {
     flex-direction: column;
     float: right;
     align-items: center;
+}
+
+.icon {
+    user-select: none;
 }
 
 .account .icon {

@@ -20,15 +20,21 @@
             <div class="title centre">
                 <a class="title" href="{% url 'home' %}">BeGreen</a>
                 <br>
-                <a class="subtitle">Today's challenge: Visit the Coast!</a>
+                <a class="subtitle">Today's challenge: {{active_challenge}}</a>
             </div>
             <div class="side">
                 <div class="account">
                     <div style="height: 80%; padding-left: 50%;">
-                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                        <div class="icon rounded-circle" id="account">{{user.username|make_list|first| capfirst}}</div>
                     </div>
-                    <div class="points">Score: 312</div>
+                    <div class="points">Score: {{user_points}}</div>
                 </div>
+                <script>
+                    account = document.getElementById("account");
+                    account.onclick = function() {
+                        location.href = "{% url 'account' %}"
+                    }
+                </script>
             </div>
         </header>
         <main class="row">

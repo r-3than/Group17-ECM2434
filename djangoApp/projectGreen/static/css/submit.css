@@ -74,6 +74,10 @@ div.account {
     align-items: center;
 }
 
+.icon {
+    user-select: none;
+}
+
 .account .icon {
     height: 100%;
     aspect-ratio: 1/1;
@@ -83,6 +87,7 @@ div.account {
     font-weight: 400;
     line-height: calc(height);
     font-size: 60px;
+    cursor: pointer;
 }
 
 .points {

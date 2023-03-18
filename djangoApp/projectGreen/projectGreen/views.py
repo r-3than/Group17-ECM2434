@@ -86,6 +86,7 @@ def home(request):
         context["user_points"] = user_points
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
         submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-sum_of_interactions')
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
@@ -156,8 +157,13 @@ def friends_feed(request):
         # List the user's friends' usernames
         friends = Friend.get_friend_usernames(request.user.username)
 
+        profileObj = Profile.objects.filter(id=request.user.id).first()
+        user_points = str(profileObj.points)
+        context["user_points"] = user_points
+
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
         submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-submission_time')
         for submission in submissions:
             if submission.username in friends:
@@ -197,9 +203,6 @@ def friends_feed(request):
                 else:
                     has_liked = 0
                 Profile.recalculate_user_points_by_username(submission.username)
-                profileObj = Profile.objects.filter(id=request.user.id).first()
-                user_points = str(profileObj.points)
-                context["user_points"] = user_points
                 submissions_info[submission.id] = {
                                                 'submission_id': submission.id,
                                                 'submission_user_displayname': user_display_name,
@@ -247,7 +250,11 @@ def camera(request):
 
 def submit(request):
     context = {}
+
     if request.user.is_authenticated:
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
+
         template = loader.get_template('submit/submit.html')  
         return HttpResponse(template.render(context, request))
     else:
@@ -257,7 +264,11 @@ def submit(request):
     
 def post(request):
     context = {}
+
     if request.user.is_authenticated:
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
+
         template = loader.get_template('home/post.html')  
         return HttpResponse(template.render(context, request))
     else:
@@ -275,6 +286,13 @@ def account(request):
 
         # Get the user submissions from most recent
         submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
+
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        context["user_points"] = user_points
+
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
 
         try:
             start_month = int(submissions.first().submission_time.strftime("%m"))
@@ -314,6 +332,12 @@ def account(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
     
+'''Signs out the user'''
+def signout(request):
+    if request.user.is_authenticated:
+        logout(request)
+    return redirect('/')
+
 '''Deletes the specified account'''
 def deleteAccount(request):
     if request.method == "POST":
@@ -325,7 +349,7 @@ def deleteAccount(request):
                 accountObj = Profile.objects.filter(user__username=request.user.username).first()
                 accountObj.user_data(fetch=False, delete=True)
                 logout(request)
-                return redirect('')
+                return redirect('/')
             except Exception as e:
                 print(str(e))
                 return redirect('/account/')
