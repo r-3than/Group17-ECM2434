@@ -33,7 +33,7 @@
                     <div style="height: 80%; padding-left: 50%;">
                         <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
                     </div>
-                    <div class="points">Score: {{ user_points }}</div>
+                    <div class="points">Score: {{user_points}}</div>
                 </div>
             </div>
         </header>
@@ -133,7 +133,7 @@
                             </div>
                             <div>{{ info.submission_comment_count }}</div>
                             <div>
-                                {% if info.submission_has_reviewed %}
+                                {% if not info.submission_has_reviewed %}
                                 <img id="flag{{info.submission_id}}" src="{% static 'img/Flag-Clear.svg' %}">
                                 <script>
                                     flagbutton = document.getElementById("flag{{info.submission_id}}");

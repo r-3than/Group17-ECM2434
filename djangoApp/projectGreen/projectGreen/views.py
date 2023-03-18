@@ -24,7 +24,12 @@ def uploadphoto(request):
             picture_bytes = b""
             for data in upload:
                 picture_bytes += data
-            active_challenge = ActiveChallenge.objects.last() ## -> 
+            has_submitted = Submission.user_has_submitted(request.user.username)
+            active_challenge = ActiveChallenge.objects.last()
+            if has_submitted == True:
+                replace_submission=Submission.objects.get(username=request.user.username, active_challenge=active_challenge)
+                replace_submission.delete()
+             ## -> 
             newSubmission = Submission(username=request.user.username,
             active_challenge=active_challenge,
             reported=False,
@@ -75,9 +80,12 @@ def home(request):
         template = loader.get_template('home/home.html')
 
         submissions_info = {}
-
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        context["user_points"] = user_points
         # List the submissions from most recent
-        submissions = Submission.objects.filter(reported=False).order_by('-submission_time')
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-sum_of_interactions')
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")
@@ -113,10 +121,9 @@ def home(request):
             else:
                 has_liked = 0
             Profile.recalculate_user_points_by_username(submission.username)
+            # Not ideal but ensures points sync
             profileObj = Profile.objects.filter(id=request.user.id).first()
             has_reviewed = submission.reviewed
-            user_points = str(profileObj.points)
-            context["user_points"] = user_points
             submissions_info[submission.id] = {
                                                'submission_id': submission.id,
                                                'submission_user_displayname': user_display_name,
@@ -149,7 +156,8 @@ def friends_feed(request):
         friends = Friend.get_friend_usernames(request.user.username)
 
         # List the submissions from most recent
-        submissions = Submission.objects.all().order_by('-submission_time')
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-submission_time')
         for submission in submissions:
             if submission.username in friends:
 

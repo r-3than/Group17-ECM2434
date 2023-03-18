@@ -495,7 +495,7 @@ class SubmissionTestCase(TestCase):
         reported_comment.reported_by = 'ab123'
         reported_comment.save()
         self.assertEqual(submission.get_comment_count(), 2, 'get_comment_count failed')
-
+    
     def test_location_is_valid(self):
         submission = Submission.objects.get(username='ab123')
         assert(submission.location_is_valid())
@@ -503,6 +503,7 @@ class SubmissionTestCase(TestCase):
         assert(not submission2.location_is_valid())
         #submission3 = Submission.objects.get(username='cd123')
         #assert(not submission3.location_is_valid())
+
 
 class UpvoteTestCase(TestCase):
     def setUp(self):
