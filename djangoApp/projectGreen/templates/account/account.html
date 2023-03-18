@@ -64,18 +64,14 @@
 
             <div class="side left">
                 <div class="links rounded-5">
-                    <a href="">Submission History</a>
-                    <a href="">Friends' Submissions</a>
-                    <a href="">University Submissions</a>
+                    <a href="{% url 'home' %}">Home Feed</a> <br>
+                    <a href="{% url 'friends' %}">Manage Friends</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
-                    <form action="{% url 'deleteAccount' %}" method="post">
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
+                    <form action="{% url 'deleteAccount' %}" method="post" class="mt-4">
                         {% csrf_token %}
-                        <!-- <input style="display: none;"
-                            type="text"
-                            id="username"
-                            name="username"
-                            value="{{user.username}}" /> -->
-                        <button type="submit" class="btn btn-danger" style="width: 100%; height: 50px;">Delete Account</button>
+                        <button type="submit" class="btn btn-danger" style="width: 100%; height: 80px;">Delete Account</button>
                     </form>
                 </div>
             </div>

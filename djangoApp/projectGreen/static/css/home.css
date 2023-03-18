@@ -10,6 +10,11 @@ body {
     font-family: "Inter";
 }
 
+body {
+    overflow-y: scroll;
+    min-height: 100vh;
+}
+
 .row:after {
     content: "";
     display: table;
@@ -221,7 +226,7 @@ header .side {
     /* width: 75%; */
     width: 360px;
     /* height: 37vh; */
-    height: 360px;
+    height: 430px;
     padding: 6%;
     padding-left: 9%;
     margin: auto;
@@ -232,7 +237,7 @@ header .side {
     font-weight: 500;
     box-shadow: 1px 5px 10px #202020;
     line-height: 300%;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 main .left {
