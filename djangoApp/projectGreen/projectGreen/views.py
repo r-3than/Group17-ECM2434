@@ -280,6 +280,11 @@ def submit(request):
     if request.user.is_authenticated:
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,active_challenge)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
 
 
         template = loader.get_template('submit/submit.html')  
