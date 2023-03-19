@@ -156,9 +156,7 @@ def home(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 
 def friends_feed(request):
@@ -238,16 +236,25 @@ def friends_feed(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
+
+def signin(request):
+    context = {}
+    template = loader.get_template('home/sign-in.html')
+    active_challenge = ActiveChallenge.get_last_active_challenge()
+    context["active_challenge"] = active_challenge.get_challenge_description()
+    return HttpResponse(template.render(context, request))
+
 
     
 def challenge(request):
     context = {}
     if request.user.is_authenticated:
+        
         template = loader.get_template('home/challenge.html')
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        if Submission.user_has_submitted(request.user.username):
+            return redirect("/home")
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
         profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
@@ -257,9 +264,8 @@ def challenge(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
+
     
 
 def camera(request):
@@ -274,13 +280,17 @@ def submit(request):
     if request.user.is_authenticated:
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,active_challenge)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
+
 
         template = loader.get_template('submit/submit.html')  
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 
 def post(request):
@@ -346,10 +356,8 @@ def post(request):
             template = loader.get_template('home/post.html')  
 
             return HttpResponse(template.render(context, request))
-        else:
-            print("Not signed in")
-            template = loader.get_template('home/sign-in.html')
-            return HttpResponse(template.render(context, request))
+    else:
+        return signin(request)
         
 @csrf_exempt
 def create_comment(request):
@@ -373,8 +381,6 @@ def create_comment(request):
                 print(str(e))
                 return HttpResponse({"failiure":"true"})
     return HttpResponse({"failiure":"true"})
-    
-    
 
 '''Loads the accounts page'''
 def account(request):
@@ -427,9 +433,7 @@ def account(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 '''Signs out the user'''
 def signout(request):
@@ -480,9 +484,7 @@ def friends(request):
         context["post_count"] = postCount
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 '''Creates a pending friend request'''
 def addFriend(request):
