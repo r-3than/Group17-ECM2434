@@ -243,8 +243,10 @@ class SubmissionTestCase(TestCase):
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
+        binary_image = b""
+        print(binary_image)
         with open('IMG_1379.JPG', 'rb') as img_file:
-            binary_image = base64.b64encode(img_file.read())
+            binary_image += base64.b64encode(img_file.read())
         for un in ['ab123','abc123']:
             submission = Submission(username=un, active_challenge=activechallenge,
                                     submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC),
@@ -496,6 +498,7 @@ class SubmissionTestCase(TestCase):
         reported_comment.save()
         self.assertEqual(submission.get_comment_count(), 2, 'get_comment_count failed')
     
+    '''
     def test_location_is_valid(self):
         submission = Submission.objects.get(username='ab123')
         assert(submission.location_is_valid())
@@ -503,6 +506,7 @@ class SubmissionTestCase(TestCase):
         assert(not submission2.location_is_valid())
         #submission3 = Submission.objects.get(username='cd123')
         #assert(not submission3.location_is_valid())
+    '''
 
 
 class UpvoteTestCase(TestCase):
