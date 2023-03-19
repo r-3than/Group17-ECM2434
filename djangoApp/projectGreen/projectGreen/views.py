@@ -1,3 +1,11 @@
+'''
+Authors:
+    ER
+    LB
+    TN
+    OL
+'''
+
 import datetime
 import os
 from sre_constants import SUCCESS
