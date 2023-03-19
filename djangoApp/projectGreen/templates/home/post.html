@@ -90,7 +90,9 @@
                         <div class="centre">
                             <div class="icon rounded-circle">{{submission.username|make_list|first| capfirst}}</div>
                             <div class="img rounded-5">
-                                <img src="{{submission.photo}}">
+                                <a href=" {{submission.photo}}" target="_blank">
+                                    <img src="{{submission.photo}}">
+                                </a>
                             </div>
                         </div>
                         <div class="side interactions">
@@ -184,11 +186,13 @@
                                     <div class="icon rounded-circle">{{comment.comment_username|make_list|first| capfirst}}</div>
                                 </div>
                                 <div class="centre">
-                                    <div class="username">{{comment.comment_username}}<span class="date">Date</span></div>
+                                    <div class="username">@{{comment.comment_username}}</div>
                                     <div>{{comment.content}}</div>
                                     <div id="reply{{comment.id}}" class="reply">Reply</div>
                                 </div>
-                                <div class="side"></div>
+                                <div class="side">
+                                    <span class="date">Date</span> <!-- TODO PUT FLAG HERE -->
+                                </div>
                             </div>
                             <script>
                                 reply = document.getElementById("reply{{comment.id}}");

@@ -331,6 +331,7 @@ def post(request):
             # Get the display name of the user who made the submission
             user = User.objects.get(username=submission.username)
             user_display_name = user.first_name
+            
             if submission.photo_bytes != None:
                 photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
             else:
@@ -345,6 +346,11 @@ def post(request):
             Profile.recalculate_user_points_by_username(submission.username)
             # Not ideal but ensures points sync
             has_reviewed = submission.reviewed
+
+            profileObj = Profile.get_profile(request.user.username)
+            user_points = str(profileObj.points)
+            context["user_points"] = user_points
+
             context['submission'] = {
                                                'id': submission.id,
                                                'user_displayname': user_display_name,
@@ -502,13 +508,6 @@ def addFriend(request):
                 return redirect('/friends/')
 
 
-def is_mobile(request):
-    MOBILE_AGENT_RE=re.compile(r".*(iphone|mobile|androidtouch)",re.IGNORECASE)
-
-    if MOBILE_AGENT_RE.match(request.META['HTTP_USER_AGENT']):
-        return True
-    else:
-        return False
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names
