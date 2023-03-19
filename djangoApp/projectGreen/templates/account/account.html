@@ -17,26 +17,26 @@
     <body>
         <header class="row">
             <div class="side">
-                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#myModal">
+                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#menuModal">
                     Menu
                 </button>
             </div>
             <div class="title centre">
                 <a class="title" href="{% url 'home' %}">BeGreen</a>
                 <br>
-                <a class="subtitle">Today's challenge: Visit the Coast!</a>
+                <a class="subtitle">Today's challenge: {{active_challenge}}</a>
             </div>
             <div class="side">
                 <div class="account">
                     <div style="height: 80%; padding-left: 50%;">
                         <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
                     </div>
-                    <div class="points">Score: 312</div>
+                    <div class="points">Score: {{user_points}}</div>
                 </div>
             </div>
         </header>
-        <!-- The Modal -->
-        <div class="modal fade" id="myModal">
+        <!-- The Links Modal -->
+        <div class="modal fade" id="menuModal">
             <div class="modal-dialog modal-fullscreen">
                 <div class="modal-content menu">
             
@@ -48,11 +48,13 @@
             
                     <!-- Modal body -->
                     <div class="modal-body links">
-                        <a href="">Submission History</a> <br>
-                        <a href="">Friends' Submissions</a> <br>
-                        <a href="">University Submissions</a> <br>
-                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
-                        <button type="button" class="btn btn-danger" style="width: 100%; height: 50px;">Delete Account</button>
+                        <a href="{% url 'home' %}">Home Feed</a> <br>
+                        <a href="{% url 'friends' %}">Manage Friends</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <button type="button" class="btn btn-dark mt-2" id="signOut" style="width: 100%; height: 50px;">Sign Out</button>
+                        <button type="button" class="btn btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#deleteAccountModal" style="width: 100%; height: 50px;">Delete Account</button>
                     </div>
             
                     <!-- Modal footer -->
@@ -60,16 +62,46 @@
                 </div>
             </div>
         </div>
+        
+        <!-- The Delete Modal -->
+        <div class="modal fade" id="deleteAccountModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true" style="display: none;">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="exampleModalLabel">Delete Account</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        Are you sure you want to delete your account? This action is irreversible.
+                    </div>
+                    <div class="modal-footer">
+                        <form action="{% url 'deleteAccount' %}" method="post">
+                        {% csrf_token %}
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-danger">Delete account</button>
+                    </form>
+                    </div>
+                </div>
+            </div>
+        </div>
         <main class="row">
 
             <div class="side left">
                 <div class="links rounded-5">
-                    <a href="">Submission History</a>
-                    <a href="">Friends' Submissions</a>
-                    <a href="">University Submissions</a>
+                    <a href="{% url 'home' %}">Home Feed</a> <br>
+                    <a href="{% url 'friends' %}">Manage Friends</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
-                    <button type="button" class="btn btn-danger" style="width: 100%; height: 50px;">Delete Account</button>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
+                    <button type="button" class="btn btn-dark mt-2" id="signOut" style="width: 100%; height: 50px;">Sign Out</button>
+                    <button type="button" class="btn btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#deleteAccountModal" style="width: 100%; height: 50px;">Delete Account</button>
                 </div>
+                <script>
+                    signOut = document.getElementById("signOut");
+                    signOut.onclick = function() {
+                        location.href = "{% url 'signout' %}"
+                    }
+                </script>
             </div>
 
             <div class="centre">
@@ -81,7 +113,7 @@
                         @{{user.username}}
                     </div>
                     <div>
-                        132 Points
+                        Score: {{user_points}}
                     </div>
                     <div>
                         You joined BeGreen 3 months ago
@@ -143,5 +175,10 @@
             </div>
             <div class="side"></div>
           </main>
+          <script>
+            function deleteAccount() {
+                
+            }
+          </script>
     </body>
 </html>

@@ -14,6 +14,7 @@ from django.http import HttpResponse
 from django.shortcuts import redirect
 
 from microsoft_authentication.auth.auth_decorators import microsoft_login_required
+from django.contrib.auth import logout
 from django.contrib.auth.models import User
 from django.template import loader
 from django.views.decorators.csrf import csrf_exempt
@@ -93,6 +94,7 @@ def home(request):
         context["user_points"] = user_points
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
         submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-sum_of_interactions')
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
@@ -163,8 +165,13 @@ def friends_feed(request):
         # List the user's friends' usernames
         friends = Friend.get_friend_usernames(request.user.username)
 
+        profileObj = Profile.objects.filter(id=request.user.id).first()
+        user_points = str(profileObj.points)
+        context["user_points"] = user_points
+
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
         submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-submission_time')
         for submission in submissions:
             if submission.username in friends:
@@ -204,9 +211,6 @@ def friends_feed(request):
                 else:
                     has_liked = 0
                 Profile.recalculate_user_points_by_username(submission.username)
-                profileObj = Profile.objects.filter(id=request.user.id).first()
-                user_points = str(profileObj.points)
-                context["user_points"] = user_points
                 submissions_info[submission.id] = {
                                                 'submission_id': submission.id,
                                                 'submission_user_displayname': user_display_name,
@@ -254,7 +258,11 @@ def camera(request):
 
 def submit(request):
     context = {}
+
     if request.user.is_authenticated:
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
+
         template = loader.get_template('submit/submit.html')  
         return HttpResponse(template.render(context, request))
     else:
@@ -264,7 +272,11 @@ def submit(request):
     
 def post(request):
     context = {}
+
     if request.user.is_authenticated:
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
+
         template = loader.get_template('home/post.html')  
         return HttpResponse(template.render(context, request))
     else:
@@ -272,6 +284,8 @@ def post(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
     
+
+'''Loads the accounts page'''
 def account(request):
     context = {}
 
@@ -281,11 +295,22 @@ def account(request):
         # Get the user submissions from most recent
         submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
 
-        start_month = int(submissions.first().submission_time.strftime("%m"))
-        end_month = int(submissions.last().submission_time.strftime("%m"))
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        context["user_points"] = user_points
+
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
+
+        try:
+            start_month = int(submissions.first().submission_time.strftime("%m"))
+            end_month = int(submissions.last().submission_time.strftime("%m"))
+            total_months = end_month - start_month + 1
+        except:
+            total_months = 0
 
         # Initialise list of empty lists for each month
-        submissions_by_month = [[]] * (end_month - start_month + 1)
+        submissions_by_month = [[]] * total_months
 
         for submission in submissions:
 
@@ -314,16 +339,45 @@ def account(request):
         print("Not signed in")
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
+    
+'''Signs out the user'''
+def signout(request):
+    if request.user.is_authenticated:
+        logout(request)
+    return redirect('/')
 
+'''Deletes the specified account'''
+def deleteAccount(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            print("Found profiles:", len(Profile.objects.values_list()))
+            for x in Profile.objects.all():
+                print(x.user.username)
+            try:
+                accountObj = Profile.objects.filter(user__username=request.user.username).first()
+                accountObj.user_data(fetch=False, delete=True)
+                logout(request)
+                return redirect('/')
+            except Exception as e:
+                print(str(e))
+                return redirect('/account/')
+
+
+
+'''Loads the friends page'''
 def friends(request):
     context = {}
 
     if request.user.is_authenticated:
         template = loader.get_template('account/friends.html')
 
-        #friends = Profile.user_data(request.user)['friends']
+        friends = Friend.get_friend_usernames(request.user.username)
 
-        #context['friends'] = friends
+        context['friends'] = friends
+
+        incoming = Friend.get_pending_friend_usernames(request.user.username)
+
+        context['incoming'] = incoming
 
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
@@ -339,6 +393,16 @@ def friends(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
     
+'''Creates a pending friend request'''
+def addFriend(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                recipient = request.POST.get("friend_name")
+                Friend.create_friend_request(request.user.username, recipient)
+            finally:
+                return redirect('/friends/')
+
 
 def is_mobile(request):
     MOBILE_AGENT_RE=re.compile(r".*(iphone|mobile|androidtouch)",re.IGNORECASE)
