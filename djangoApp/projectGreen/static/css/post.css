@@ -84,6 +84,10 @@ div.account {
     font-size: 15px;
 }
 
+.trigger-menu {
+    display: none;   
+}
+
 main {
     height: auto;
     width: auto;
@@ -203,9 +207,11 @@ main {
 }
 
 .comment {
-    border: 1px solid white;
+    /*border: 1px solid white;*/
     height: 100px;
     width: 100%;
+    margin: auto;
+    margin-bottom: 1rem;
 }
 
 .comment .side {
@@ -214,7 +220,22 @@ main {
 
 .comment .icon {
     position: relative;
-    height: auto;
+    height: 45px;
+}
+
+.username {
+    font-weight: bold;
+}
+
+.date {
+    float:right;
+    font-weight: normal;
+    color: #D3D3D3;
+}
+
+.reply {
+    font-size: small;
+    color: #D3D3D3;
 }
 
 .side {
