@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
     Main Authors:
-        OJ - Design
+        OJ - Design + Styling + Integration
         SJ - Styling
 -->
 {% load static %}
@@ -55,10 +55,12 @@
 
                     <!-- Modal body -->
                     <div class="modal-body links">
+                        <a href="{% url 'home' %}">Home Feed</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <a href="{% url 'account' %}">Submission History</a> <br>
-                        <a href="">Friends' Submissions</a> <br>
-                        <a href="">University Submissions</a> <br>
-                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
+                        <a href="{% url 'friends' %}">Manage Friends</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
                     </div>
 
                     <!-- Modal footer -->
@@ -69,9 +71,11 @@
         <main class="row">
               <div class="side left">
                 <div class="links rounded-5">
+                    <a href="{% url 'home' %}">Home Feed</a> <br>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="{% url 'account' %}">Submission History</a>
-                    <a href="">Friends' Submissions</a>
-                    <a href="">University Submissions</a>
+                    <a href="{% url 'friends' %}">Manage Friends</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                 </div>
               </div>
