@@ -270,7 +270,7 @@ def submit(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
     
-@csrf_exempt
+
 def post(request):
     context = {}
 
@@ -279,7 +279,7 @@ def post(request):
             active_challenge = ActiveChallenge.get_last_active_challenge()
             context["active_challenge"] = active_challenge.get_challenge_description()
 
-            submission_id = request.POST.get("submission_id", "")    #json.loads(request.body)
+            submission_id = request.POST.get("submission_id", "")
             submission=Submission.objects.filter(id=submission_id).first()
             
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
@@ -338,6 +338,30 @@ def post(request):
             print("Not signed in")
             template = loader.get_template('home/sign-in.html')
             return HttpResponse(template.render(context, request))
+        
+@csrf_exempt
+def create_comment(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                data=json.loads(request.body)
+
+                submission_id = data["submission_id"]
+                submission = Submission.objects.filter(id = submission_id).first()                
+                
+                author = data["author"]
+                content = data["content"]
+
+                print("new comment:", submission, author, content)
+
+                submission.create_comment(author, content)
+
+                return HttpResponse({"success":"true"})
+            except Exception as e:
+                print(str(e))
+                return HttpResponse({"failiure":"true"})
+    return HttpResponse({"failiure":"true"})
+    
     
 
 '''Loads the accounts page'''
