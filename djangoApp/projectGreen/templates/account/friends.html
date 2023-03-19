@@ -1,0 +1,205 @@
+<!doctype html>
+<!--
+    Main Author:
+        OJ - Design + Styling
+-->
+{% load static %}
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+        <link href="{% static 'css/friends.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
+        <link href="{% static 'css/friends-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
+        <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+    </head>
+    <body>
+        <header class="row">
+            <div class="side">
+                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#menuModal">
+                    Menu
+                </button>
+            </div>
+            <div class="title centre">
+                <a class="title" href="{% url 'home' %}">BeGreen</a>
+                <br>
+                <a class="subtitle">Today's challenge: {{active_challenge}}</a>
+            </div>
+            <div class="side">
+                <div class="account">
+                    <div style="height: 80%; padding-left: 50%;">
+                        <div class="icon rounded-circle" id="account">{{user.username|make_list|first| capfirst}}</div>
+                    </div>
+                    <div class="points">Score: {{user_points}}</div>
+                </div>
+                <script>
+                    account = document.getElementById("account");
+                    account.onclick = function() {
+                        location.href = "{% url 'account' %}"
+                    }
+                </script>
+            </div>
+        </header>
+        <!-- The Modal -->
+        <div class="modal fade" id="menuModal">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content menu">
+            
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h4 class="modal-title">Useful Links</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+            
+                    <!-- Modal body -->
+                    <div class="modal-body links">
+                        <a href="{% url 'home' %}">Home Feed</a> <br>
+                        <a href="{% url 'account' %}">Submission History</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+
+                        Add Friend:
+                        <div class="add-friend rounded-3">
+                            <form action="{% url 'addFriend' %}" method="post">
+                                {% csrf_token %}
+                                <input  class="rounded-3" type="text" name="friend_name" id="friend-name">
+                                <button type="submit" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
+                            </form>
+                        </div>
+                    </div>
+            
+                    <!-- Modal footer -->
+                    <div class="modal-footer"></div>
+                </div>
+            </div>
+        </div>
+        <main class="row">
+
+            <div class="side left">
+                <div class="links rounded-5">
+                    <a href="{% url 'home' %}">Home Feed</a> <br>
+                    <a href="{% url 'account' %}">Submission History</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
+                    <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
+                    <div class="add-friend rounded-3 mt-4">
+                        <form method="post">
+                            {% csrf_token %}
+                            <input  class="rounded-3" type="text" name="friend_name" id="friend-name">
+                            <button type="submit" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="centre">
+                <div class="overview rounded-5">
+                    <div class="main-pic" style="margin: auto;">
+                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                    </div>
+                    <div style="text-decoration: underline;">
+                        @{{user.username}}
+                    </div>
+                    <div>
+                        Score: {{user_points}}
+                    </div>
+                    <div>
+                        You joined BeGreen 3 months ago
+                    </div>
+                    <br>
+                    <div style="bottom: 0px;">
+                        View your friends here!
+                    </div>
+                </div>
+
+                <div class="row" style="padding: 0px 15px;">
+                    <button class="filter btn btn-dark" id="setCurrent">Current Friends</button>
+                    <!-- <button class="filter btn btn-dark" id="setOutgoing" >Sent Requests</button> -->
+                    <button class="filter btn btn-dark" id="setIncoming">Incoming Requests</button>
+                </div>
+
+                <div class="friends-list" id="current" style="display: flex;">
+                    {% for friend in friends.items %}
+                        <div class="friend row rounded-3">
+                            <div class="side left">
+                                <div class="icon rounded-circle">{{friend.username|make_list|first| capfirst}}</div>
+                            </div>
+                            <div class="centre">
+                                <div>{{friend.username}}</div>
+                            </div>
+                            <div class="side right">
+                                <button type="button" class="btn btn-outline-danger" style="width: 95px;">Remove Friend</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- THIS MIGHT NOT BE USED-->
+                <div class="friends-list" id="outgoing" style="display: none;">
+                    <div class="friend row rounded-3">
+                        <div class="side left">
+                            <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                        </div>
+                        <div class="centre">
+                            <div>{{user.username}}</div>
+                        </div>
+                        <div class="side right">
+                            <button type="button" class="btn btn-outline-danger" style="width: 95px; height: 50px;">Cancel</button>
+                        </div>
+                    </div>
+                </div>
+
+                
+                <div class="friends-list" id="incoming" style="display: none;">
+                    {% for request in incoming.items %}
+                        <div class="friend row rounded-3">
+                            <div class="side left">
+                                <div class="icon rounded-circle">{{request.username|make_list|first| capfirst}}</div>
+                            </div>
+                            <div class="centre">
+                                <div>{{request.username}}</div>
+                            </div>
+                            <div class="side right">
+                                <button type="button" class="btn btn-outline-success" style="width: 95px; height: 50px; margin-right: 5px;">Accept</button>
+                                <button type="button" class="btn btn-outline-danger" style="width: 95px; height: 50px;">Decline</button>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="side"></div>
+          </main>
+          <script>
+            let current = document.getElementById("current");
+            let outgoing = document.getElementById("outgoing");
+            let incoming = document.getElementById("incoming");
+
+            document.getElementById("setCurrent").addEventListener("click", displayCurrent);
+            document.getElementById("setOutgoing").addEventListener("click", displayOutgoing);
+            document.getElementById("setIncoming").addEventListener("click", displayIncoming);
+
+            function displayCurrent() {
+                current.setAttribute("style", "display: flex;");
+                outgoing.setAttribute("style", "display: none;");
+                incoming.setAttribute("style", "display: none;");
+                console.log("set current");
+            }
+
+            function displayOutgoing() {
+                current.style.display = "none";
+                outgoing.style.display = "flex";
+                incoming.style.display = "none";
+                console.log("set outgoing");
+            }
+
+            function displayIncoming() {
+                current.setAttribute("style", "display: none;");
+                outgoing.setAttribute("style", "display: none;");
+                incoming.setAttribute("style", "display: flex;");
+                console.log("set incoming");
+            }
+          </script>
+    </body>
+</html>

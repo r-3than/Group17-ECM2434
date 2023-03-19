@@ -3,6 +3,10 @@ Metadata extraction:
 https://www.thepythoncode.com/article/extracting-image-metadata-in-python
 GPS data decoding:
 https://stackoverflow.com/questions/19804768/interpreting-gps-info-of-exif-data-from-photo-in-python
+
+Main Authors:
+    TN - Image metadata extraction
+    LB - Geodata calculations
 """
 
 from PIL import Image
@@ -42,10 +46,35 @@ def extract_metadata(img: Image) -> dict[dict, dt]:
             out['DateTime'] = dt.strptime(date_string, '%Y:%m:%d %H:%M:%S')
     return out
 
+
 def extract_metadata_from_filepath(filepath: str) -> dict[dict, dt]:
     '''Wrapper for extract_metadata function with filepath input'''
     source_image = Image.open(filepath)
     return extract_metadata(source_image)
+
+
+def coordinates_to_decdegrees(lat:list, lon:list):
+    '''
+    Convert latitude and longitude coordinates into decimal degrees
+    '''
+    dd_latitude = lat[0] + (lat[1]/60) + (lat[2]/3600)
+    if lat[3] == "S":
+        dd_latitude = -dd_latitude
+    dd_longitude = lon[0] + (lon[1]/60) + (lon[2]/3600)
+    if lon[3] == "W":
+        dd_longitude = -dd_longitude
+    return (dd_latitude, dd_longitude)
+
+
+def process_GPS_data(img: Image):
+    data = extract_metadata(img)
+    gps_info = data['GPSInfo']
+    latitude = gps_info['GPSLatitude'] + [gps_info['GPSLatitudeRef']]
+    longitude = gps_info['GPSLongitude'] + [gps_info['GPSLongitudeRef']]
+    print(latitude, longitude)
+    d_lat, d_lon = coordinates_to_decdegrees(latitude, longitude)
+    print(d_lat, d_lon)
+    # USE GEOPY to calculate distance in models
 
 
 if __name__ == '__main__':

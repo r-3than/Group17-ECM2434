@@ -1,0 +1,360 @@
+@import url(https://fonts.googleapis.com/css2?family=Inter:wght@200..900);
+
+html,
+body {
+    width: auto;
+    height: auto;
+    background-color: var(--exeter-deep-green);
+    box-sizing: border-box;
+    overflow-x: clip;
+    font-family: "Inter";
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    overflow-y: scroll;
+}
+
+.row:after {
+    content: "";
+    display: table;
+    clear: both;
+}
+
+header {
+    width: 100vw;
+    position: sticky;
+    top:0;
+    background-color: var(--exeter-deep-green);
+    height: 130px; 
+    z-index: 1000;
+    box-shadow: 1px 5px 10px #202020;
+}
+
+div.title {
+    text-align: center;
+    line-height: 250%;
+    padding-top: 20px;
+}
+
+a.title {
+    color: var(--exeter-dark-green);
+    font-weight: 700;
+    font-size: 48px;
+    text-decoration: none;
+    margin: auto;
+}
+  
+a.subtitle {
+    color: #00BDA7;
+    font-weight: 700;
+    font-size: 24px;
+    text-decoration: none;
+    margin: auto;
+}
+
+div.account {
+    width: 200px;
+    height: 100%;
+    display: flex;
+    padding: 7px;
+    padding-right: 20px;
+    flex-direction: column;
+    float: right;
+    align-items: center;
+}
+
+.icon {
+    user-select: none;
+}
+
+.account .icon {
+    height: 100%;
+    aspect-ratio: 1/1;
+    background-color: var(--exeter-dark-green);
+    color: white;
+    text-align: center;
+    font-weight: 400;
+    line-height: calc(height);
+    font-size: 60px;
+}
+
+.trigger-menu {
+    display: none;
+}
+
+.overview {
+    top:0;
+    width: 50%;
+    display: block;
+    background-color: #191919;
+    height: auto;
+    box-shadow: 1px 5px 10px #202020;
+    padding-top: 20px;
+    margin: auto;
+    margin-top: 10px;
+    margin-bottom: 8px;
+    padding-bottom: 20px;
+    color: white;
+    text-align: center;
+}
+
+.main-pic {
+    width: fit-content;
+    height: 100px;
+    margin: auto;
+}
+
+.main-pic .icon {
+    height: 100%;
+    aspect-ratio: 1/1;
+    background-color: var(--exeter-dark-green);
+    color: white;
+    text-align: center;
+    font-weight: 400;
+    line-height: calc(height);
+    font-size: 70px;
+}
+
+.accordion-button {
+    background-color: var(--exeter-dark-green);
+    color: white;
+}
+
+.accordion {
+    background-color: var(--exeter-deep-green);
+}
+
+.accordion-item {
+    background-color: var(--exeter-deep-green);
+    border: 1px solid var(--exeter-deep-green);
+}
+
+.accordion-body {
+    overflow-y: scroll;
+    background-color: var(--exeter-deep-green);
+    max-height: 800px;
+}
+
+.points {
+    width: 100%;
+    padding-left: 50%;
+    color: white;
+    font-weight: 500;
+    text-align: center;
+    font-size: 15px;
+}
+
+main {
+    height: auto;
+    width: auto;
+    content: "";
+}
+
+.centre {
+    float: left;
+    width: 50%;
+    height: auto;
+}
+
+.post {
+    background-color: #191919;
+    color: white;
+    width: 85%;
+    max-width: 620px;
+    min-width: 593px;
+    height: auto;
+    /* aspect-ratio: 6/5; */
+    padding: 15px;
+    margin: auto;
+    position: relative;
+    top: 30px;
+    box-shadow: 1px 5px 12px #202020;
+}
+
+.post .header {
+    display: flex;
+    font-weight: 600;
+    padding-bottom: 10px;
+}
+
+.post .header .user {
+    float: left;
+    width: 50%;
+    font-size: 22px;
+    padding-left: 40px;
+}
+
+.post .header .time {
+    float: right;
+    width: 50%;
+    text-align: right;
+    padding-right: 50px;
+    font-size: small;
+}
+
+.post .side {
+    float: left;
+    width: 7%;
+    height: auto;
+    padding: 0;
+    user-select: none;
+}
+
+.interactions {
+    text-align: center;
+    line-height: 200%;
+}
+
+.interactions div {
+    width: auto;
+}
+
+.interactions img {
+    height: 20px;
+    filter: invert();
+}
+
+.upvote {
+    height: 24px !important;
+}
+
+.post .centre {
+    float: left;
+    width: 86%;
+    aspect-ratio: 6/5;
+    padding: 0px;
+    position: relative;
+}
+
+.post .icon {
+    height: 45px;
+    aspect-ratio: 1/1;
+    margin: 10px;
+    z-index: 500;
+    right: 0px;
+    background-color: var(--exeter-dark-green);
+    color: white;
+    text-align: center;
+    font-weight: 400;
+    line-height: 45px;
+    font-size: 32px;
+    float: right;
+    position: absolute;
+}
+
+.img {
+    max-width: 100%;
+    width: fit-content;
+    height: 440px;
+    overflow: hidden;
+    margin: auto;
+    box-shadow: 1px 5px 12px black;
+    display: flex;
+    justify-content: center;
+    position: relative;
+}
+
+.img img {
+    max-height: 100%;
+}
+
+.divider {
+    margin: 25px;
+    height: 8px;
+    background-color: white;
+    box-shadow: 1px 5px 12px black;
+}
+
+.comment {
+    border: 1px solid white;
+    height: 100px;
+    width: 100%;
+}
+
+.comment .side {
+    width: 9%;
+}
+
+.comment .icon {
+    position: relative;
+    height: auto;
+}
+
+.side {
+    float: left;
+    width: 25%;
+    height: auto;
+    padding: 0;
+}
+
+header .centre {
+    width: 60%;
+}
+
+header .side {
+    float: left;
+    width: 20%;
+    height: 100%;
+    padding: 0;
+}
+
+.links {
+    background-color: var(--exeter-dark-green);
+    color: white;
+    width: 360px;
+    height: 430px;
+    padding: 6%;
+    padding-left: 9%;
+    margin: auto;
+    position: relative;
+    top: 70px;
+    font-size: 24px;
+    font-weight: 500;
+    box-shadow: 1px 5px 10px #202020;
+    line-height: 300%;
+    overflow-y: auto;
+}
+
+.friends {
+    background-color: var(--exeter-dark-green);
+    color: white;
+    width: 360px;
+    height: 360px;
+    padding: 6%;
+    padding-left: 9%;
+    /* margin: auto; */
+    /* position: sticky; */
+    /* top: 200px; */
+    font-size: 24px;
+    font-weight: 500;
+    box-shadow: 1px 5px 10px #202020;
+    line-height: 300%;
+    overflow-y: auto;
+}
+
+main .left {
+    min-width: 400px;
+}
+
+main > .centre {
+    min-width: 600px;
+}
+
+.links a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.friends a {
+    color: inherit;
+    text-decoration: none;
+}
+
+.break {
+    height: 25px;
+}

@@ -1,4 +1,9 @@
 <!doctype html>
+<!--
+    Main Author:
+        TN - Design
+        OJ - Styling
+-->
 {% load static %}
 <html lang="en">
     <head>
@@ -13,26 +18,35 @@
         <header class="row">
             <div class="side"></div>
             <div class="title centre">
-                <a class="title">BeGreen</a>
+                <a class="title" href="">BeGreen</a>
             </div>
             <div class="side">
                 <div class="account">
                     <div style="height: 80%; padding-left: 50%;">
-                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                        <div class="icon rounded-circle" id="account">{{user.username|make_list|first| capfirst}}</div>
                     </div>
-                    <div class="points">Score: 312</div>
+                    <div class="points">Score: {{user_points}}</div>
                 </div>
+                <script>
+                  account = document.getElementById("account");
+                  account.onclick = function() {
+                      location.href = "{% url 'account' %}"
+                  }
+              </script>
             </div>
         </header>
         <main class="w-100 m-auto text-center">
           <div>
             <a class="title" id="welcomeBanner">Hello {{user.username| capfirst}}!</a>
             <br>
-            <a class="subtitle">Today's Challenge: Visit the Coast!</a>
+            <a class="subtitle">Today's Challenge: {{active_challenge}}</a>
           </div>
           <form class="form-signin m-auto mt-2" action="{% url 'submit' %}">
             <button class="w-100 btn btn-lg btn-primary mb-3" style="background-color:#003c3c" type="submit">Post Now</button>
-            <p class="friends">4 friends have already posted</p>
+          </form>
+          <form class="form-signin m-auto mt-2" action="{% url 'home' %}">
+            <button class="w-100 btn btn-lg btn-primary mb-3" style="background-color:#003c3c" type="submit">Go to feed</button>
+            <p class="friends">{{post_count}} friends have already posted</p>
           </form>
         </main>
       </body>
