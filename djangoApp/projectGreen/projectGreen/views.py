@@ -478,6 +478,7 @@ def friends(request):
         template = loader.get_template('account/friends.html')
 
         friends = Friend.get_friend_usernames(request.user.username)
+        print(friends)
 
         context['friends'] = friends
 

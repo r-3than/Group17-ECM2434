@@ -121,7 +121,8 @@
                 </div>
 
                 <div class="friends-list" id="current" style="display: flex;">
-                    {% for friend in friends.items %}
+                    {% for friend in friends %}
+
                         <div class="friend row rounded-3">
                             <div class="side left">
                                 <div class="icon rounded-circle">{{friend|make_list|first| capfirst}}</div>
@@ -153,7 +154,7 @@
 
                 
                 <div class="friends-list" id="incoming" style="display: none;">
-                    {% for friend in incoming.items %}
+                    {% for friend in incoming %}
                         <div class="friend row rounded-3">
                             <div class="side left">
                                 <div class="icon rounded-circle">{{friend|make_list|first| capfirst}}</div>
