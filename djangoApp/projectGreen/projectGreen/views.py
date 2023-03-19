@@ -39,12 +39,13 @@ def uploadphoto(request):
                 replace_submission=Submission.objects.get(username=request.user.username, active_challenge=active_challenge)
                 replace_submission.delete()
              ## -> 
+            current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
             newSubmission = Submission(username=request.user.username,
             active_challenge=active_challenge,
             reported=False,
             reviewed=False,
             photo_bytes=picture_bytes,
-            submission_time=datetime.datetime.now())
+            submission_time=current_date)
             # Check location
             if active_challenge.challenge.allowed_distance == 0.0 or newSubmission.location_is_valid():
                 newSubmission.save()
