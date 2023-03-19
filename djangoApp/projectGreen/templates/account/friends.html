@@ -62,7 +62,7 @@
 
                         Add Friend:
                         <div class="add-friend rounded-3">
-                            <form method="post">
+                            <form action="{% url 'addFriend' %}" method="post">
                                 {% csrf_token %}
                                 <input  class="rounded-3" type="text" name="friend-name" id="friend-name">
                                 <button type="submit" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
