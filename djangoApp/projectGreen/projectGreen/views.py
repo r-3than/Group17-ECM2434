@@ -45,8 +45,12 @@ def uploadphoto(request):
             reviewed=False,
             photo_bytes=picture_bytes,
             submission_time=datetime.datetime.now())
-            newSubmission.save()
-        return redirect('/home/')
+            # Check location
+            if active_challenge.challenge.allowed_distance == 0.0 or newSubmission.location_is_valid():
+                newSubmission.save()
+                
+            return redirect('/home/')
+                
         """
         data=json.loads(request.body)
         print(data)
