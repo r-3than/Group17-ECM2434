@@ -2,7 +2,7 @@
 Main Author:
     TN - Models and points system
 Sub-Author:
-    LB - Challenge model helper functions; overall code review
+    LB - Challenge model helper functions; overall code review, location checking
 '''
 
 from django.db import models
@@ -504,24 +504,27 @@ class Submission(models.Model):
         return len(self.get_comments())
 
     def location_is_valid(self) -> bool:
+        '''
+        Checks if the GPS metadata from a submission image matches the 
+        challenge location
+        '''
 
-        #Checks if a submission picture has been taken at the correct location for a challenge
-
+        # Get coordinates and allowed distance for the challenge
         challenge_lat = self.active_challenge.challenge.latitude
         challenge_lon = self.active_challenge.challenge.longitude
         allowed_distance = self.active_challenge.challenge.allowed_distance
 
         if self.photo_bytes != None:
+            # Decode the base64 string of the image and extract the metadata
             photo_b64 = base64.b64decode(self.photo_bytes)
             img = Image.open(io.BytesIO(photo_b64))
             submission_lat, submission_lon = process_GPS_data(img)
             submission_distance_to_challenge = distance((challenge_lat, challenge_lon), (submission_lat, submission_lon)).km
+            # Check if the image is near the challenge location
             if submission_distance_to_challenge <= allowed_distance:
                 return True
 
         return False
-
-
 
     verbose_name = 'Submission'
     verbose_name_plural = 'Submissions'

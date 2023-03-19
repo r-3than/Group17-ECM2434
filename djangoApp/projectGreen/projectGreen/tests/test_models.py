@@ -243,15 +243,21 @@ class SubmissionTestCase(TestCase):
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
+        with open('IMG_1379.JPG', 'rb') as img_file:
+            binary_image = base64.b64encode(img_file.read())
         for un in ['ab123','abc123']:
             submission = Submission(username=un, active_challenge=activechallenge,
-                                    submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
+                                    submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC),
+                                    photo_bytes=binary_image)
             submission.save()
         reported_submission = Submission(username='bc123', active_challenge=activechallenge,
                                         submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True, reported_by='ab123')
         reported_submission.save()
+        with open('IMG_34123.jpg', 'rb') as img_file2:
+            binary_image2 = base64.b64encode(img_file2.read())
         reviewed_submission = Submission(username='cd123', active_challenge=activechallenge,
-                                            submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reviewed=True)
+                                            submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC),
+                                            photo_bytes=binary_image2, reviewed=True)
         reviewed_submission.save()
 
     def test_user_has_submitted(self):
@@ -489,6 +495,15 @@ class SubmissionTestCase(TestCase):
         reported_comment.reported_by = 'ab123'
         reported_comment.save()
         self.assertEqual(submission.get_comment_count(), 2, 'get_comment_count failed')
+    
+    def test_location_is_valid(self):
+        submission = Submission.objects.get(username='ab123')
+        assert(submission.location_is_valid())
+        submission2 = Submission.objects.get(username='bc123')
+        assert(not submission2.location_is_valid())
+        #submission3 = Submission.objects.get(username='cd123')
+        #assert(not submission3.location_is_valid())
+
 
 class UpvoteTestCase(TestCase):
     def setUp(self):
