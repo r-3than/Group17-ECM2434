@@ -85,7 +85,7 @@
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                     <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <div class="add-friend rounded-3 mt-4">
-                        <form method="post">
+                        <form action="{% url 'addFriend' %}" method="post">
                             {% csrf_token %}
                             <input  class="rounded-3" type="text" name="friend_name" id="friend-name">
                             <button type="submit" class="btn btn-outline-success" style="width: 80px;">Add Friend</button>
