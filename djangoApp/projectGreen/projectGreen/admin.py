@@ -9,6 +9,7 @@ import base64
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
+from django.template.loader import render_to_string
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
 from datetime import datetime
 import logging
@@ -17,6 +18,7 @@ LOGGER = logging.getLogger('django')
 
 @admin.action(description='Publish challenge')
 def publish_challenge(modeladmin, request, queryset):
+    c = queryset[0]
     date = datetime.now().strftime('%Y-%m-%d')
     try:
         ActiveChallenge.objects.get(date=date)
@@ -24,14 +26,20 @@ def publish_challenge(modeladmin, request, queryset):
         return
     except ActiveChallenge.DoesNotExist:
         ActiveChallenge.objects.all().update(is_expired=True)
-        ac = ActiveChallenge(date=datetime.now(), challenge=queryset[0])
+        ac = ActiveChallenge(date=datetime.now(), challenge=c)
         ac.save()
 
-    message = 'A new challenge has been posted! \n'+queryset[0].description+'\nDate: '+date
+    context = {
+        'date': ac.date.strftime('%d/%m/%Y'),
+        'description': ac.get_challenge_description(),
+        'url': 'localhost:8000' # dynamically fetch this?
+    }
+    plain_text = render_to_string('notification/notification.txt', context)
+    html = render_to_string('notification/notification.html', context)
 
     for user in User.objects.all():
         try:
-            user.email_user('Time to BeGreen!',message, 'djangotestemail31@gmail.com')
+            user.email_user('Time to BeGreen!',message=plain_text, html_message=html, from_email='djangotestemail31@gmail.com')
         except:
             LOGGER.error("Message to ", user.email, "failed to send.")
 
