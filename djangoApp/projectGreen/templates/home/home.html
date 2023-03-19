@@ -193,13 +193,12 @@
                         </div>
                     </div>
                     <script>
-                        form = document.getElementById("form{{info.submission_id}}");
                         post = document.getElementById("post{{info.submission_id}}");
                         detailElements = post.getElementsByClassName("details");
 
                         for (var i = 0; i < detailElements.length; i++) {
                             detailElements.item(i).onclick = function() {
-                                alert(form.id)
+                                form = document.getElementById("form{{info.submission_id}}");
                                 form.submit();
                             }
                         }

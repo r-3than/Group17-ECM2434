@@ -141,61 +141,59 @@
                     <div class="comments">
                         <div class="enter-comment rounded-3">
                             <input  class="rounded-3" type="text" name="content" id="content" value="">
-                            <button type="button" id="post-comment" class="btn btn-outline-success" style="width: 80px;">Post Comment</button>
+                            <button type="button" id="post-comment" class="btn btn-outline-light" style="width: 100px;">Post Comment</button>
                             <script>
                                 var submission_id = "{{submission.id}}";
 
                                 var button = document.getElementById("post-comment");
 
                                 button.onclick = function() {
-                                    var content = document.getElementById("content").value;
+                                    var content = document.getElementById("content");
                                     if (content == "") {
                                         return;
                                     }
                                     else {
                                         var url = window.location.protocol + '//' + location.host + "/create-comment/";
                                         fetch(url, {
-                                        method: "POST",
-                                        credentials: "include",
-                                        headers: {
-                                        Accept: "application/json",
-                                        "Content-Type": "application/json",
-                                        },
-                                        body: JSON.stringify({
-                                            submission_id: submission_id,
-                                            author: "{{user.username}}",
-                                            content: content,
-                                        }),
-                                    })
+                                            method: "POST",
+                                            credentials: "include",
+                                            headers: {
+                                            Accept: "application/json",
+                                            "Content-Type": "application/json",
+                                            },
+                                            body: JSON.stringify({
+                                                submission_id: submission_id,
+                                                author: "{{user.username}}",
+                                                content: content.value,
+                                            }),
+                                        })
                                         .then((response) => response.json())
                                         .then((response) => console.log(JSON.stringify(response)));
+                                        location.reload();
                                     }   
                                 }
                             </script>
                         </div>
-                        <div class="comment row">
-                            <div class="side">
-                                <div class="icon rounded-circle">T</div>
-                            </div>
-                            <div class="centre">
-                                <div class="username">Username<span class="date">Date</span></div>
-                                <div>Content</div>
-                                <div class="reply">Reply</div>
-                            </div>
-                            <div class="side"></div>
-                        </div>
                         {% for comment in submission.comments %}
-                            <div class="comment row">
+                            <div id="comment{{comment.id}}" class="comment row">
                                 <div class="side">
                                     <div class="icon rounded-circle">{{comment.comment_username|make_list|first| capfirst}}</div>
                                 </div>
                                 <div class="centre">
                                     <div class="username">{{comment.comment_username}}<span class="date">Date</span></div>
                                     <div>{{comment.content}}</div>
-                                    <div class="reply">Reply</div>
+                                    <div id="reply{{comment.id}}" class="reply">Reply</div>
                                 </div>
                                 <div class="side"></div>
                             </div>
+                            <script>
+                                reply = document.getElementById("reply{{comment.id}}");
+                                content = document.getElementById("content");
+
+                                reply.onclick = function() {
+                                    content.value = "@{{comment.comment_username}}";
+                                }
+                            </script>
                         {% endfor %}
                     </div>
                 </div>
