@@ -403,6 +403,24 @@ def account(request):
         # Get the user submissions from most recent
         submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
 
+        # Display date joined
+        user_join_date = request.user.date_joined
+        current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+        date_difference = current_date - user_join_date
+        print(date_difference.days)
+
+        if date_difference.days:
+            display_date = str(date_difference.days) + " days"
+        elif date_difference.seconds > 3600:
+            display_date = str(date_difference.seconds // 3600) + " hours"
+        elif date_difference.seconds > 60:
+            display_date = str(date_difference.seconds // 60) + " minutes"
+        else:
+            display_date = "a few seconds"
+
+        context["display_date"] = display_date
+
+        # Display points
         profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
         context["user_points"] = user_points
