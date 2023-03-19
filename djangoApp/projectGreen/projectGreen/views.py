@@ -407,7 +407,6 @@ def account(request):
         user_join_date = request.user.date_joined
         current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
         date_difference = current_date - user_join_date
-        print(date_difference.days)
 
         if date_difference.days:
             display_date = str(date_difference.days) + " days"
