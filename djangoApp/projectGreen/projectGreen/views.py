@@ -100,7 +100,13 @@ def home(request):
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
-        submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-sum_of_interactions')
+        if Submission.user_has_submitted(request.user.username):
+            user_submission = Submission.objects.filter(active_challenge=active_challenge,username=request.user.username)
+            submissions = Submission.objects.filter(active_challenge=active_challenge,reported=False).order_by('-sum_of_interactions').exclude(username=request.user.username)
+            submissions = user_submission | submissions
+        else:
+            submissions = Submission.objects.filter(active_challenge=active_challenge,reported=False).order_by('-sum_of_interactions')
+
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")
@@ -177,9 +183,15 @@ def friends_feed(request):
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
-        submissions = Submission.objects.filter(active_challenge=active_challenge, reported=False).order_by('-submission_time')
+        if Submission.user_has_submitted(request.user.username):
+            user_submission = Submission.objects.filter(active_challenge=active_challenge,username=request.user.username)
+            submissions = Submission.objects.filter(active_challenge=active_challenge,reported=False).order_by('-submission_time').exclude(username=request.user.username)
+            submissions = user_submission | submissions
+        else:
+            submissions = Submission.objects.filter(active_challenge=active_challenge,reported=False).order_by('-submission_time')
+
         for submission in submissions:
-            if submission.username in friends:
+            if submission.username in friends or submission.username == request.user.username:
 
                 submission_date = submission.submission_time.strftime("%d:%m:%Y")
                 submission_year = submission.submission_time.strftime("%Y")
@@ -275,19 +287,98 @@ def submit(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
     
+
 def post(request):
     context = {}
 
-    if request.user.is_authenticated:
-        active_challenge = ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = active_challenge.get_challenge_description()
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            active_challenge = ActiveChallenge.get_last_active_challenge()
+            context["active_challenge"] = active_challenge.get_challenge_description()
 
-        template = loader.get_template('home/post.html')  
-        return HttpResponse(template.render(context, request))
-    else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+            submission_id = request.POST.get("submission_id", "")
+            submission=Submission.objects.filter(id=submission_id).first()
+            
+            submission_date = submission.submission_time.strftime("%d:%m:%Y")
+            submission_year = submission.submission_time.strftime("%Y")
+            current_date = date.today().strftime("%d:%m:%Y")
+            current_year = date.today().strftime("%Y")
+
+            # Only display submission year if different from current year
+            if submission_year != current_year:
+                submission_time_form = submission.submission_time.strftime("%B %d, %Y")
+            # Only display submission date if different from current date
+            elif submission_date != current_date:
+                # Display "Yesterday" if submission is from previous day
+                if current_date == (submission.submission_time + timedelta(days = 1)).strftime("%d:%m:%Y"):
+                    submission_time_form = submission.submission_time.strftime("Yesterday, %H:%M")
+                # Display actual date otherwise
+                else:
+                    submission_time_form = submission.submission_time.strftime("%B %d, %H:%M")
+            else:
+                submission_time_form = submission.submission_time.strftime("%H:%M")
+
+            # Get the display name of the user who made the submission
+            user = User.objects.get(username=submission.username)
+            user_display_name = user.first_name
+            if submission.photo_bytes != None:
+                photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
+            else:
+                photo_b64 = "data:image/png;base64,"
+            # Dictionary structure to pass to template 
+            checker = Upvote.objects.filter(voter_username=request.user.username,
+                submission_id=submission.id)
+            if len(checker) >= 1:
+                has_liked = 1
+            else:
+                has_liked = 0
+            Profile.recalculate_user_points_by_username(submission.username)
+            # Not ideal but ensures points sync
+            has_reviewed = submission.reviewed
+            context['submission'] = {
+                                               'id': submission.id,
+                                               'user_displayname': user_display_name,
+                                               'username': submission.username,
+                                               'time': submission_time_form,
+                                               'photo': photo_b64,
+                                               'comment_count': submission.get_comment_count(),
+                                               'comments' : submission.get_comments(),
+                                               'has_liked': has_liked,
+                                               'has_reviewed': has_reviewed,
+                                               'upvote_count': submission.get_upvote_count()
+                                            }
+
+            template = loader.get_template('home/post.html')  
+
+            return HttpResponse(template.render(context, request))
+        else:
+            print("Not signed in")
+            template = loader.get_template('home/sign-in.html')
+            return HttpResponse(template.render(context, request))
+        
+@csrf_exempt
+def create_comment(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                data=json.loads(request.body)
+
+                submission_id = data["submission_id"]
+                submission = Submission.objects.filter(id = submission_id).first()                
+                
+                author = data["author"]
+                content = data["content"]
+
+                print("new comment:", submission, author, content)
+
+                submission.create_comment(author, content)
+
+                return HttpResponse({"success":"true"})
+            except Exception as e:
+                print(str(e))
+                return HttpResponse({"failiure":"true"})
+    return HttpResponse({"failiure":"true"})
+    
     
 
 '''Loads the accounts page'''
