@@ -122,7 +122,6 @@ main .centre {
     width: 85%;
     max-width: 593px;
     height: auto;
-    /* aspect-ratio: 6/5; */
     padding: 15px;
     margin: auto;
     position: relative;
@@ -222,8 +221,24 @@ main .centre {
     box-shadow: 1px 5px 12px black;
 }
 
+.enter-comment {
+    height: 80px;
+    width: 100%;
+    margin: auto;
+    display: flex;
+    align-items: center;
+}
+
+#content {
+    width: calc(98% - 100px);
+    background-color: #191919;
+    color: white;
+    border: 1px solid white;
+    height: 60px;
+    margin-right: 2%;
+}
+
 .comment {
-    /*border: 1px solid white;*/
     height: 85px;
     width: 100%;
     margin: auto;
@@ -257,6 +272,7 @@ main .centre {
 .reply {
     font-size: small;
     color: #D3D3D3;
+    user-select: none;
 }
 
 .side {

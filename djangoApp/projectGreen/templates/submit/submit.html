@@ -23,10 +23,16 @@
             <div class="side">
                 <div class="account">
                     <div style="height: 80%; padding-left: 50%;">
-                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                        <div class="icon rounded-circle" id="account">{{user.username|make_list|first| capfirst}}</div>
                     </div>
                     <div class="points">Score: {{user_points}}</div>
                 </div>
+                <script>
+                  account = document.getElementById("account");
+                  account.onclick = function() {
+                      location.href = "{% url 'account' %}"
+                  }
+              </script>
             </div>
         </header>
         <main class="w-100 m-auto text-center">
@@ -39,8 +45,8 @@
                 type="file"
                 id="upload_pic"
                 name="upload_pic"
-                accept=".jpg, .jpeg, .png"
-                capture="camera" />
+                accept="image/*"
+                capture="user" />
               </label>
               <br>
               <a class="subtitle">Today's Challenge: {{active_challenge}}</a>

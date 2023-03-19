@@ -59,6 +59,10 @@ div.account {
     align-items: center;
 }
 
+.icon {
+    user-select: none;
+}
+
 .account .icon {
     height: 100%;
     aspect-ratio: 1/1;
@@ -68,6 +72,7 @@ div.account {
     font-weight: 400;
     line-height: calc(height);
     font-size: 60px;
+    cursor: pointer;
 }
 
 .points {
@@ -100,7 +105,7 @@ main {
     color: white;
     width: 85%;
     min-width: 593px;
-    height: 1000px;
+    height: auto;
     /* aspect-ratio: 6/5; */
     padding: 15px;
     margin: auto;
@@ -201,8 +206,24 @@ main {
     box-shadow: 1px 5px 12px black;
 }
 
+.enter-comment {
+    height: 80px;
+    width: 100%;
+    margin: auto;
+    display: flex;
+    align-items: center;
+}
+
+#content {
+    width: calc(95% - 100px);
+    background-color: #191919;
+    color: white;
+    border: 1px solid white;
+    height: 60px;
+    margin-right: 5%;
+}
+
 .comment {
-    /*border: 1px solid white;*/
     height: 100px;
     width: 100%;
     margin: auto;
@@ -231,6 +252,8 @@ main {
 .reply {
     font-size: small;
     color: #D3D3D3;
+    cursor: pointer;
+    user-select: none;
 }
 
 .side {

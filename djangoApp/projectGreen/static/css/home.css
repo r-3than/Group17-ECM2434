@@ -8,6 +8,17 @@ body {
     box-sizing: border-box;
     overflow-x: clip;
     font-family: "Inter";
+    margin: 0;
+    padding: 0;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    overflow-y: scroll;
 }
 
 .row:after {
@@ -60,6 +71,10 @@ div.account {
     user-select: none;
 }
 
+.icon {
+    user-select: none;
+}
+
 .account .icon {
     height: 100%;
     aspect-ratio: 1/1;
@@ -69,6 +84,7 @@ div.account {
     font-weight: 400;
     line-height: calc(height);
     font-size: 60px;
+    cursor: pointer;
 }
 
 .points {
@@ -88,6 +104,7 @@ main {
     height: auto;
     width: auto;
     content: "";
+    height: calc(100% - 130px);
 }
 
 .centre {
@@ -108,6 +125,10 @@ main {
     position: relative;
     top: 30px;
     box-shadow: 1px 5px 12px #202020;
+}
+
+.details {
+    cursor: pointer;
 }
 
 .post .header {
@@ -218,29 +239,28 @@ header .side {
 .links {
     background-color: var(--exeter-dark-green);
     color: white;
-    /* width: 75%; */
     width: 360px;
-    /* height: 37vh; */
-    height: 360px;
+    height: 430px;
     padding: 6%;
     padding-left: 9%;
     margin: auto;
     position: sticky;
     top: 200px;
-    /* font-size: 1.3vw; */
     font-size: 24px;
     font-weight: 500;
     box-shadow: 1px 5px 10px #202020;
     line-height: 300%;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 main .left {
     min-width: 400px;
+    min-height: 100%;
 }
 
 main > .centre {
     min-width: 600px;
+    min-height: 100%;
 }
 
 .links a {

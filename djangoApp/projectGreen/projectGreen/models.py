@@ -2,7 +2,7 @@
 Main Author:
     TN - Models and points system
 Sub-Author:
-    LB - Challenge model helper functions; overall code review
+    LB - Challenge model helper functions; overall code review, location checking
 '''
 
 from django.db import models
@@ -288,9 +288,9 @@ class ActiveChallenge(models.Model):
         Throws django.db.utils.IntegrityError if submission already exists.
         '''
         profile = Profile.get_profile(username)
-        lambda_user = math.log(1+len(Friend.get_friend_usernames(username)))*math.sqrt(profile.points)*SCORES['submission']
+        lambda_user = math.log(1+len(Friend.get_friend_usernames(username)))*math.sqrt(profile.points)
         s = Submission(username=username, active_challenge=self, submission_time=submission_time)
-        s.sum_of_interactions = lambda_user*s.get_punctuality_scaling()
+        s.sum_of_interactions = lambda_user*s.get_punctuality_scaling()*SCORES['submission']
         if create_submission_instance:
             s.save()
         Profile.add_points_by_username(username, SCORES['submission']*s.get_punctuality_scaling())                         
@@ -319,7 +319,7 @@ class Submission(models.Model):
     submission_time = models.DateTimeField('Submission Time', null=True)
     sum_of_interactions = models.FloatField(default=0.0)
     reported = models.BooleanField(default=False)
-    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, null=True)
+    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, blank=True)
     reviewed = models.BooleanField(default=False)
     photo_bytes = models.BinaryField(null=True)
 
@@ -448,8 +448,8 @@ class Submission(models.Model):
         except Upvote.DoesNotExist:
             u = Upvote(submission=self, voter_username=voter_username)
             profile = Profile.get_profile(voter_username)
-            lambda_user = math.log(1+len(Friend.get_friend_usernames(voter_username)))*math.sqrt(profile.points)*SCORES['upvote']['recieved']
-            self.sum_of_interactions += lambda_user*self.get_punctuality_scaling()
+            u.lambda_user = math.log(1+len(Friend.get_friend_usernames(voter_username)))*math.sqrt(profile.points)
+            self.sum_of_interactions += u.lambda_user*self.get_punctuality_scaling()*SCORES['upvote']['recieved']
             self.save()
             if create_upvote_instance:
                 u.save()
@@ -462,17 +462,17 @@ class Submission(models.Model):
         Creates comment object for this submission in database and syncronises points
         Returns False if comment was flagged for profanity
         '''
-        u = Comment(submission=self, comment_username=comment_username, content=comment_content)
+        c = Comment(submission=self, comment_username=comment_username, content=comment_content)
         profile = Profile.get_profile(comment_username)
-        lambda_user = math.log(1+len(Friend.get_friend_usernames(comment_username)))*math.sqrt(profile.points)*SCORES['comment']['recieved']
-        self.sum_of_interactions += lambda_user*self.get_punctuality_scaling()
+        c.lambda_user = math.log(1+len(Friend.get_friend_usernames(comment_username)))*math.sqrt(profile.points)
+        self.sum_of_interactions += c.lambda_user*self.get_punctuality_scaling()*SCORES['comment']['recieved']
         self.save()
         if create_comment_instance:
-            u.save()
+            c.save()
         Profile.add_points_by_username(self.username, SCORES['comment']['recieved'])
         Profile.add_points_by_username(comment_username, SCORES['comment']['given'])
-        if u.inappropriate_language_filter():
-            u.report_comment('admin')
+        if c.inappropriate_language_filter():
+            c.report_comment('admin')
             return False
         else:
             return True
@@ -504,24 +504,34 @@ class Submission(models.Model):
         return len(self.get_comments())
 
     def location_is_valid(self) -> bool:
+        '''
+        Checks if the GPS metadata from a submission image matches the 
+        challenge location
+        '''
 
-        #Checks if a submission picture has been taken at the correct location for a challenge
-
+        # Get coordinates and allowed distance for the challenge
         challenge_lat = self.active_challenge.challenge.latitude
         challenge_lon = self.active_challenge.challenge.longitude
         allowed_distance = self.active_challenge.challenge.allowed_distance
 
         if self.photo_bytes != None:
-            photo_b64 = base64.b64decode(self.photo_bytes)
-            img = Image.open(io.BytesIO(photo_b64))
+            img_bytes = self.photo_bytes
+            # Decode the base64 string of the image and extract the metadata
+            # img = Image.frombytes("RGBA", (width, height), raw_data)
+            # photo_b64 = base64.b64decode(self.photo_bytes)
+            '''
+            with open("output.txt", "w") as f:
+                f.write(str(photo_b64))
+                f.close()
+            '''
+            img = Image.open(io.BytesIO(img_bytes))
             submission_lat, submission_lon = process_GPS_data(img)
             submission_distance_to_challenge = distance((challenge_lat, challenge_lon), (submission_lat, submission_lon)).km
+            # Check if the image is near the challenge location
             if submission_distance_to_challenge <= allowed_distance:
                 return True
 
         return False
-
-
 
     verbose_name = 'Submission'
     verbose_name_plural = 'Submissions'
@@ -535,20 +545,20 @@ class Submission(models.Model):
 class Upvote(models.Model):
     submission = models.ForeignKey(Submission, models.CASCADE, null=True)
     voter_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+    lambda_user = models.FloatField(default=0.0)
 
     def remove_upvote(self, delete_instance: bool=True) -> bool:
         '''
         Removes upvote object from database (conditional flag) and synchronises points
         Returns False if associated post is reported (points do not change)
         '''
-        profile = Profile.get_profile(self.voter_username)
-        lambda_user = math.log(1+len(Friend.get_friend_usernames(self.voter_username)))*math.sqrt(profile.points)*SCORES['upvote']['recieved']
-        self.submission.sum_of_interactions -= lambda_user*self.submission.get_punctuality_scaling()
-        self.submission.save()
         if not self.submission.reported:
             Profile.add_points_by_username(self.voter_username, -SCORES['upvote']['given'])
             Profile.add_points_by_username(self.submission.username, -SCORES['upvote']['recieved'])
-        if delete_instance: self.delete()
+        if delete_instance:
+            self.submission.sum_of_interactions -= self.lambda_user*self.submission.get_punctuality_scaling()*SCORES['upvote']['recieved']
+            self.submission.save()
+            self.delete()
         return not self.submission.reported
 
     def reinstate_upvote(self):
@@ -567,8 +577,9 @@ class Comment(models.Model):
     submission = models.ForeignKey(Submission, models.CASCADE, null=True)
     comment_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     content = models.CharField(max_length=256)
+    lambda_user = models.FloatField(default=0.0)
     reported = models.BooleanField(default=False)
-    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, null=True)
+    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, blank=True)
     reviewed = models.BooleanField(default=False)
 
     def report_comment(self, reporter_username: str) -> bool:
@@ -637,9 +648,7 @@ class Comment(models.Model):
         Removes comment object from database (conditional flag) and synchronises points
         Returns False if either the submission or comment is reported (points do not change)
         '''
-        profile = Profile.get_profile(self.comment_username)
-        lambda_user = math.log(1+len(Friend.get_friend_usernames(self.comment_username)))*math.sqrt(profile.points)*SCORES['comment']['recieved']
-        self.submission.sum_of_interactions -= lambda_user*self.submission.get_punctuality_scaling()
+        self.submission.sum_of_interactions -= self.lambda_user*self.submission.get_punctuality_scaling()*SCORES['comment']['recieved']
         self.submission.save()
         condition = not (self.submission.reported or self.reported)
         if condition:
@@ -656,6 +665,8 @@ class Comment(models.Model):
         if not self.reported:
             Profile.add_points_by_username(self.comment_username, SCORES['comment']['given'])
             Profile.add_points_by_username(self.submission.username, SCORES['comment']['recieved'])
+            self.submission.sum_of_interactions += self.lambda_user*self.submission.get_punctuality_scaling()*SCORES['comment']['recieved']
+            self.submission.save()
         return not self.reported
 
     def inappropriate_language_filter(self) -> bool:

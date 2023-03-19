@@ -77,9 +77,16 @@ header div.account {
     float: right;
 }
 
+.filter {
+    width: 49%;
+    float: left;
+    margin: auto;
+}
+
 .friends-list {
     display: flex;
-    justify-content: center;
+    align-items: center;
+    flex-direction: column;
     margin-top: 30px;
     height: 500px;
     overflow-y: scroll;
@@ -91,6 +98,7 @@ header div.account {
     background-color: #191919;
     box-shadow: 1px 5px 10px #202020;
     color: white;
+    margin-bottom: 10px;
 }
 
 .friend .side {
