@@ -250,8 +250,11 @@ def signin(request):
 def challenge(request):
     context = {}
     if request.user.is_authenticated:
+        
         template = loader.get_template('home/challenge.html')
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        if Submission.user_has_submitted(request.user.username):
+            return redirect("/home")
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
         profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
@@ -277,6 +280,7 @@ def submit(request):
     if request.user.is_authenticated:
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
+
 
         template = loader.get_template('submit/submit.html')  
         return HttpResponse(template.render(context, request))
