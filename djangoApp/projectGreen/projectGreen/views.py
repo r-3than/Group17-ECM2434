@@ -156,9 +156,7 @@ def home(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 
 def friends_feed(request):
@@ -238,9 +236,15 @@ def friends_feed(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
+
+def signin(request):
+    context = {}
+    template = loader.get_template('home/sign-in.html')
+    active_challenge = ActiveChallenge.get_last_active_challenge()
+    context["active_challenge"] = active_challenge.get_challenge_description()
+    return HttpResponse(template.render(context, request))
+
 
     
 def challenge(request):
@@ -257,9 +261,8 @@ def challenge(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
+
     
 
 def camera(request):
@@ -278,9 +281,7 @@ def submit(request):
         template = loader.get_template('submit/submit.html')  
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 def post(request):
     context = {}
@@ -292,9 +293,7 @@ def post(request):
         template = loader.get_template('home/post.html')  
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 
 '''Loads the accounts page'''
@@ -348,9 +347,7 @@ def account(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 '''Signs out the user'''
 def signout(request):
@@ -401,9 +398,7 @@ def friends(request):
         context["post_count"] = postCount
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 '''Creates a pending friend request'''
 def addFriend(request):
