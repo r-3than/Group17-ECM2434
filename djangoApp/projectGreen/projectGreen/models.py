@@ -319,7 +319,7 @@ class Submission(models.Model):
     submission_time = models.DateTimeField('Submission Time', null=True)
     sum_of_interactions = models.FloatField(default=0.0)
     reported = models.BooleanField(default=False)
-    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, null=True)
+    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, blank=True)
     reviewed = models.BooleanField(default=False)
     photo_bytes = models.BinaryField(null=True)
 
@@ -571,7 +571,7 @@ class Comment(models.Model):
     comment_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     content = models.CharField(max_length=256)
     reported = models.BooleanField(default=False)
-    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, null=True)
+    reported_by = models.CharField(max_length=USERNAME_MAX_LENGTH, blank=True)
     reviewed = models.BooleanField(default=False)
 
     def report_comment(self, reporter_username: str) -> bool:
