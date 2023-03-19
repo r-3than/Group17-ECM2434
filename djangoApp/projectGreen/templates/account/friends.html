@@ -124,10 +124,10 @@
                     {% for friend in friends.items %}
                         <div class="friend row rounded-3">
                             <div class="side left">
-                                <div class="icon rounded-circle">{{friend.username|make_list|first| capfirst}}</div>
+                                <div class="icon rounded-circle">{{friend|make_list|first| capfirst}}</div>
                             </div>
                             <div class="centre">
-                                <div>{{friend.username}}</div>
+                                <div>{{friend}}</div>
                             </div>
                             <div class="side right">
                                 <button type="button" class="btn btn-outline-danger" style="width: 95px;">Remove Friend</button>
@@ -140,10 +140,10 @@
                 <div class="friends-list" id="outgoing" style="display: none;">
                     <div class="friend row rounded-3">
                         <div class="side left">
-                            <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                            <div class="icon rounded-circle">{{user|make_list|first| capfirst}}</div>
                         </div>
                         <div class="centre">
-                            <div>{{user.username}}</div>
+                            <div>{{user}}</div>
                         </div>
                         <div class="side right">
                             <button type="button" class="btn btn-outline-danger" style="width: 95px; height: 50px;">Cancel</button>
@@ -153,13 +153,13 @@
 
                 
                 <div class="friends-list" id="incoming" style="display: none;">
-                    {% for request in incoming.items %}
+                    {% for friend in incoming.items %}
                         <div class="friend row rounded-3">
                             <div class="side left">
-                                <div class="icon rounded-circle">{{request.username|make_list|first| capfirst}}</div>
+                                <div class="icon rounded-circle">{{friend|make_list|first| capfirst}}</div>
                             </div>
                             <div class="centre">
-                                <div>{{request.username}}</div>
+                                <div>{{friend}}</div>
                             </div>
                             <div class="side right">
                                 <button type="button" class="btn btn-outline-success" style="width: 95px; height: 50px; margin-right: 5px;">Accept</button>
