@@ -32,7 +32,12 @@ LOGGING = {
     'handlers': {
         'file_app': {
             'class': 'logging.FileHandler',
-            'filename': 'projectGreen_log.log',
+            'filename': 'projectGreen.log',
+            'formatter': 'simple',
+        },
+        'file_game_master': {
+            'class': 'logging.FileHandler',
+            'filename': 'gameMaster.log',
             'formatter': 'simple',
         },
         'file_global': {
@@ -45,6 +50,10 @@ LOGGING = {
         'projectGreen.models': {
             'level': 'INFO',
             'handlers': ['file_app'],
+        },
+        'gameMaster': {
+            'level;': 'INFO',
+            'handlers': ['file_game_master'],
         },
         'django': {
             'level': 'DEBUG',

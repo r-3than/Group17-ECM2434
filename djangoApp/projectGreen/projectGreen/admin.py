@@ -37,7 +37,7 @@ def publish_challenge(modeladmin, request, queryset):
     }
     plain_text = render_to_string('notification/notification.txt', context)
     html = render_to_string('notification/notification.html', context)
-    print(html)
+    
     for user in User.objects.all():
         try:
             user.email_user('Time to BeGreen!',message=plain_text, html_message=html, from_email='djangotestemail31@gmail.com')

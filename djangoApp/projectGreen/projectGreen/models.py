@@ -19,6 +19,7 @@ from projectGreen.extract_metadata import process_GPS_data
 from projectGreen.settings import PROFANITY_FILTER_SOURCE_URL
 
 LOGGER = logging.getLogger(__name__)
+GAMEMASTER_LOGGER = logging.getLogger('gameMaster')
 
 USERNAME_MAX_LENGTH = 20
 SCORES = {'submission':20, 'upvote':{'given':1, 'recieved':4}, 'comment':{'given':3, 'recieved':12}}
@@ -367,6 +368,8 @@ class Submission(models.Model):
             self.reported = True
             self.reported_by = reporter_username
             self.save()
+            for log in [LOGGER, GAMEMASTER_LOGGER]:
+                log.info('{}\'s post on {} has been reported.'.format(self.username, date))
             return True
         return False
 
@@ -394,7 +397,8 @@ class Submission(models.Model):
                     p.number_of_false_reports = 1
                 p.save()
                 if p.number_of_false_reports > MISCONDUCT_THRESHOLDS['false_reports']:
-                    LOGGER.info('user {} has made over {} false reports'.format(p.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
+                    for log in [LOGGER, GAMEMASTER_LOGGER]:
+                        log.info('user {} has made over {} false reports'.format(p.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
             else:
                 u = User.objects.get(username=self.username)
                 try:
@@ -404,7 +408,8 @@ class Submission(models.Model):
                     p = Profile(user=u, number_of_submissions_removed=1)
                 p.save()
                 if p.number_of_submissions_removed > MISCONDUCT_THRESHOLDS['submissions_removed']:
-                    LOGGER.info('user {} has had over {} submissions removed'.format(p.user.username, MISCONDUCT_THRESHOLDS['submissions_removed']))
+                    for log in [LOGGER, GAMEMASTER_LOGGER]:
+                        log.info('user {} has had over {} submissions removed'.format(p.user.username, MISCONDUCT_THRESHOLDS['submissions_removed']))
                 self.delete()
             return True
         return False
@@ -616,6 +621,8 @@ class Comment(models.Model):
             self.reported = True
             self.reported_by = reporter_username
             self.save()
+            for log in [LOGGER, GAMEMASTER_LOGGER]:
+                log.info('{}\'s comment on {}\' post (on {}) has been reported.'.format(self.comment_username, self.submission.username, date))
             return True
         return False
 
@@ -644,7 +651,8 @@ class Comment(models.Model):
                         p.number_of_false_reports = 1
                     p.save()
                     if p.number_of_false_reports > MISCONDUCT_THRESHOLDS['false_reports']:
-                        LOGGER.info('user {} has made over {} false reports'.format(p.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
+                        for log in [LOGGER, GAMEMASTER_LOGGER]:
+                            log.info('user {} has made over {} false reports'.format(p.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
             else:
                 u = User.objects.get(username=self.comment_username)
                 try:
@@ -654,7 +662,8 @@ class Comment(models.Model):
                     p = Profile(user=u, number_of_comments_removed=1)
                 p.save()
                 if p.number_of_comments_removed > MISCONDUCT_THRESHOLDS['comments_removed']:
-                    LOGGER.info('user {} has had over {} comments removed'.format(p.user.username, MISCONDUCT_THRESHOLDS['comments_removed']))
+                    for log in [LOGGER, GAMEMASTER_LOGGER]:
+                        log.info('user {} has had over {} comments removed'.format(p.user.username, MISCONDUCT_THRESHOLDS['comments_removed']))
                 self.delete()
             return True
         return False
@@ -692,6 +701,7 @@ class Comment(models.Model):
         '''
         for word in WORDS_TO_FILTER:
             if word in self.content:
-                LOGGER.warning('flagged inappropriate word "{}" in {}\'s comment'.format(word, self.comment_username))
+                for log in [LOGGER, GAMEMASTER_LOGGER]:
+                    log.warning('flagged inappropriate word "{}" in {}\'s comment'.format(word, self.comment_username))
                 return True
         return False
