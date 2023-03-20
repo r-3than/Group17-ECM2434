@@ -135,7 +135,7 @@ main .centre {
 .post {
     background-color: #191919;
     color: white;
-    width: 85%;
+    width: 90%;
     max-width: 593px;
     height: auto;
     /* aspect-ratio: 6/5; */
@@ -196,7 +196,7 @@ main .centre {
 .post .centre {
     float: left;
     width: 86%;
-    aspect-ratio: 6/5;
+    height: auto;
     padding: 0px;
     position: relative;
 }
@@ -205,32 +205,28 @@ main .centre {
     height: 45px;
     aspect-ratio: 1/1;
     margin: 10px;
+    position: absolute;
     z-index: 500;
-    right: 0px;
+    right: 8px;
     background-color: var(--exeter-dark-green);
     color: white;
     text-align: center;
     font-weight: 400;
     line-height: 45px;
     font-size: 32px;
-    float: right;
-    position: absolute;
 }
 
 .img {
-    max-width: 100%;
-    width: fit-content;
-    height: 440px;
+    width: 100%;
+    height: fit-content;
     overflow: hidden;
-    margin: auto;
+    margin-left: -8px;
     box-shadow: 1px 5px 12px black;
-    display: flex;
-    justify-content: center;
-    position: relative;
 }
 
 .img img {
     max-height: 100%;
+    width: 100%;
 }
 
 header .centre {

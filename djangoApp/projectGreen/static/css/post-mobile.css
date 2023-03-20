@@ -179,7 +179,7 @@ main .centre {
 .post .centre {
     float: left;
     width: 86%;
-    aspect-ratio: 6/5;
+    height: auto;
     padding: 0px;
     position: relative;
 }
@@ -201,17 +201,15 @@ main .centre {
 
 .img {
     width: 100%;
-    aspect-ratio: 6/5;
+    height: fit-content;
     overflow: hidden;
-    margin-top: -60px;
-    position: absolute;
-    top: 60px;
-    left: -8px;
+    margin-left: -8px;
     box-shadow: 1px 5px 12px black;
 }
 
 .img img {
     max-height: 100%;
+    width: 100%;
 }
 
 .divider {
