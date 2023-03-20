@@ -505,8 +505,7 @@ class Submission(models.Model):
 
     def location_is_valid(self) -> bool:
         '''
-        Checks if the GPS metadata from a submission image matches the 
-        challenge location
+        Checks if the GPS metadata from a submission image matches the challenge location
         '''
 
         # Get coordinates and allowed distance for the challenge
@@ -531,6 +530,23 @@ class Submission(models.Model):
             if submission_distance_to_challenge <= allowed_distance:
                 return True
 
+        return False
+    
+    def location_check_missing_metadata(self, latitude:str, longitude:str) -> bool:
+        '''
+        Checks if the GPS coordinates of a user are within the challenge allowed distance
+        Only used if GPS metadata from a submission image is missing
+        '''
+        # Get coordinates and allowed distance for the challenge
+        challenge_lat = self.active_challenge.challenge.latitude
+        challenge_lon = self.active_challenge.challenge.longitude
+        allowed_distance = self.active_challenge.challenge.allowed_distance
+
+        distance_to_challenge = distance((challenge_lat, challenge_lon), (latitude, longitude)).km
+        # Check if the image is near the challenge location
+        if distance_to_challenge <= allowed_distance:
+            return True
+        
         return False
 
     verbose_name = 'Submission'

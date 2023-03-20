@@ -23,8 +23,6 @@ from datetime import date, timedelta
 
 from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Upvote
 
-
-
 @csrf_exempt
 def uploadphoto(request):
     if request.method == "POST":
@@ -32,7 +30,6 @@ def uploadphoto(request):
             upload=request.FILES["upload_pic"]
             LAT = request.POST["latitude"]
             LON = request.POST["longitude"]
-            print(LAT,LON)
             picture_bytes = b""
             for data in upload:
                 picture_bytes += data
@@ -50,10 +47,19 @@ def uploadphoto(request):
             photo_bytes=picture_bytes,
             submission_time=current_date)
             # Check location
-            if active_challenge.challenge.allowed_distance == 0.0 or newSubmission.location_is_valid():
-                newSubmission.save()
+            if active_challenge.challenge.allowed_distance == 0.0:
+                return redirect('/home/')
+            else:
+                try:
+                    if newSubmission.location_is_valid():
+                        newSubmission.save()
+                        return redirect('/home/')
+                except:
+                    if newSubmission.location_check_missing_metadata(latitude=LAT, longitude=LON):
+                        newSubmission.save()
+                        return redirect('/home/')
+                return redirect('/submit/')
                 
-            return redirect('/home/')
                 
         """
         data=json.loads(request.body)
