@@ -41,12 +41,15 @@
               <img id="submission" class="rounded-3" src="" style="visibility: hidden;">
               <label class="rounded-5" for="upload_pic">
                 <p id="label_text">Click to select photo</p>
+                <input style="display: none;" type="text" id="latitude" name="latitude" value="0.0">
+                <input style="display: none;" type="text" id="longitude" name="longitude" value="0.0">
+
                 <input style="display: none;"
                 type="file"
                 id="upload_pic"
                 name="upload_pic"
-                accept=".jpg, .jpeg, .png"
-                capture="camera" />
+                accept="image/*"
+                capture="user" />
               </label>
               <br>
               <a class="subtitle">Today's Challenge: {{active_challenge}}</a>
@@ -58,6 +61,17 @@
             <p class="friends">{{post_count}} friends have already posted</p>
           </form>
           <script>
+            if (navigator.geolocation) {
+              navigator.geolocation.getCurrentPosition(showPosition);
+            } else {
+              alert("No geo data")
+            }
+            function showPosition(position) {
+              lat = document.getElementById("latitude");
+              lon = document.getElementById("longitude");
+              lat.value=position.coords.latitude;
+              lon.value = position.coords.longitude;
+            }
             input = document.getElementById("upload_pic");
             labelText = document.getElementById("label_text");
             submission = document.getElementById("submission");
