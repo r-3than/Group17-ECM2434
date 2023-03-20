@@ -39,14 +39,19 @@ def uploadphoto(request):
                 replace_submission=Submission.objects.get(username=request.user.username, active_challenge=active_challenge)
                 replace_submission.delete()
              ## -> 
+            current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
             newSubmission = Submission(username=request.user.username,
             active_challenge=active_challenge,
             reported=False,
             reviewed=False,
             photo_bytes=picture_bytes,
-            submission_time=datetime.datetime.now())
-            newSubmission.save()
-        return redirect('/home/')
+            submission_time=current_date)
+            # Check location
+            if active_challenge.challenge.allowed_distance == 0.0 or newSubmission.location_is_valid():
+                newSubmission.save()
+                
+            return redirect('/home/')
+                
         """
         data=json.loads(request.body)
         print(data)
@@ -156,9 +161,7 @@ def home(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 
 def friends_feed(request):
@@ -238,16 +241,25 @@ def friends_feed(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
+
+def signin(request):
+    context = {}
+    template = loader.get_template('home/sign-in.html')
+    active_challenge = ActiveChallenge.get_last_active_challenge()
+    context["active_challenge"] = active_challenge.get_challenge_description()
+    return HttpResponse(template.render(context, request))
+
 
     
 def challenge(request):
     context = {}
     if request.user.is_authenticated:
+        
         template = loader.get_template('home/challenge.html')
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        if Submission.user_has_submitted(request.user.username):
+            return redirect("/home")
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
         profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
@@ -257,9 +269,8 @@ def challenge(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
+
     
 
 def camera(request):
@@ -274,28 +285,113 @@ def submit(request):
     if request.user.is_authenticated:
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,active_challenge)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
+
 
         template = loader.get_template('submit/submit.html')  
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
+
 def post(request):
     context = {}
 
-    if request.user.is_authenticated:
-        active_challenge = ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = active_challenge.get_challenge_description()
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            active_challenge = ActiveChallenge.get_last_active_challenge()
+            context["active_challenge"] = active_challenge.get_challenge_description()
 
-        template = loader.get_template('home/post.html')  
-        return HttpResponse(template.render(context, request))
+            submission_id = request.POST.get("submission_id", "")
+            submission=Submission.objects.filter(id=submission_id).first()
+            
+            submission_date = submission.submission_time.strftime("%d:%m:%Y")
+            submission_year = submission.submission_time.strftime("%Y")
+            current_date = date.today().strftime("%d:%m:%Y")
+            current_year = date.today().strftime("%Y")
+
+            # Only display submission year if different from current year
+            if submission_year != current_year:
+                submission_time_form = submission.submission_time.strftime("%B %d, %Y")
+            # Only display submission date if different from current date
+            elif submission_date != current_date:
+                # Display "Yesterday" if submission is from previous day
+                if current_date == (submission.submission_time + timedelta(days = 1)).strftime("%d:%m:%Y"):
+                    submission_time_form = submission.submission_time.strftime("Yesterday, %H:%M")
+                # Display actual date otherwise
+                else:
+                    submission_time_form = submission.submission_time.strftime("%B %d, %H:%M")
+            else:
+                submission_time_form = submission.submission_time.strftime("%H:%M")
+
+            # Get the display name of the user who made the submission
+            user = User.objects.get(username=submission.username)
+            user_display_name = user.first_name
+            
+            if submission.photo_bytes != None:
+                photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
+            else:
+                photo_b64 = "data:image/png;base64,"
+            # Dictionary structure to pass to template 
+            checker = Upvote.objects.filter(voter_username=request.user.username,
+                submission_id=submission.id)
+            if len(checker) >= 1:
+                has_liked = 1
+            else:
+                has_liked = 0
+            Profile.recalculate_user_points_by_username(submission.username)
+            # Not ideal but ensures points sync
+            has_reviewed = submission.reviewed
+
+            profileObj = Profile.get_profile(request.user.username)
+            user_points = str(profileObj.points)
+            context["user_points"] = user_points
+
+            context['submission'] = {
+                                               'id': submission.id,
+                                               'user_displayname': user_display_name,
+                                               'username': submission.username,
+                                               'time': submission_time_form,
+                                               'photo': photo_b64,
+                                               'comment_count': submission.get_comment_count(),
+                                               'comments' : submission.get_comments(),
+                                               'has_liked': has_liked,
+                                               'has_reviewed': has_reviewed,
+                                               'upvote_count': submission.get_upvote_count()
+                                            }
+
+            template = loader.get_template('home/post.html')  
+
+            return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
-    
+        return signin(request)
+        
+@csrf_exempt
+def create_comment(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                data=json.loads(request.body)
+
+                submission_id = data["submission_id"]
+                submission = Submission.objects.filter(id = submission_id).first()                
+                
+                author = data["author"]
+                content = data["content"]
+
+                print("new comment:", submission, author, content)
+
+                submission.create_comment(author, content)
+
+                return HttpResponse({"success":"true"})
+            except Exception as e:
+                print(str(e))
+                return HttpResponse({"failiure":"true"})
+    return HttpResponse({"failiure":"true"})
 
 '''Loads the accounts page'''
 def account(request):
@@ -348,9 +444,7 @@ def account(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 '''Signs out the user'''
 def signout(request):
@@ -401,9 +495,7 @@ def friends(request):
         context["post_count"] = postCount
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
     
 '''Creates a pending friend request'''
 def addFriend(request):
@@ -416,13 +508,6 @@ def addFriend(request):
                 return redirect('/friends/')
 
 
-def is_mobile(request):
-    MOBILE_AGENT_RE=re.compile(r".*(iphone|mobile|androidtouch)",re.IGNORECASE)
-
-    if MOBILE_AGENT_RE.match(request.META['HTTP_USER_AGENT']):
-        return True
-    else:
-        return False
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names

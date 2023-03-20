@@ -84,6 +84,10 @@ div.account {
     font-size: 15px;
 }
 
+.trigger-menu {
+    display: none;   
+}
+
 main {
     height: auto;
     width: auto;
@@ -99,10 +103,9 @@ main {
 .post {
     background-color: #191919;
     color: white;
-    width: 85%;
+    width: 90%;
     min-width: 593px;
-    height: 1000px;
-    /* aspect-ratio: 6/5; */
+    height: auto;
     padding: 15px;
     margin: auto;
     position: relative;
@@ -160,7 +163,8 @@ main {
 .post .centre {
     float: left;
     width: 86%;
-    aspect-ratio: 6/5;
+    height: fit-content;
+    /* aspect-ratio: 6/5; */
     padding: 0px;
     position: relative;
 }
@@ -182,17 +186,19 @@ main {
 
 .img {
     width: 100%;
-    aspect-ratio: 6/5;
+    height: auto;
+    /* aspect-ratio: 6/5; */
     overflow: hidden;
-    margin-top: -60px;
+    /* margin-top: -60px;
     position: absolute;
     top: 60px;
-    left: -8px;
+    left: -8px; */
     box-shadow: 1px 5px 12px black;
 }
 
 .img img {
-    max-height: 100%;
+    max-width: 100%;
+    max-height: 700px;
 }
 
 .divider {
@@ -202,10 +208,28 @@ main {
     box-shadow: 1px 5px 12px black;
 }
 
-.comment {
+.enter-comment {
+    height: 80px;
+    width: 100%;
+    margin: auto;
+    display: flex;
+    align-items: center;
+}
+
+#content {
+    width: calc(98% - 100px);
+    background-color: #191919;
+    color: white;
     border: 1px solid white;
+    height: 60px;
+    margin-right: 2%;
+}
+
+.comment {
     height: 100px;
     width: 100%;
+    margin: auto;
+    margin-bottom: 1rem;
 }
 
 .comment .side {
@@ -214,7 +238,24 @@ main {
 
 .comment .icon {
     position: relative;
-    height: auto;
+    height: 45px;
+}
+
+.username {
+    font-weight: bold;
+}
+
+.date {
+    float:right;
+    font-weight: normal;
+    color: #D3D3D3;
+}
+
+.reply {
+    font-size: small;
+    color: #D3D3D3;
+    cursor: pointer;
+    user-select: none;
 }
 
 .side {
