@@ -21,7 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 import base64 , json
 from datetime import date, timedelta
 
-from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Upvote
+from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Upvote, Comment
 
 
 
@@ -69,6 +69,19 @@ def flag_submission(request):
             submission_id = data["submission_id"]
             submssionObj=Submission.objects.filter(id=submission_id).first()
             submssionObj.report_submission(request.user.username)
+
+        return HttpResponse({"success":"true"})
+     
+@csrf_exempt
+def flag_comment(request):
+     if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+
+            comment_id = data["comment_id"]
+            commentObj = Comment.objects.filter(id=comment_id).first() # We think comment IDs are unique globally
+
+            commentObj.report_comment(request.user.username)
 
         return HttpResponse({"success":"true"})
 
