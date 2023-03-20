@@ -30,6 +30,9 @@ def uploadphoto(request):
     if request.method == "POST":
         if request.user.is_authenticated:
             upload=request.FILES["upload_pic"]
+            LAT = request.POST["latitude"]
+            LON = request.POST["longitude"]
+            print(LAT,LON)
             picture_bytes = b""
             for data in upload:
                 picture_bytes += data
