@@ -10,6 +10,7 @@ from django.contrib import admin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
 from django.template.loader import render_to_string
+from django.urls import reverse
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
 from datetime import datetime
 import logging
@@ -32,11 +33,11 @@ def publish_challenge(modeladmin, request, queryset):
     context = {
         'date': ac.date.strftime('%d/%m/%Y'),
         'description': ac.get_challenge_description(),
-        'url': 'localhost:8000' # dynamically fetch this?
+        'url': request.build_absolute_uri(reverse('submit'))
     }
     plain_text = render_to_string('notification/notification.txt', context)
     html = render_to_string('notification/notification.html', context)
-
+    print(html)
     for user in User.objects.all():
         try:
             user.email_user('Time to BeGreen!',message=plain_text, html_message=html, from_email='djangotestemail31@gmail.com')
