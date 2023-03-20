@@ -301,7 +301,12 @@ class ActiveChallenge(models.Model):
         '''
         Returns the most recent (current) ActiveChallenge object
         '''
-        return ActiveChallenge.objects.latest('date')
+        try:
+            ac = ActiveChallenge.objects.latest('date')
+        except ActiveChallenge.DoesNotExist:
+            c = Challenge(description='')
+            ac = ActiveChallenge(date=dt.now(), challenge=c)
+        return ac
     
     def get_challenge_description(self) -> str:
         '''
