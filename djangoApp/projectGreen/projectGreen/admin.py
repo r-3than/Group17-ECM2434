@@ -58,7 +58,7 @@ def recalculate_points_from_profile(modeladmin, request, queryset):
 @admin.action(description='Report Submission(s)')
 def report_submission(modeladmin, request, queryset):
     for submission in queryset:
-        submission.report_submission()
+        submission.report_submission('admin')
 
 @admin.action(description='Approve Submission(s)')
 def approve_submission(modeladmin, request, queryset):
@@ -73,7 +73,7 @@ def deny_submission(modeladmin, request, queryset):
 @admin.action(description='Report Comment(s)')
 def report_comment(modeladmin, request, queryset):
     for comment in queryset:
-        comment.report_comment()
+        comment.report_comment('admin')
 
 @admin.action(description='Approve Comment(s)')
 def approve_comment(modeladmin, request, queryset):
