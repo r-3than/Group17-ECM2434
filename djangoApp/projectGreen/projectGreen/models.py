@@ -335,6 +335,10 @@ class Submission(models.Model):
             return True
         except Submission.DoesNotExist:
             return False
+        
+    def is_for_active_challenge(self) -> bool:
+        ac = ActiveChallenge.get_last_active_challenge()
+        return (self.active_challenge == ac)
 
     def get_minutes_late(self) -> int:
         '''

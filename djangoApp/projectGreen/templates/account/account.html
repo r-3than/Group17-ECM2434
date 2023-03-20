@@ -138,31 +138,46 @@
                             <div id="collapseTwo" class="accordion-collapse collapse" aria-labelledby="headingTwo" data-bs-parent="#accordionExample">
                                 <div class="accordion-body">
                                     {% for submission in month %}
-                                    <div class="post rounded-5">
-                                        <div class="header row">
-                                            <div class="user">{{ submission.username }}</div>
-                                            <div class="time">{{ submission.time }}</div>
-                                        </div>
-                                        <div class="row">
-                                            <div class="side"></div>
-                                            <div class="centre">
-                                                <div class="img rounded-5">
-                                                    <div class="icon rounded-circle">{{submission.username|make_list|first| capfirst}}</div>
-                                                    <img src="{{ submission.photo }}">
+                                        <form action="{% url 'post' %}" method="post" id="form{{submission.id}}" style="display: none;">
+                                            {% csrf_token %}
+                                            <input type="text" name="submission_id" id="submission_id" value="{{submission.id}}">
+                                        </form>
+                                        <div id="post{{submission.id}}" class="post rounded-5">
+                                            <div class="header row details">
+                                                <div class="user">{{ submission.username }}</div>
+                                                <div class="time">{{ submission.time }}</div>
+                                            </div>
+                                            <div class="row">
+                                                <div class="side"></div>
+                                                <div class="centre">
+                                                    <div class="img rounded-5">
+                                                        <div class="icon rounded-circle">{{submission.username|make_list|first| capfirst}}</div>
+                                                        <img class="details" src="{{ submission.photo }}">
+                                                    </div>
+                                                </div>
+                                                <div class="side interactions">
+                                                    <div>
+                                                        <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
+                                                    </div>
+                                                    <div>{{ submission.upvote_count }}</div>
+                                                    <div class="details">
+                                                        <img src="{% static 'img/Comment.svg' %}">
+                                                    </div>
+                                                    <div>0</div>
                                                 </div>
                                             </div>
-                                            <div class="side interactions">
-                                                <div>
-                                                    <img class="upvote" src="{% static 'img/Upvote-Clear.svg' %}">
-                                                </div>
-                                                <div>{{ submission.upvote_count }}</div>
-                                                <div>
-                                                    <img src="{% static 'img/Comment.svg' %}">
-                                                </div>
-                                                <div>0</div>
-                                            </div>
                                         </div>
-                                    </div>
+                                        <script>
+                                            post = document.getElementById("post{{submission.id}}");
+                                            detailElements = post.getElementsByClassName("details");
+                    
+                                            for (var i = 0; i < detailElements.length; i++) {
+                                                detailElements.item(i).onclick = function() {
+                                                    form = document.getElementById("form{{submission.id}}");
+                                                    form.submit();
+                                                }
+                                            }
+                                        </script>
                                         <div class="break"></div>
                                     {% endfor %}
                                 </div>

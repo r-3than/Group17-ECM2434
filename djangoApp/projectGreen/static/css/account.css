@@ -176,6 +176,10 @@ main {
     box-shadow: 1px 5px 12px #202020;
 }
 
+.details {
+    cursor: pointer;
+}
+
 .post .header {
     display: flex;
     font-weight: 600;

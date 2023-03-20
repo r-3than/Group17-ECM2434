@@ -383,7 +383,8 @@ def post(request):
                                                'comments' : submission.get_comments(),
                                                'has_liked': has_liked,
                                                'has_reviewed': has_reviewed,
-                                               'upvote_count': submission.get_upvote_count()
+                                               'upvote_count': submission.get_upvote_count(),
+                                               'is_active': submission.is_for_active_challenge()
                                             }
 
             template = loader.get_template('home/post.html')  
@@ -473,10 +474,12 @@ def account(request):
                 photo_b64 = "data:image/png;base64,"
 
             # Nested list structure to pass to template 
-            submissions_by_month[submission_month - start_month].append({'username': submission.username,
-                                               'time': submission_time_form,
-                                               'photo': photo_b64,
-                                               'upvote_count': submission.get_upvote_count()
+            submissions_by_month[submission_month - start_month].append({
+                                                'id': submission.id,
+                                                'username': submission.username,
+                                                'time': submission_time_form,
+                                                'photo': photo_b64,
+                                                'upvote_count': submission.get_upvote_count(),
                                                 })
         
         context['months'] = submissions_by_month
