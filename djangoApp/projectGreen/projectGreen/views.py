@@ -383,8 +383,10 @@ def post(request):
             template = loader.get_template('home/post.html')  
 
             return HttpResponse(template.render(context, request))
+        else:
+            return signin(request)
     else:
-        return signin(request)
+        return(redirect('/'))
         
 @csrf_exempt
 def create_comment(request):
@@ -398,8 +400,6 @@ def create_comment(request):
                 
                 author = data["author"]
                 content = data["content"]
-
-                print("new comment:", submission, author, content)
 
                 submission.create_comment(author, content)
 

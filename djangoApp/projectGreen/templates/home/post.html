@@ -190,11 +190,11 @@
                                     <div>{{comment.content}}</div>
                                     <div id="reply{{comment.id}}" class="reply">Reply</div>
                                 </div>
-                                <div class="side">
-                                    {% if not info.submission_has_reviewed %}
-                                        <img id="flag{{comment.id}}" src="{% static 'img/Flag-Clear.svg' %}">
+                                <div class="side interactions">
+                                    {% if not comment.reviewed %}
+                                        <img id="flag{{comment.id}}" class="flag" src="{% static 'img/Flag-Clear.svg' %}">
                                         <script>
-                                            flagbutton = document.getElementById("flag{{info.submission_id}}");
+                                            flagbutton = document.getElementById("flag{{comment.id}}");
                                             var has_flagged = "{{info.submission_has_flagged}}";
                                             if ("{{info.submission_has_flagged}}" == "1"){
                                                 flagbutton.src = "{% static 'img/Flag-Solid.svg' %}";
@@ -202,11 +202,9 @@
                                             flagbutton.onclick = function(){
                                                 if (document.getElementById("flag{{comment.id}}").src.includes("Solid")){
                                                     document.getElementById("flag{{comment.id}}").src="{% static 'img/Flag-Clear.svg' %}";
-                                                    
                                                 }
                                                 else{
-                                                    document.getElementById("flag{{comment.id}}").src = "{% static 'img/Flag-Solid.svg' %}";
-                                                
+                                                    document.getElementById("flag{{comment.id}}").src = "{% static 'img/Flag-Solid.svg' %}"; 
                                                 }
                                                 document.getElementById("comment{{comment.id}}").style.display="none";
                                                 

@@ -227,7 +227,7 @@ main {
 }
 
 .comment {
-    height: 100px;
+    height: 80px;
     width: 100%;
     margin: auto;
     margin-bottom: 1rem;
@@ -235,6 +235,20 @@ main {
 
 .comment .side {
     width: 9%;
+}
+
+.comment .interactions {
+    display: flex;
+    align-items: center;
+}
+
+.flag {
+    height: 30px !important;
+    cursor: pointer;
+}
+
+.comment .centre { 
+    width: 82%;
 }
 
 .comment .icon {
