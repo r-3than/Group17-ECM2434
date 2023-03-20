@@ -40,6 +40,10 @@ The specification for this project is provided below:
 
 https://vle.exeter.ac.uk/pluginfile.php/1800367/mod_label/intro/project-spec-2023.pdf.
 
+### Dealing with Data Requests
+
+Provided with the database is a data request function. Calling `user_data(fetch=True)` on a profile instance will return a dictionary of all items in our database related to a single user. This includes friend connections, submissions, comments and upvotes.
+
 ## Group Members
 
 + [Ethan](https://github.com/r-3than) - *<er545@exeter.ac.uk>*
