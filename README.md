@@ -40,6 +40,14 @@ The specification for this project is provided below:
 
 https://vle.exeter.ac.uk/pluginfile.php/1800367/mod_label/intro/project-spec-2023.pdf.
 
+### Dealing with Data Requests
+
+Provided with the database is a data request function. Calling `user_data(fetch=True)` on a profile instance will return a dictionary of all items in our database related to a single user. This includes friend connections, submissions, comments and upvotes.
+
+### Points Economy
+
+The points system is entirely modular, so can be changed globally in [models.py](<./djangoApp/projectGreen/projectGreen/models.py>), but make sure to resynchronize all users points (from the admin panel) if you do this.
+
 ## Group Members
 
 + [Ethan](https://github.com/r-3than) - *<er545@exeter.ac.uk>*
