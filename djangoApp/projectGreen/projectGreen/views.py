@@ -23,13 +23,13 @@ from datetime import date, timedelta
 
 from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Upvote
 
-
-
 @csrf_exempt
 def uploadphoto(request):
     if request.method == "POST":
         if request.user.is_authenticated:
             upload=request.FILES["upload_pic"]
+            LAT = request.POST["latitude"]
+            LON = request.POST["longitude"]
             picture_bytes = b""
             for data in upload:
                 picture_bytes += data
@@ -47,10 +47,19 @@ def uploadphoto(request):
             photo_bytes=picture_bytes,
             submission_time=current_date)
             # Check location
-            if active_challenge.challenge.allowed_distance == 0.0 or newSubmission.location_is_valid():
-                newSubmission.save()
+            if active_challenge.challenge.allowed_distance == 0.0:
+                return redirect('/home/')
+            else:
+                try:
+                    if newSubmission.location_is_valid():
+                        newSubmission.save()
+                        return redirect('/home/')
+                except:
+                    if newSubmission.location_check_missing_metadata(latitude=LAT, longitude=LON):
+                        newSubmission.save()
+                        return redirect('/home/')
+                return redirect('/submit/')
                 
-            return redirect('/home/')
                 
         """
         data=json.loads(request.body)
@@ -331,6 +340,7 @@ def post(request):
             # Get the display name of the user who made the submission
             user = User.objects.get(username=submission.username)
             user_display_name = user.first_name
+            
             if submission.photo_bytes != None:
                 photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
             else:
@@ -345,6 +355,11 @@ def post(request):
             Profile.recalculate_user_points_by_username(submission.username)
             # Not ideal but ensures points sync
             has_reviewed = submission.reviewed
+
+            profileObj = Profile.get_profile(request.user.username)
+            user_points = str(profileObj.points)
+            context["user_points"] = user_points
+
             context['submission'] = {
                                                'id': submission.id,
                                                'user_displayname': user_display_name,
@@ -397,6 +412,23 @@ def account(request):
         # Get the user submissions from most recent
         submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
 
+        # Display date joined
+        user_join_date = request.user.date_joined
+        current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+        date_difference = current_date - user_join_date
+
+        if date_difference.days:
+            display_date = str(date_difference.days) + " days"
+        elif date_difference.seconds > 3600:
+            display_date = str(date_difference.seconds // 3600) + " hours"
+        elif date_difference.seconds > 60:
+            display_date = str(date_difference.seconds // 60) + " minutes"
+        else:
+            display_date = "a few seconds"
+
+        context["display_date"] = display_date
+
+        # Display points
         profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
         context["user_points"] = user_points
@@ -472,6 +504,7 @@ def friends(request):
         template = loader.get_template('account/friends.html')
 
         friends = Friend.get_friend_usernames(request.user.username)
+        print(friends)
 
         context['friends'] = friends
 
@@ -502,13 +535,6 @@ def addFriend(request):
                 return redirect('/friends/')
 
 
-def is_mobile(request):
-    MOBILE_AGENT_RE=re.compile(r".*(iphone|mobile|androidtouch)",re.IGNORECASE)
-
-    if MOBILE_AGENT_RE.match(request.META['HTTP_USER_AGENT']):
-        return True
-    else:
-        return False
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names

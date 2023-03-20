@@ -1,7 +1,7 @@
 <!doctype html>
 <!--
     Main Authors:
-        OJ - Design
+        OJ - Design + Styling + Integration
         SJ - Styling
 -->
 {% load static %}
@@ -55,10 +55,12 @@
 
                     <!-- Modal body -->
                     <div class="modal-body links">
+                        <a href="{% url 'home' %}">Home Feed</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <a href="{% url 'account' %}">Submission History</a> <br>
-                        <a href="">Friends' Submissions</a> <br>
-                        <a href="">University Submissions</a> <br>
-                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
+                        <a href="{% url 'friends' %}">Manage Friends</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
                     </div>
 
                     <!-- Modal footer -->
@@ -69,9 +71,11 @@
         <main class="row">
               <div class="side left">
                 <div class="links rounded-5">
+                    <a href="{% url 'home' %}">Home Feed</a> <br>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="{% url 'account' %}">Submission History</a>
-                    <a href="">Friends' Submissions</a>
-                    <a href="">University Submissions</a>
+                    <a href="{% url 'friends' %}">Manage Friends</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                 </div>
               </div>
@@ -86,7 +90,9 @@
                         <div class="centre">
                             <div class="icon rounded-circle">{{submission.username|make_list|first| capfirst}}</div>
                             <div class="img rounded-5">
-                                <img src="{{submission.photo}}">
+                                <a href=" {{submission.photo}}" target="_blank">
+                                    <img src="{{submission.photo}}">
+                                </a>
                             </div>
                         </div>
                         <div class="side interactions">
@@ -180,11 +186,13 @@
                                     <div class="icon rounded-circle">{{comment.comment_username|make_list|first| capfirst}}</div>
                                 </div>
                                 <div class="centre">
-                                    <div class="username">{{comment.comment_username}}<span class="date">Date</span></div>
+                                    <div class="username">@{{comment.comment_username}}</div>
                                     <div>{{comment.content}}</div>
                                     <div id="reply{{comment.id}}" class="reply">Reply</div>
                                 </div>
-                                <div class="side"></div>
+                                <div class="side">
+                                    <span class="date">Date</span> <!-- TODO PUT FLAG HERE -->
+                                </div>
                             </div>
                             <script>
                                 reply = document.getElementById("reply{{comment.id}}");
