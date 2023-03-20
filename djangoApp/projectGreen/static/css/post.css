@@ -158,6 +158,7 @@ main {
 
 .upvote {
     height: 24px !important;
+    cursor: pointer;
 }
 
 .post .centre {
