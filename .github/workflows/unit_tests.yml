@@ -27,7 +27,5 @@ jobs:
         pip install -r ./djangoApp/projectGreen/requirements.txt
     - name: Run Unit Tests
       run: |
-        cd imageMetadata
-        python -m pytest
-        cd ../emailNotifications
+        cd ./djangoApp/projectGreen/projectGreen/imageMetadata
         python -m pytest

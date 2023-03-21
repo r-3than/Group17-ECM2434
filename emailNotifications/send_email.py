@@ -1,4 +1,9 @@
 '''
+DEPRECATED (by redundancy)
+The email_user() functionality provided by the inbuilt
+django.contrib.auth.models.User model is now used.
+
+Original file docstring:
 Emails through SMTP
 Works with a test email address (djangotestemail31@gmail.com)
 Password is an "App Password" (used by gmail)
@@ -39,7 +44,8 @@ def build_message(sender: str, recipient: str, subject: str) -> dict[str, str]:
 
 
 def send_email(sender: str, username: str, password: str, recipients_list: list[str], subject: str) -> None:
-    '''Send an email to each recipient in a given list of recipients
+    '''
+    Send an email to each recipient in a given list of recipients
    
     :params sender: the sender's email address
     :params username: the sender's username (email address)
@@ -88,3 +94,4 @@ if __name__ == '__main__':
 
     # Send message
     send_email(from_email, username, password, to_list, msg_subject)
+    print("email sent")

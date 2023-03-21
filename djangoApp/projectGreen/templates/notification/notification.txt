@@ -1,0 +1,8 @@
+It's Time to ♻️ BeGreen 🌳
+
+{{ date }}
+
+
+A new challenge has just been posted - be the first of your friends to post!
+
+Today's challenge: {{ description }}

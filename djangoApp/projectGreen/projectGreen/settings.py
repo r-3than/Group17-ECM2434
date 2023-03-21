@@ -40,7 +40,12 @@ LOGGING = {
     'handlers': {
         'file_app': {
             'class': 'logging.FileHandler',
-            'filename': 'projectGreen_log.log',
+            'filename': 'projectGreen.log',
+            'formatter': 'simple',
+        },
+        'file_game_master': {
+            'class': 'logging.FileHandler',
+            'filename': 'gameMaster.log',
             'formatter': 'simple',
         },
         'file_global': {
@@ -53,6 +58,10 @@ LOGGING = {
         'projectGreen.models': {
             'level': 'INFO',
             'handlers': ['file_app'],
+        },
+        'gameMaster': {
+            'level;': 'INFO',
+            'handlers': ['file_game_master'],
         },
         'django': {
             'level': 'DEBUG',
@@ -72,6 +81,7 @@ LOGGING = {
     },
 }
 
+broadcastURL = "http://localhost:8000" # change this url to the hosting url and make sure below
 ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com","localhost"]
 CSRF_TRUSTED_ORIGINS = ['https://projectgreen.grayitsolutions.com',"http://localhost:8000"]
 
@@ -156,7 +166,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-broadcastURL = "http://localhost:8000" # makes it easier when hosting so i can just change this url
+
 
 
 MICROSOFT = {
@@ -207,4 +217,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
 
-PROFANITY_FILTER_SOURCE_URL = 'https://www.cs.cmu.edu/~biglou/resources/bad-words.txt'
+PROFANITY_FILTER_SOURCE_URL = 'https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/badwordslist/badwords.txt'

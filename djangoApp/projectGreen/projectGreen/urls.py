@@ -13,32 +13,52 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.conf import settings
 from django.conf.urls.static import static
 from django.urls import path,include
-from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access, post, create_comment, account, friends, friends_feed, deleteAccount, signout, addFriend, store, buy_item, activate_item, deactivate_item
+
+from projectGreen import views
 
 urlpatterns = [
-    path('', challenge, ),
-    path('home/', home, name='home'),
-    path('submit/',submit,name='submit'),
-    path('uploadphoto/',uploadphoto),
+    # Pages:
+    # Initial Process:
+    path('', views.challenge),
+    path('submit/', views.submit, name='submit'),
 
-    path('post/',post, name='post'),
-    path('create-comment/', create_comment, name='create-comment'),
+    # Feeds:
+    path('university-feed/', views.university_feed, name='university-feed'),
+    path('friends-feed/', views.friends_feed, name='friends-feed'),
 
-    path('friends-feed/',friends_feed, name='friends-feed'),
+    # Account Management:
+    path('history/', views.history, name='history'),
+    path('friends/', views.friends, name='friends'),
+
+    # Other:
+    path('post/', views.post, name='post'),
+    path('leaderboard/', views.leaderboard, name='leaderboard'),
 
 
+    # Functions:
+    # Posts:
+    path('uploadphoto/', views.upload_photo),
+    path('like_submission/', views.like_submission),
+    path('flag_submission/', views.flag_submission),
 
-    path('account/',account, name='account'),
-    path('deleteAccount/', deleteAccount, name='deleteAccount'),
-    path('signout/', signout, name='signout'),
+    # Comments:
+    path('create-comment/', views.create_comment, name='create-comment'),
+    path('flag_comment/', views.flag_comment),
 
+    # Friends:
+    path('addFriend/', views.add_friend, name='addFriend'),
+    path('removeFriend/', views.remove_friend, name='removeFriend'),
+    path('acceptFriendRequest/', views.accept_friend_request, name='acceptFriendRequest'),
+    path('declineFriendRequest/', views.decline_friend_request, name='declineFriendRequest'),
 
-    path('friends/',friends, name='friends'),
-    path('addFriend/',addFriend, name='addFriend'),
+    # Accounts:
+    path('deleteAccount/', views.delete_account, name='deleteAccount'),
+    path('signout/', views.signout, name='signout'),
 
     path('store/',store, name='store'),
     path('buy_item/', buy_item),
@@ -50,5 +70,15 @@ urlpatterns = [
     path('specific_group_access', specific_group_access, ),
     path('admin/', admin.site.urls),
     path('microsoft_authentication/', include('microsoft_authentication.urls')),
+
+    # Emails:
+    path('unsubscribe/', views.unsubscribe_from_emails, name='unsubscribe'),
+    path('resubscribe/', views.resubscribe_to_emails, name='resubscribe'),
+
+        # Other:
+    path('specific_group_access', views.specific_group_access, ),
+    path('admin/', admin.site.urls),
+    path('microsoft_authentication/', include('microsoft_authentication.urls')),
     
 ] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
