@@ -13,55 +13,57 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+
 from django.contrib import admin
 from django.urls import path,include
-from projectGreen.views import *
+
+from projectGreen import views
 
 urlpatterns = [
     # Pages:
     # Initial Process:
-    path('', challenge),
-    path('submit/', submit, name='submit'),
-    
+    path('', views.challenge),
+    path('submit/', views.submit, name='submit'),
+
     # Feeds:
-    path('university-feed/', university_feed, name='university-feed'),
-    path('friends-feed/',friends_feed, name='friends-feed'),
-    
+    path('university-feed/', views.university_feed, name='university-feed'),
+    path('friends-feed/', views.friends_feed, name='friends-feed'),
+
     # Account Management:
-    path('history/', history, name='history'),
-    path('friends/', friends, name='friends'),
-    
+    path('history/', views.history, name='history'),
+    path('friends/', views.friends, name='friends'),
+
     # Other:
-    path('post/', post, name='post'),
-    path('leaderboard/', leaderboard, name='leaderboard'),
+    path('post/', views.post, name='post'),
+    path('leaderboard/', views.leaderboard, name='leaderboard'),
 
 
     # Functions:
     # Posts:
-    path('uploadphoto/', upload_photo),
-    path('like_submission/', like_submission),
-    path('flag_submission/', flag_submission),
+    path('uploadphoto/', views.upload_photo),
+    path('like_submission/', views.like_submission),
+    path('flag_submission/', views.flag_submission),
 
     # Comments:
-    path('create-comment/', create_comment, name='create-comment'),
-    path('flag_comment/', flag_comment),
-    
+    path('create-comment/', views.create_comment, name='create-comment'),
+    path('flag_comment/', views.flag_comment),
+
     # Friends:
-    path('addFriend/', add_friend, name='addFriend'),
-    path('removeFriend/', remove_friend, name='removeFriend'),
-    path('acceptFriendRequest/', accept_friend_request, name='acceptFriendRequest'),
-    path('declineFriendRequest/', decline_friend_request, name='declineFriendRequest'),
+    path('addFriend/', views.add_friend, name='addFriend'),
+    path('removeFriend/', views.remove_friend, name='removeFriend'),
+    path('acceptFriendRequest/', views.accept_friend_request, name='acceptFriendRequest'),
+    path('declineFriendRequest/', views.decline_friend_request, name='declineFriendRequest'),
 
     # Accounts:
-    path('deleteAccount/', delete_account, name='deleteAccount'),
-    path('signout/', signout, name='signout'),
+    path('deleteAccount/', views.delete_account, name='deleteAccount'),
+    path('signout/', views.signout, name='signout'),
 
     # Emails:
-    path('unsubscribe/', unsubscribe_from_emails, name='unsubscribe'),
-    path('resubscribe/', resubscribe_to_emails, name='resubscribe'),
+    path('unsubscribe/', views.unsubscribe_from_emails, name='unsubscribe'),
+    path('resubscribe/', views.resubscribe_to_emails, name='resubscribe'),
 
     # Other:
-    path('specific_group_access', specific_group_access, ),
+    path('specific_group_access', views.specific_group_access, ),
     path('admin/', admin.site.urls),
     path('microsoft_authentication/', include('microsoft_authentication.urls')),
 ]
