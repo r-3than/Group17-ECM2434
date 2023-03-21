@@ -3,13 +3,10 @@ Authors:
     ER
     LB
     TN
-    OL
+    OJ
 '''
 
 import datetime
-import os
-from sre_constants import SUCCESS
-import time
 from django.http import HttpResponse
 from django.shortcuts import redirect
 
@@ -23,94 +20,62 @@ from datetime import date, timedelta
 
 from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Upvote, Comment
 
-@csrf_exempt
-def uploadphoto(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            upload=request.FILES["upload_pic"]
-            LAT = request.POST["latitude"]
-            LON = request.POST["longitude"]
-            picture_bytes = b""
-            for data in upload:
-                picture_bytes += data
-            has_submitted = Submission.user_has_submitted(request.user.username)
-            active_challenge = ActiveChallenge.objects.last()
-            if has_submitted == True:
-                replace_submission=Submission.objects.get(username=request.user.username, active_challenge=active_challenge)
-                replace_submission.delete()
-             ## -> 
-            current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
-            newSubmission = Submission(username=request.user.username,
-            active_challenge=active_challenge,
-            reported=False,
-            reviewed=False,
-            photo_bytes=picture_bytes,
-            submission_time=current_date)
-            # Check location
-            if active_challenge.challenge.allowed_distance == 0.0:
-                newSubmission.save()
-                return redirect('/home/')
-            else:
-                try:
-                    if newSubmission.location_is_valid():
-                        newSubmission.save()
-                        return redirect('/home/')
-                except:
-                    if newSubmission.location_check_missing_metadata(latitude=LAT, longitude=LON):
-                        newSubmission.save()
-                        return redirect('/home/')
-                return redirect('/submit/')
-                
-                
-        """
-        data=json.loads(request.body)
-        print(data)
-        img_data = data["img"]
-        img_data = base64.b64decode(img_data.split(",")[1])
-        with open(str(request.user)+".png", "wb") as fh:
-            fh.write(img_data)
-        return HttpResponse({"success":"true"})
-        """
-@csrf_exempt
-def flag_submission(request):
-     if request.method == "POST":
-        if request.user.is_authenticated:
-            data=json.loads(request.body)
-            submission_id = data["submission_id"]
-            submssionObj=Submission.objects.filter(id=submission_id).first()
-            submssionObj.report_submission(request.user.username)
+#region Pages
 
-        return HttpResponse({"success":"true"})
-     
-@csrf_exempt
-def flag_comment(request):
-     if request.method == "POST":
-        if request.user.is_authenticated:
-            data=json.loads(request.body)
+#region Initial Process
 
-            comment_id = data["comment_id"]
-            commentObj = Comment.objects.filter(id=comment_id).first() # We think comment IDs are unique globally
+'''Displays the sign-in page'''
+def signin(request):
+    context = {}
+    template = loader.get_template('home/sign-in.html')
+    active_challenge = ActiveChallenge.get_last_active_challenge()
+    context["active_challenge"] = active_challenge.get_challenge_description()
+    return HttpResponse(template.render(context, request))
 
-            commentObj.report_comment(request.user.username)
+'''Displays the page for the current challenge'''  
+def challenge(request):
+    context = {}
+    if request.user.is_authenticated:
+        
+        template = loader.get_template('home/challenge.html')
+        CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        if Submission.user_has_submitted(request.user.username):
+            return redirect("/home")
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
 
-        return HttpResponse({"success":"true"})
+        return HttpResponse(template.render(context, request))
+    else:
+        return signin(request)
 
-@csrf_exempt
-def like_submission(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            data=json.loads(request.body)
-            submission_id = data["submission_id"]
-            checker = Upvote.objects.filter(voter_username=request.user.username,
-                submission_id=submission_id)
-            if len(checker) < 1:
-                SubmissionObj = Submission.objects.filter(id=submission_id).first()
-                SubmissionObj.create_upvote(request.user.username)
-            else:
-                checker.first().remove_upvote()
-        return HttpResponse({"success":"true"})
+'''Displays the page where the user can submit a photo'''
+def submit(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,active_challenge)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
 
 
+        template = loader.get_template('submit/submit.html')  
+        return HttpResponse(template.render(context, request))
+    else:
+        return signin(request)
+
+#endregion
+
+#region Feed
+
+'''Displays the university-wide feed''' # TODO RENAME THIS
 def home(request):
     context = {}
     if request.user.is_authenticated:
@@ -186,7 +151,7 @@ def home(request):
     else:
         return signin(request)
     
-
+'''Displays the feed of friends' posts only'''
 def friends_feed(request):
     context = {}
     if request.user.is_authenticated:
@@ -266,61 +231,113 @@ def friends_feed(request):
     else:
         return signin(request)
 
-def signin(request):
-    context = {}
-    template = loader.get_template('home/sign-in.html')
-    active_challenge = ActiveChallenge.get_last_active_challenge()
-    context["active_challenge"] = active_challenge.get_challenge_description()
-    return HttpResponse(template.render(context, request))
+#endregion
 
+#region Account Management
 
-    
-def challenge(request):
+'''Displays the submission history page'''
+def history(request):
     context = {}
+
     if request.user.is_authenticated:
+        template = loader.get_template('account/history.html')
+
+        # Get the user submissions from most recent
+        submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
+
+        # Display date joined
+        user_join_date = request.user.date_joined
+        current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+        date_difference = current_date - user_join_date
+
+        if date_difference.days:
+            display_date = str(date_difference.days) + " days"
+        elif date_difference.seconds > 3600:
+            display_date = str(date_difference.seconds // 3600) + " hours"
+        elif date_difference.seconds > 60:
+            display_date = str(date_difference.seconds // 60) + " minutes"
+        else:
+            display_date = "a few seconds"
+
+        context["display_date"] = display_date
+
+        # Display points
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        context["user_points"] = user_points
+        context["is_subscribed"] = profileObj.subscribed_to_emails
+
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = active_challenge.get_challenge_description()
+
+        try:
+            start_month = int(submissions.first().submission_time.strftime("%m"))
+            end_month = int(submissions.last().submission_time.strftime("%m"))
+            total_months = end_month - start_month + 1
+        except:
+            total_months = 0
+
+        # Initialise list of empty lists for each month
+        submissions_by_month = [[]] * total_months
+
+        for submission in submissions:
+
+            # Get date
+            submission_date = submission.submission_time.strftime("%d/%m/%Y")
+            submission_month = int(submission.submission_time.strftime("%m"))
+
+            submission_time_form = submission_date
+
+            if submission.photo_bytes != None:
+                photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
+            else:
+                photo_b64 = "data:image/png;base64,"
+
+            # Nested list structure to pass to template 
+            submissions_by_month[submission_month - start_month].append({
+                                                'id': submission.id,
+                                                'username': submission.username,
+                                                'time': submission_time_form,
+                                                'photo': photo_b64,
+                                                'upvote_count': submission.get_upvote_count(),
+                                                })
         
-        template = loader.get_template('home/challenge.html')
+        context['months'] = submissions_by_month
+
+        return HttpResponse(template.render(context, request))
+    else:
+        return signin(request)
+    
+    '''Loads the friends management page'''
+def friends(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        template = loader.get_template('account/friends.html')
+
+        friends = Friend.get_friend_usernames(request.user.username)
+        context['friends'] = friends
+
+        incoming = Friend.get_pending_friend_usernames(request.user.username)
+        context['incoming'] = incoming
+
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
-        if Submission.user_has_submitted(request.user.username):
-            return redirect("/home")
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        
         profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
         postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
         context["user_points"] = user_points
         context["post_count"] = postCount
-
         return HttpResponse(template.render(context, request))
     else:
         return signin(request)
 
-    
+#endregion
 
-def camera(request):
-    template = loader.get_template('camera/camera.html')
-    context = {}
-    return HttpResponse(template.render(context, request))
+#region Other
 
-
-def submit(request):
-    context = {}
-
-    if request.user.is_authenticated:
-        active_challenge = ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = active_challenge.get_challenge_description()
-        profileObj = Profile.get_profile(request.user.username)
-        user_points = str(profileObj.points)
-        postCount= Friend.get_friend_post_count(profileObj.user.username,active_challenge)
-        context["user_points"] = user_points
-        context["post_count"] = postCount
-
-
-        template = loader.get_template('submit/submit.html')  
-        return HttpResponse(template.render(context, request))
-    else:
-        return signin(request)
-    
-
+'''Displays a speicifed post and its comments in further detail'''
 def post(request):
     context = {}
 
@@ -395,191 +412,8 @@ def post(request):
             return signin(request)
     else:
         return(redirect('/'))
-        
-@csrf_exempt
-def create_comment(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            try:
-                data=json.loads(request.body)
-
-                submission_id = data["submission_id"]
-                submission = Submission.objects.filter(id = submission_id).first()                
-                
-                author = data["author"]
-                content = data["content"]
-
-                submission.create_comment(author, content)
-
-                return HttpResponse({"success":"true"})
-            except Exception as e:
-                print(str(e))
-                return HttpResponse({"failiure":"true"})
-    return HttpResponse({"failiure":"true"})
-
-'''Loads the accounts page'''
-def history(request):
-    context = {}
-
-    if request.user.is_authenticated:
-        template = loader.get_template('account/history.html')
-
-        # Get the user submissions from most recent
-        submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
-
-        # Display date joined
-        user_join_date = request.user.date_joined
-        current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
-        date_difference = current_date - user_join_date
-
-        if date_difference.days:
-            display_date = str(date_difference.days) + " days"
-        elif date_difference.seconds > 3600:
-            display_date = str(date_difference.seconds // 3600) + " hours"
-        elif date_difference.seconds > 60:
-            display_date = str(date_difference.seconds // 60) + " minutes"
-        else:
-            display_date = "a few seconds"
-
-        context["display_date"] = display_date
-
-        # Display points
-        profileObj = Profile.get_profile(request.user.username)
-        user_points = str(profileObj.points)
-        context["user_points"] = user_points
-        context["is_subscribed"] = profileObj.subscribed_to_emails
-
-        active_challenge = ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = active_challenge.get_challenge_description()
-
-        try:
-            start_month = int(submissions.first().submission_time.strftime("%m"))
-            end_month = int(submissions.last().submission_time.strftime("%m"))
-            total_months = end_month - start_month + 1
-        except:
-            total_months = 0
-
-        # Initialise list of empty lists for each month
-        submissions_by_month = [[]] * total_months
-
-        for submission in submissions:
-
-            # Get date
-            submission_date = submission.submission_time.strftime("%d/%m/%Y")
-            submission_month = int(submission.submission_time.strftime("%m"))
-
-            submission_time_form = submission_date
-
-            if submission.photo_bytes != None:
-                photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
-            else:
-                photo_b64 = "data:image/png;base64,"
-
-            # Nested list structure to pass to template 
-            submissions_by_month[submission_month - start_month].append({
-                                                'id': submission.id,
-                                                'username': submission.username,
-                                                'time': submission_time_form,
-                                                'photo': photo_b64,
-                                                'upvote_count': submission.get_upvote_count(),
-                                                })
-        
-        context['months'] = submissions_by_month
-
-        return HttpResponse(template.render(context, request))
-    else:
-        return signin(request)
     
-'''Signs out the user'''
-def signout(request):
-    if request.user.is_authenticated:
-        logout(request)
-    return redirect('/')
-
-'''Deletes the specified account'''
-def deleteAccount(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            try:
-                accountObj = Profile.objects.filter(user__username=request.user.username).first()
-                accountObj.user_data(fetch=False, delete=True)
-                logout(request)
-                return redirect('/')
-            except Exception as e:
-                print(str(e))
-                return redirect('/account/')
-
-'''Loads the friends page'''
-def friends(request):
-    context = {}
-
-    if request.user.is_authenticated:
-        template = loader.get_template('account/friends.html')
-
-        friends = Friend.get_friend_usernames(request.user.username)
-        context['friends'] = friends
-
-        incoming = Friend.get_pending_friend_usernames(request.user.username)
-        context['incoming'] = incoming
-
-        CurrentChallenge =ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = CurrentChallenge.get_challenge_description()
-        
-        profileObj = Profile.get_profile(request.user.username)
-        user_points = str(profileObj.points)
-        postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
-        context["user_points"] = user_points
-        context["post_count"] = postCount
-        return HttpResponse(template.render(context, request))
-    else:
-        return signin(request)
-    
-'''Creates a pending friend request'''
-def addFriend(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            try:
-                recipient = request.POST.get("friend_name")
-                Friend.create_friend_request(request.user.username, recipient)
-            finally:
-                return redirect('/friends/')
-            
-'''Removes an existing friend'''        
-def removeFriend(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            try:
-                friend_username = request.POST.get("friend_name")
-                Friend.remove_friend(request.user.username, friend_username)
-            except Exception as e:
-                print(str(e))
-            finally:
-                return redirect('/friends/')
-
-'''Accepts a pending friend'''  
-def acceptFriendRequest(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            try:
-                friend_username = request.POST.get("friend_name")
-                Friend.accept_friend_request(friend_username, request.user.username)
-            except Exception as e:
-                print(str(e))
-            finally:
-                return redirect('/friends/')
-
-'''Removes a pending friend'''
-def declineFriendRequest(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            try:
-                friend_username = request.POST.get("friend_name")
-                Friend.decline_friend_request(friend_username, request.user.username)
-            except Exception as e:
-                print(str(e))
-            finally:
-                return redirect('/friends/')
-            
+'''Displays the leaderboard page'''      
 def leaderboard(request):
     context = {}
 
@@ -626,6 +460,203 @@ def leaderboard(request):
         return HttpResponse(template.render(context, request))
     else:
         return signin(request)
+
+#endregion
+
+#endregion
+
+#region Functions
+
+#region Posts
+
+'''Uploads the specified photo to the database'''
+@csrf_exempt
+def uploadphoto(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            upload=request.FILES["upload_pic"]
+            LAT = request.POST["latitude"]
+            LON = request.POST["longitude"]
+            picture_bytes = b""
+            for data in upload:
+                picture_bytes += data
+            has_submitted = Submission.user_has_submitted(request.user.username)
+            active_challenge = ActiveChallenge.objects.last()
+            if has_submitted == True:
+                replace_submission=Submission.objects.get(username=request.user.username, active_challenge=active_challenge)
+                replace_submission.delete()
+             ## -> 
+            current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+            newSubmission = Submission(username=request.user.username,
+            active_challenge=active_challenge,
+            reported=False,
+            reviewed=False,
+            photo_bytes=picture_bytes,
+            submission_time=current_date)
+            # Check location
+            if active_challenge.challenge.allowed_distance == 0.0:
+                newSubmission.save()
+                return redirect('/home/')
+            else:
+                try:
+                    if newSubmission.location_is_valid():
+                        newSubmission.save()
+                        return redirect('/home/')
+                except:
+                    if newSubmission.location_check_missing_metadata(latitude=LAT, longitude=LON):
+                        newSubmission.save()
+                        return redirect('/home/')
+                return redirect('/submit/')
+            
+'''Flags the specified submission for manual review'''
+@csrf_exempt
+def flag_submission(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            submission_id = data["submission_id"]
+            submssionObj=Submission.objects.filter(id=submission_id).first()
+            submssionObj.report_submission(request.user.username)
+
+            return HttpResponse({"success":"true"})
+    else:
+        return(redirect('/'))
+    
+'''Adds a like to the specified submission'''
+@csrf_exempt
+def like_submission(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            submission_id = data["submission_id"]
+            checker = Upvote.objects.filter(voter_username=request.user.username,
+                submission_id=submission_id)
+            if len(checker) < 1:
+                SubmissionObj = Submission.objects.filter(id=submission_id).first()
+                SubmissionObj.create_upvote(request.user.username)
+            else:
+                checker.first().remove_upvote()
+        return HttpResponse({"success":"true"})
+
+#endregion
+
+#region Comments:
+
+'''Creates a new comment on the specified post'''   
+@csrf_exempt
+def create_comment(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                data=json.loads(request.body)
+
+                submission_id = data["submission_id"]
+                submission = Submission.objects.filter(id = submission_id).first()                
+                
+                author = data["author"]
+                content = data["content"]
+
+                submission.create_comment(author, content)
+
+                return HttpResponse({"success":"true"})
+            except Exception as e:
+                print(str(e))
+                return HttpResponse({"failiure":"true"})
+    return HttpResponse({"failiure":"true"})
+
+'''Flags the specified comment for manual review'''
+@csrf_exempt
+def flag_comment(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+
+            comment_id = data["comment_id"]
+            commentObj = Comment.objects.filter(id=comment_id).first()
+
+            commentObj.report_comment(request.user.username)
+
+            return HttpResponse({"success":"true"})
+    else:
+        return(redirect('/'))
+
+#endregion
+
+#region Friends
+
+'''Creates a pending friend request'''
+def addFriend(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                recipient = request.POST.get("friend_name")
+                Friend.create_friend_request(request.user.username, recipient)
+            finally:
+                return redirect('/friends/')
+            
+'''Removes an existing friend'''        
+def removeFriend(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                friend_username = request.POST.get("friend_name")
+                Friend.remove_friend(request.user.username, friend_username)
+            except Exception as e:
+                print(str(e))
+            finally:
+                return redirect('/friends/')
+
+'''Accepts a pending friend request'''  
+def acceptFriendRequest(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                friend_username = request.POST.get("friend_name")
+                Friend.accept_friend_request(friend_username, request.user.username)
+            except Exception as e:
+                print(str(e))
+            finally:
+                return redirect('/friends/')
+
+'''Removes a pending friend request'''
+def declineFriendRequest(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                friend_username = request.POST.get("friend_name")
+                Friend.decline_friend_request(friend_username, request.user.username)
+            except Exception as e:
+                print(str(e))
+            finally:
+                return redirect('/friends/')
+
+#endregion
+
+#region Accounts
+
+'''Signs the user out'''
+def signout(request):
+    if request.user.is_authenticated:
+        logout(request)
+    return redirect('/')
+
+'''Deletes the specified account'''
+def deleteAccount(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                accountObj = Profile.objects.filter(user__username=request.user.username).first()
+                accountObj.user_data(fetch=False, delete=True)
+                logout(request)
+                return redirect('/')
+            except Exception as e:
+                print(str(e))
+                return redirect('/account/')
+
+#endregion
+
+#region Emails
+
 '''Unsubscribes a user from email notifiactions'''
 def unsubscribeFromEmails(request):
     if request.user.is_authenticated:
@@ -649,9 +680,12 @@ def resubscribeToEmails(request):
             print(str(e))
         finally:
             return redirect('/account/')
-            
+
+#endregion
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names
 def specific_group_access(request):
     return HttpResponse("You are accessing page which is accessible only to users belonging to SpecificGroup1 or SpecificGroup2")
+
+#endregion
