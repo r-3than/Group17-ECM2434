@@ -5,15 +5,18 @@ Main Author:
 Sub-Author:
     LB - Initial Challenge model view; code review
 '''
+
 import base64
-from datetime import datetime
 import logging
+
+from datetime import datetime
 from django.contrib import admin
 from django.contrib.auth.models import User
-from django.utils.html import format_html
 from django.template.loader import render_to_string
 from django.urls import reverse
-from projectGreen.models import Profile,Friend,Challenge,ActiveChallenge,Submission,Upvote,Comment
+from django.utils.html import format_html
+
+from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
 
 LOGGER = logging.getLogger('django')
 
@@ -33,9 +36,10 @@ def send_email_notfication(active_challenge: ActiveChallenge, request):
     }
     plain_text = render_to_string('notification/notification.txt', context)
     html = render_to_string('notification/notification.html', context)
+
     for user in User.objects.all():
-        profile = Profile.get_profile(user.username)
-        if profile.subscribed_to_emails:
+        user_profile = Profile.get_profile(user.username)
+        if user_profile.subscribed_to_emails:
             try:
                 user.email_user('Time to BeGreen!',message=plain_text, html_message=html,
                                 from_email='djangotestemail31@gmail.com')
@@ -52,7 +56,6 @@ def publish_challenge(modeladmin, request, queryset):
     ActiveChallenge.objects.all().update(is_expired=True)
     active = ActiveChallenge(date=datetime.now(), challenge=new_challenge)
     active.save()
-
     send_email_notfication(active, request)
 
 @admin.action(description='Resend Email Notification')

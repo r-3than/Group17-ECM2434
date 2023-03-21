@@ -44,7 +44,9 @@ def extract_metadata(img: Image) -> dict[dict, dt]:
 
 
 def extract_metadata_from_filepath(filepath: str) -> dict[dict, dt]:
-    '''Wrapper for extract_metadata function with filepath input'''
+    '''
+    Wrapper for extract_metadata function with filepath input
+    '''
     source_image = Image.open(filepath)
     return extract_metadata(source_image)
 

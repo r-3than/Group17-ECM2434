@@ -24,7 +24,7 @@
                 </button>
             </div>
             <div class="title centre">
-                <a class="title" href="{% url 'home' %}">BeGreen</a>
+                <a class="title" href="{% url 'university-feed' %}">BeGreen</a>
                 <br>
                 <a class="subtitle">Today's challenge: {{active_challenge}}</a>
             </div>
@@ -56,7 +56,7 @@
 
                     <!-- Modal body -->
                     <div class="modal-body links">
-                        <a href="{% url 'home' %}">Home Feed</a> <br>
+                        <a href="{% url 'university-feed' %}">Home Feed</a> <br>
                         <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <a href="{% url 'history' %}">Submission History</a> <br>
                         <a href="{% url 'friends' %}">Manage Friends</a> <br>
@@ -72,7 +72,7 @@
         <main class="row">
               <div class="side left">
                 <div class="links rounded-5">
-                    <a href="{% url 'home' %}">Home Feed</a> <br>
+                    <a href="{% url 'university-feed' %}">Home Feed</a> <br>
                     <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="{% url 'history' %}">Submission History</a>
                     <a href="{% url 'friends' %}">Manage Friends</a>

@@ -4,14 +4,13 @@ Main Authors:
     LB - Challenge, ActiveChallenge, Submission and Upvote tests
 '''
 
-import io
-import unittest
+import base64
 import datetime
 import pytz
-import base64
-from PIL import Image
+
 from django.test import TestCase
 from django.contrib.auth.models import User
+
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment, SCORES, WORDS_TO_FILTER
 
 class ProfileTestCase(TestCase):
@@ -43,6 +42,7 @@ class ProfileTestCase(TestCase):
         self.assertSetEqual(data_empty['upvotes']['recieved'], u_data['upvotes']['recieved'])
         self.assertSetEqual(data_empty['comments']['given'], u_data['comments']['given'])
         self.assertSetEqual(data_empty['comments']['recieved'], u_data['comments']['recieved'])
+
         # initialize env
         for un in ['bc123', 'cd123', 'ef123']: # extra users
             User(username=un, password='unsecure_password').save()
@@ -52,12 +52,14 @@ class ProfileTestCase(TestCase):
         activechallenge.save()
         activechallenge.create_submission('ab123', datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC))
         activechallenge.create_submission('bc123', datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC))
+
         # outgoing
         sub = Submission.objects.get(username='bc123')
         sub.create_upvote('ab123')
         up0 = Upvote.objects.get(voter_username='ab123')
         sub.create_comment('ab123', 'hello')
         c0 = Comment.objects.get(comment_username='ab123')
+
         # incoming
         sub = Submission.objects.get(username='ab123')
         sub.create_upvote('bc123')
@@ -68,6 +70,7 @@ class ProfileTestCase(TestCase):
         c1 = Comment.objects.get(comment_username='cd123', content='hi ab123')
         sub.create_comment('cd123', 'i love your post')
         c2 = Comment.objects.get(comment_username='cd123', content='i love your post')
+
         # friends
         f1 = Friend(left_username='ab123', right_username='bc123')
         f1.save()
@@ -163,12 +166,14 @@ class FriendTestCase(TestCase):
             Friend.objects.get(left_username='cd123',right_username='ef123')
         with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - neither user exists'):
             Friend.objects.get(left_username='ef123',right_username='cd123')
+
         # attempts to create friend connection between existient and non-existient users
         Friend.create_friend_request('ab123','ef123')
         with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - to non-existient user'):
             Friend.objects.get(left_username='ab123',right_username='ef123')
         with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - to non-existient user (reverse)'):
             Friend.objects.get(left_username='ef123',right_username='ab123')
+
         # reverse direction
         Friend.create_friend_request('ef123','ab123')
         with self.assertRaises(Friend.DoesNotExist, msg='invalid connection created - from non-existient user (reverse)'):
@@ -510,6 +515,7 @@ class SubmissionTestCase(TestCase):
         sub = Submission.objects.get(username='cd123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling())
         submission.reinstate_submission()
+
         # check residual scores
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
@@ -595,9 +601,6 @@ class SubmissionTestCase(TestCase):
         submission = Submission.objects.get(username='bc123')
         self.assertTrue(submission.location_check_missing_metadata('50.73473', '-3.533968'))
         self.assertFalse(submission.location_check_missing_metadata('55.94585', '-3.231052'))
-
-        
-
 
 class UpvoteTestCase(TestCase):
     def setUp(self):
