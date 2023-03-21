@@ -13,11 +13,13 @@
         <link href="{% static 'css/store.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
         <link href="{% static 'css/store-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
-
+        
         <style>
-            .icon {
+            .main-pic .icon,
+            .account .icon {
                 background-image: url('{{ profile_image }}');
                 background-position: center;
+                color: {{ text_colour }};
             }
         </style>
     </head>

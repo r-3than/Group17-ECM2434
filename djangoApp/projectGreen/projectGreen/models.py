@@ -725,6 +725,7 @@ class StoreItem(models.Model):
     item_name = models.CharField(max_length=256)
     cost = models.IntegerField(default=0)
     photo = models.ImageField(upload_to='uploads/')
+    text_colour = models.CharField(max_length=6, default='FFFFFF')
 
     @classmethod
     def get_item_cost(cls, item_name: str) -> int:

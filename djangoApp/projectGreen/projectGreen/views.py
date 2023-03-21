@@ -565,7 +565,7 @@ def store(request):
             profile_item_name = OwnedItems.get(is_active=True).item_name
             item = StoreItem.objects.get(item_name=profile_item_name)
             context["profile_image"] = item.photo.url
-            print(context["profile_image"])
+            context["text_colour"] = '#'+item.text_colour
         except:
             pass
 

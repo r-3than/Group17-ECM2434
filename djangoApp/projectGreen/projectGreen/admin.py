@@ -178,16 +178,7 @@ class CommentAdmin(admin.ModelAdmin):
         return comment.submission
 
 class StoreAdmin(admin.ModelAdmin):
-    list_display = ['get_name', 'get_cost', 'photo']
-    fields = ['item_name', 'cost', 'photo']
-
-    @admin.display(description='name')
-    def get_name(self, store) -> StoreItem:
-        return store.item_name
-
-    @admin.display(description='cost')
-    def get_cost(self, store) -> StoreItem:
-        return store.cost
+    list_display = ['item_name', 'cost', 'photo', 'text_colour']
     
 class OwnedItemAdmin(admin.ModelAdmin):
     list_display = ['item_name', 'username', 'is_active']
