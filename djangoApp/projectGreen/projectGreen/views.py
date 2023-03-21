@@ -17,6 +17,7 @@ from django.contrib.auth.models import User
 from django.http import HttpResponse
 from django.shortcuts import redirect
 from django.template import loader
+from django.utils.datastructures import MultiValueDictKeyError
 from django.views.decorators.csrf import csrf_exempt
 
 from microsoft_authentication.auth.auth_decorators import microsoft_login_required
@@ -493,9 +494,14 @@ def upload_photo(request):
     '''
     if request.method == "POST":
         if request.user.is_authenticated:
-            upload=request.FILES["upload_pic"]
-            lat = request.POST["latitude"]
-            lon = request.POST["longitude"]
+            try:
+                upload=request.FILES["upload_pic"]
+                lat = request.POST["latitude"]
+                lon = request.POST["longitude"]
+            except MultiValueDictKeyError:
+                # Missing data
+                return redirect('/submit/')
+
             picture_bytes = b""
             for data in upload:
                 picture_bytes += data
@@ -526,7 +532,7 @@ def upload_photo(request):
                         new_submission.save()
                         return redirect('/university-feed/')
                 return redirect('/submit/')
-    return redirect('/')
+    return redirect('submit/')
 
 @csrf_exempt
 def flag_submission(request):
@@ -686,8 +692,8 @@ def delete_account(request):
     if request.method == "POST":
         if request.user.is_authenticated:
             try:
-                accountObj = Profile.objects.filter(user__username=request.user.username).first()
-                accountObj.user_data(fetch=False, delete=True)
+                user_account = Profile.objects.filter(user__username=request.user.username).first()
+                user_account.user_data(fetch=False, delete=True)
                 logout(request)
                 return redirect('/')
             except Exception as e:
