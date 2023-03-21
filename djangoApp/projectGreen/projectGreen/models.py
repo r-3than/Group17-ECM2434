@@ -766,13 +766,15 @@ class OwnedItem(models.Model):
         '''
         if OwnedItem.owns_item(item_name, username) == True:
             try:
-                current_active_item = OwnedItem.object.get(is_active=True)
+                current_active_item = OwnedItem.objects.get(is_active=True)
                 current_active_item.is_active=False
+                current_active_item.save()
             except:
                 pass
             try:
-                new_active_item = OwnedItem.object.get(item_name=item_name, username=username)
+                new_active_item = OwnedItem.objects.get(item_name=item_name, username=username)
                 new_active_item.is_active=True
+                new_active_item.save()
                 return True
             except OwnedItem.DoesNotExist:
                 return False
@@ -783,8 +785,9 @@ class OwnedItem(models.Model):
         Removes the active state from the selected active item
         '''
         try:
-            active_item = OwnedItem.object.get(is_active=True, username=username)
+            active_item = OwnedItem.objects.get(is_active=True, username=username)
             active_item.is_active=False
+            active_item.save()
         except OwnedItem.DoesNotExist:
             return False
 
@@ -794,7 +797,7 @@ class OwnedItem(models.Model):
         Gets the name of the active item
         '''
         try:
-            active_item = OwnedItem.object.get(is_active=True, username=username)
+            active_item = OwnedItem.objects.get(is_active=True, username=username)
             return active_item.item_name
         except OwnedItem.DoesNotExist:
             return ""

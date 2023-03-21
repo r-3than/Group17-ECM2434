@@ -108,14 +108,14 @@
 
                 {% for item, info in store.items %}
                     <div class="item">
-                        <img src="../../static/img/Post1.jpg" style="width: 92px; height: 92px; border-radius: 50%; object-fit: none;">
+                        <img src="{{ info.image }}" style="width: 92px; height: 92px; border-radius: 50%; object-fit: none; border: solid 2px; border-color: {{ info.text }};">
                         {% if info.is_owned == False %}
                             <button class="store btn btn-dark" id="Buy{{user.username}}{{info.item_name}}">Buy: {{ info.item_cost }}</button>
                         {% else %}
                             {% if info.is_active == False %}
                                 <button class="store btn btn-dark" id="Activate{{user.username}}{{info.item_name}}">Make Active</button>
                             {% else %}
-                                <button class="store btn btn-dark" id="Deactivate{{user.username}}{{info.item_name}}">Active</button>
+                                <button class="store btn btn-dark" id="Deactivate{{user.username}}{{info.item_name}}" disabled aria-disabled="true">Active</button>
                             {% endif %}
                         {% endif %}
                     </div>

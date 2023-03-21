@@ -99,7 +99,11 @@ def buy_item(request):
             spendable_points = data['spendable_points']
             itemObj = StoreItem.objects.get(item_name=item_name)
             if int(spendable_points) >= itemObj.cost:
-                OwnedItem(item_name, username, False)
+                item_instance = OwnedItem(item_name, username, False)
+                item_instance.save()
+                p = Profile.get_profile(username)
+                p.spendable_points -= itemObj.cost
+                p.save()
     return HttpResponse({"success":"true"})
 
 @csrf_exempt
@@ -581,11 +585,16 @@ def store(request):
                     if owned.is_active == True:
                         is_active = True
 
+            profile_image = item.photo.url
+            text_colour = '#'+item.text_colour
+
             store_info[i] = {
                 'item_name': item_name,
                 'item_cost': item_cost,
                 'is_owned': is_owned,
                 'is_active': is_active,
+                'image': profile_image,
+                'text': text_colour
             }
 
         context['store'] = store_info
