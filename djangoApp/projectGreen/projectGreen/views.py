@@ -27,7 +27,7 @@ from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Up
 '''Displays the sign-in page'''
 def signin(request):
     context = {}
-    template = loader.get_template('home/sign-in.html')
+    template = loader.get_template('submit/sign-in.html')
     active_challenge = ActiveChallenge.get_last_active_challenge()
     context["active_challenge"] = active_challenge.get_challenge_description()
     return HttpResponse(template.render(context, request))
@@ -37,7 +37,7 @@ def challenge(request):
     context = {}
     if request.user.is_authenticated:
         
-        template = loader.get_template('home/challenge.html')
+        template = loader.get_template('submit/challenge.html')
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
         if Submission.user_has_submitted(request.user.username):
             return redirect("/home")
@@ -79,7 +79,7 @@ def submit(request):
 def home(request):
     context = {}
     if request.user.is_authenticated:
-        template = loader.get_template('home/home.html')
+        template = loader.get_template('feed/home.html')
 
         submissions_info = {}
         profileObj = Profile.get_profile(request.user.username)
@@ -155,7 +155,7 @@ def home(request):
 def friends_feed(request):
     context = {}
     if request.user.is_authenticated:
-        template = loader.get_template('home/home.html')
+        template = loader.get_template('feed/home.html')
 
         submissions_info = {}
 
@@ -405,7 +405,7 @@ def post(request):
                                                'is_active': submission.is_for_active_challenge()
                                             }
 
-            template = loader.get_template('home/post.html')  
+            template = loader.get_template('misc/post.html')  
 
             return HttpResponse(template.render(context, request))
         else:
@@ -418,7 +418,7 @@ def leaderboard(request):
     context = {}
 
     if request.user.is_authenticated:
-        template = loader.get_template('account/leaderboard.html')
+        template = loader.get_template('misc/leaderboard.html')
 
         profileObj = Profile.get_profile(request.user.username)
 
