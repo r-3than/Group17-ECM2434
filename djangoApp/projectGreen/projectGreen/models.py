@@ -236,6 +236,10 @@ class Friend(models.Model):
 
     @classmethod
     def accept_friend_request(cls, from_username: str, to_username: str):
+        '''
+        Accepts a pending friend request
+        i.e. sets pending to False
+        '''
         # TODO IS THIS EVEN NECESSARY?
         # checks that users exist
         try:
@@ -260,10 +264,12 @@ class Friend(models.Model):
             return
         except Friend.DoesNotExist:
             LOGGER.warning('the friend request from "{}" to "{}" does not exist'.format(from_username, to_username))
-            pass
 
     @classmethod
     def decline_friend_request(cls, from_username: str, to_username: str):
+        '''
+        Removes a pending friend object
+        '''
         # checks that users exist
         try:
             User.objects.get(username=from_username)
@@ -289,6 +295,9 @@ class Friend(models.Model):
 
     @classmethod
     def remove_friend(cls, from_username: str, to_username: str):
+        '''
+        Remove non-pending friend object
+        '''
         # checks that users exist
         try:
             User.objects.get(username=from_username)
@@ -356,7 +365,6 @@ class Friend(models.Model):
     verbose_name_plural = 'Friends'
     class Meta:
         db_table = 'Friends'
-
 
 class Challenge(models.Model):
     description = models.CharField(max_length=200)
@@ -656,7 +664,7 @@ class Submission(models.Model):
             models.UniqueConstraint(fields=['username','active_challenge'],
                                     name='single_submission_per_active_challenge')
         ]
-    
+   
 class Upvote(models.Model):
     submission = models.ForeignKey(Submission, models.CASCADE, null=True)
     voter_username = models.CharField(max_length=USERNAME_MAX_LENGTH)

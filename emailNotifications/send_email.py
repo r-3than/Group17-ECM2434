@@ -44,7 +44,8 @@ def build_message(sender: str, recipient: str, subject: str) -> dict[str, str]:
 
 
 def send_email(sender: str, username: str, password: str, recipients_list: list[str], subject: str) -> None:
-    '''Send an email to each recipient in a given list of recipients
+    '''
+    Send an email to each recipient in a given list of recipients
    
     :params sender: the sender's email address
     :params username: the sender's username (email address)

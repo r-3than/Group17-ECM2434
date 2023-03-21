@@ -29,7 +29,9 @@ from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Up
 
 
 def signin(request):
-    '''Displays the sign-in page'''
+    '''
+    Displays the sign-in page
+    '''
     context = {}
     template = loader.get_template('submit/sign-in.html')
     active_challenge = ActiveChallenge.get_last_active_challenge()
@@ -37,7 +39,10 @@ def signin(request):
     return HttpResponse(template.render(context, request))
 
 def challenge(request):
-    '''Displays the page for the current challenge'''  
+    '''
+    Displays the page for the current challenge
+    '''
+      
     context = {}
     if request.user.is_authenticated:        
         template = loader.get_template('submit/challenge.html')
@@ -56,7 +61,9 @@ def challenge(request):
         return signin(request)
 
 def submit(request):
-    '''Displays the page where the user can submit a photo'''
+    '''
+    Displays the page where the user can submit a photo
+    '''
     context = {}
 
     if request.user.is_authenticated:
@@ -78,7 +85,10 @@ def submit(request):
 #region Feed
 
 def university_feed(request):
-    '''Displays the university-wide feed''' # TODO RENAME THIS
+    '''
+    Displays the university-wide feed
+    '''
+     # TODO RENAME THIS
     context = {}
     if request.user.is_authenticated:
         template = loader.get_template('feed/feed.html')
@@ -154,7 +164,9 @@ def university_feed(request):
         return signin(request)
 
 def friends_feed(request):
-    '''Displays the feed of friends' posts only'''
+    '''
+    Displays the feed of friends' posts only
+    '''
     context = {}
     if request.user.is_authenticated:
         template = loader.get_template('feed/feed.html')
@@ -236,7 +248,9 @@ def friends_feed(request):
 #region Account Management
 
 def history(request):
-    '''Displays the submission history page'''
+    '''
+    Displays the submission history page
+    '''
     context = {}
 
     if request.user.is_authenticated:
@@ -308,7 +322,9 @@ def history(request):
         return signin(request)
 
 def friends(request):
-    '''Loads the friends management page'''
+    '''
+    Loads the friends management page
+    '''
     context = {}
 
     if request.user.is_authenticated:
@@ -337,7 +353,9 @@ def friends(request):
 #region Other
 
 def post(request):
-    '''Displays a speicifed post and its comments in further detail'''
+    '''
+    Displays a speicifed post and its comments in further detail
+    '''
     context = {}
 
     if request.method == "POST":
@@ -413,7 +431,9 @@ def post(request):
         return redirect('/')
 
 def leaderboard(request):
-    '''Displays the leaderboard page'''
+    '''
+    Displays the leaderboard page
+    '''
     context = {}
 
     if request.user.is_authenticated:
@@ -469,7 +489,9 @@ def leaderboard(request):
 
 @csrf_exempt
 def upload_photo(request):
-    '''Uploads the specified photo to the database'''
+    '''
+    Uploads the specified photo to the database
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             upload=request.FILES["upload_pic"]
@@ -509,7 +531,9 @@ def upload_photo(request):
         
 @csrf_exempt
 def flag_submission(request):
-    '''Flags the specified submission for manual review'''
+    '''
+    Flags the specified submission for manual review
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             data=json.loads(request.body)
@@ -521,7 +545,9 @@ def flag_submission(request):
 
 @csrf_exempt
 def like_submission(request):
-    '''Adds a like to the specified submission'''
+    '''
+    Adds a like to the specified submission
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             data=json.loads(request.body)
@@ -542,7 +568,9 @@ def like_submission(request):
 
 @csrf_exempt
 def create_comment(request):
-    '''Creates a new comment on the specified post'''
+    '''
+    Creates a new comment on the specified post
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             try:
@@ -564,7 +592,9 @@ def create_comment(request):
 
 @csrf_exempt
 def flag_comment(request):
-    '''Flags the specified comment for manual review'''
+    '''
+    Flags the specified comment for manual review
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             data=json.loads(request.body)
@@ -581,7 +611,9 @@ def flag_comment(request):
 #region Friends
 
 def add_friend(request):
-    '''Creates a pending friend request'''
+    '''
+    Creates a pending friend request
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             try:
@@ -592,7 +624,10 @@ def add_friend(request):
     return redirect('/')
 
 def remove_friend(request):
-    '''Removes an existing friend'''        
+    '''
+    Removes an existing friend
+    '''
+            
     if request.method == "POST":
         if request.user.is_authenticated:
             try:
@@ -605,7 +640,9 @@ def remove_friend(request):
     return redirect('/')
 
 def accept_friend_request(request):
-    '''Accepts a pending friend request'''
+    '''
+    Accepts a pending friend request
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             try:
@@ -618,7 +655,9 @@ def accept_friend_request(request):
     return redirect('/')
 
 def decline_friend_request(request):
-    '''Removes a pending friend request'''
+    '''
+    Removes a pending friend request
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             try:
@@ -635,13 +674,17 @@ def decline_friend_request(request):
 #region Accounts
 
 def signout(request):
-    '''Signs the user out'''
+    '''
+    Signs the user out
+    '''
     if request.user.is_authenticated:
         logout(request)
     return redirect('/')
 
 def delete_account(request):
-    '''Deletes the specified account'''
+    '''
+    Deletes the specified account
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             try:
@@ -658,8 +701,10 @@ def delete_account(request):
 
 #region Emails
 
-'''Unsubscribes a user from email notifiactions'''
 def unsubscribe_from_emails(request):
+    '''
+    Unsubscribes a user from email notifiactions
+    '''
     if request.user.is_authenticated:
         try:
             profile = Profile.get_profile(request.user.username)
@@ -671,8 +716,10 @@ def unsubscribe_from_emails(request):
             return redirect('/account/')
     return redirect('/')
 
-'''Resubscribes a user to email notifiactions'''
 def resubscribe_to_emails(request):
+    '''
+    Resubscribes a user to email notifiactions
+    '''
     if request.user.is_authenticated:
         try:
             profile = Profile.get_profile(request.user.username)
