@@ -37,7 +37,7 @@
                 <script>
                     account = document.getElementById("account");
                     account.onclick = function() {
-                        location.href = "{% url 'account' %}"
+                        location.href = "{% url 'history' %}"
                     }
                 </script>
             </div>
@@ -56,7 +56,7 @@
                     <!-- Modal body -->
                     <div class="modal-body links">
                         <a href="{% url 'home' %}">Home Feed</a> <br>
-                        <a href="{% url 'account' %}">Submission History</a> <br>
+                        <a href="{% url 'history' %}">Submission History</a> <br>
                         <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
                         <div style="background-color: white; height: 5px; width: 80%;"></div>
@@ -81,7 +81,7 @@
             <div class="side left">
                 <div class="links rounded-5">
                     <a href="{% url 'home' %}">Home Feed</a> <br>
-                    <a href="{% url 'account' %}">Submission History</a>
+                    <a href="{% url 'history' %}">Submission History</a>
                     <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                     <div style="background-color: white; height: 5px; width: 80%;"></div>

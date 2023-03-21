@@ -418,11 +418,11 @@ def create_comment(request):
     return HttpResponse({"failiure":"true"})
 
 '''Loads the accounts page'''
-def account(request):
+def history(request):
     context = {}
 
     if request.user.is_authenticated:
-        template = loader.get_template('account/account.html')
+        template = loader.get_template('account/history.html')
 
         # Get the user submissions from most recent
         submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')

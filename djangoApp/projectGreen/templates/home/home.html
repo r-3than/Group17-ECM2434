@@ -39,7 +39,7 @@
                 <script>
                     account = document.getElementById("account");
                     account.onclick = function() {
-                        location.href = "{% url 'account' %}"
+                        location.href = "{% url 'history' %}"
                     }
                 </script>
             </div>
@@ -57,7 +57,7 @@
             
                     <!-- Modal body -->
                     <div class="modal-body links">
-                        <a href="{% url 'account' %}">Submission History</a> <br>
+                        <a href="{% url 'history' %}">Submission History</a> <br>
                         <a href="{% url 'friends' %}">Manage Friends</a> <br>
                         <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
@@ -74,7 +74,7 @@
         <main class="row">
               <div class="side left">
                 <div class="links rounded-5">
-                    <a href="{% url 'account' %}">Submission History</a>
+                    <a href="{% url 'history' %}">Submission History</a>
                     <a href="{% url 'friends' %}">Manage Friends</a>
                     <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
@@ -92,7 +92,6 @@
                     <div id="post{{info.submission_id}}" class="post rounded-5">
                         <div class="header row details" id="header{{info.submission_id}}">
                             <div class="user">{{ info.submission_user_displayname }}</div>
-                            <!--<div class="user"style=>{{ info.submission_username }}</div>-->
                             <div class="time">{{ info.submission_time }}</div>
                         </div>
                         <div class="row">
