@@ -209,4 +209,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
 
-PROFANITY_FILTER_SOURCE_URL = 'https://www.cs.cmu.edu/~biglou/resources/bad-words.txt'
+PROFANITY_FILTER_SOURCE_URL = 'https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/badwordslist/badwords.txt'

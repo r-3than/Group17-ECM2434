@@ -15,7 +15,8 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path,include
-from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access, post, create_comment, flag_comment, account, friends, friends_feed, deleteAccount, signout, addFriend, removeFriend, declineFriendRequest, acceptFriendRequest
+from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access, post, create_comment, flag_comment, account
+from projectGreen.views import friends, friends_feed, deleteAccount, signout, addFriend, removeFriend, declineFriendRequest, acceptFriendRequest, unsubscribeFromEmails, resubscribeToEmails
 
 urlpatterns = [
     path('', challenge, ),
@@ -34,6 +35,8 @@ urlpatterns = [
     path('account/',account, name='account'),
     path('deleteAccount/', deleteAccount, name='deleteAccount'),
     path('signout/', signout, name='signout'),
+    path('unsubscribe/', unsubscribeFromEmails, name='unsubscribe'),
+    path('resubscribe/', resubscribeToEmails, name='resubscribe'),
 
 
     path('friends/',friends, name='friends'),

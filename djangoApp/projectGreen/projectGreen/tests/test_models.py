@@ -879,7 +879,7 @@ class CommentTestCase(TestCase):
         profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*submission.get_punctuality_scaling()+2*SCORES['comment']['recieved'])
         # attempt to create comment containing profane language
-        inappropriate_comment = ''.join([WORDS_TO_FILTER[i] for i in [16, 32, 64]])
+        inappropriate_comment = ''.join([WORDS_TO_FILTER[i] for i in [8, 16, 32]])
         self.assertFalse(submission.create_comment('cd123', inappropriate_comment), 'profanity in comment was not flagged')
         self.assertEqual(2, submission.get_comment_count()) # only non-reported fetched
         comment = Comment.objects.get(comment_username='cd123', content=inappropriate_comment)
