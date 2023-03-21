@@ -84,9 +84,9 @@
                     </div>
 
                     <!-- Category Buttons -->
-                    <div class="category">
-                        <span class="friends">Friends</span>
-                        <span class="university">University</span>
+                    <div class="categories">
+                        <button id="setFriends" class="btn btn-dark">Friends</button>
+                        <button id="setUniversity" class="btn btn-dark">University</button>
                     </div>
                     
                     <!-- Leaderboard Table -->
@@ -94,15 +94,26 @@
                         
                         <!-- Leaderboard Columns -->
                         <div class="head">
-                            <div class="position">Position#</div>
+                            <div class="position">Position</div>
                             <div class="username">Username</div>
                             <div class="point-number">Points</div>
                         </div>
                         
                         <div class="divider"></div>
                         
-                        <div class="body">
+                        <div class="body" id="leaders" style="display: none;">
                             {% for profile in leaders %}
+                                <div class="record">
+                                    <div class="position">{{forloop.counter}}</div>
+                                    <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                    <div class="username">{{profile.user.username}}</div>
+                                    <div class="point-number">{{profile.points}}</div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="body" id="friends">
+                            {% for profile in friends %}
                                 <div class="record">
                                     <div class="position">{{forloop.counter}}</div>
                                     <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>

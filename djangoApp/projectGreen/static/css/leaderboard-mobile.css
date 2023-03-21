@@ -137,25 +137,14 @@ main .centre {
     padding-bottom: 10px;
 }
 
-.post .category {
-    font-size: 14px;
-    text-align: center;
-    padding: 10px;
-    margin-bottom: 15px;
-    margin-left: 32%;
-    margin-right: 32%;
-    border-radius: 12px;
-    background-color: var(--exeter-deep-green);
+.post .categories {
+    width: 80%;
+    margin: auto;
+    margin-bottom: 10px;
 }
 
-.post .category .friends:hover {
-    border-radius: 5px;
-    background-color: var(--exeter-dark-green);
-}
-
-.post .category .university:hover {
-    border-radius: 5px;
-    background-color: var(--exeter-dark-green);
+.categories button {
+    width: 49%;
 }
 
 .leaderboard .head {

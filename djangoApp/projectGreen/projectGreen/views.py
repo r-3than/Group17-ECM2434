@@ -584,17 +584,24 @@ def leaderboard(request):
     if request.user.is_authenticated:
         template = loader.get_template('account/leaderboard.html')
 
-        leaders = Profile.objects.order_by('-points')[:20]
+        profiles = Profile.objects.order_by('-points')
+        leaders = profiles[:20]
         context["leaders"] = leaders
+
+        friend_usernames = Friend.get_friend_usernames(request.user.username)
+        friend_leaders = []
+        for profile in profiles:
+            if profile.user.username in friend_usernames:
+                friend_leaders.append(profile)
+        context["friends"] = friend_leaders
 
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
         
         profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
-        postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
         context["user_points"] = user_points
-        context["post_count"] = postCount
+
         return HttpResponse(template.render(context, request))
     else:
         return signin(request)

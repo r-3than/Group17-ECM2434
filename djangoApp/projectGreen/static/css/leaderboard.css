@@ -59,6 +59,10 @@ div.account {
     align-items: center;
 }
 
+.icon {
+    user-select: none;
+}
+
 .account .icon {
     height: 100%;
     aspect-ratio: 1/1;
@@ -116,25 +120,14 @@ main {
     padding-bottom: 10px;
 }
 
-.post .category {
-    font-size: 18px;
-    text-align: center;
-    padding: 10px;
-    margin-bottom: 15px;
-    margin-left: 32%;
-    margin-right: 32%;
-    border-radius: 12px;
-    background-color: var(--exeter-deep-green);
+.post .categories {
+    width: 80%;
+    margin: auto;
+    margin-bottom: 10px;
 }
 
-.post .category .friends:hover {
-    border-radius: 5px;
-    background-color: var(--exeter-dark-green);
-}
-
-.post .category .university:hover {
-    border-radius: 5px;
-    background-color: var(--exeter-dark-green);
+.categories button {
+    width: 49%;
 }
 
 .leaderboard .head {
@@ -198,13 +191,13 @@ main {
     float: left;
     text-align: center;
     height: 45px;
-    width: 46px;
+    line-height: 45px;
     margin: 5px;
     background-color: var(--exeter-dark-green);
     color: white;
     text-align: center;
     font-weight: 400;
-    font-size: 27px;
+    font-size: 28px;
 }
 
 .record .username {
