@@ -15,7 +15,7 @@ import io
 from PIL import Image
 import urllib.request
 from geopy.distance import distance
-from projectGreen.extract_metadata import process_GPS_data
+from .imageMetadata.extract_metadata import process_GPS_data
 from projectGreen.settings import PROFANITY_FILTER_SOURCE_URL
 
 LOGGER = logging.getLogger(__name__)
@@ -39,7 +39,9 @@ def load_profanity_file() -> list[str]:
     '''
     url_stream = urllib.request.urlopen(PROFANITY_FILTER_SOURCE_URL)
     LOGGER.info('loaded profanity file from {}'.format(PROFANITY_FILTER_SOURCE_URL))
-    return [line.decode().strip('\n') for line in url_stream.readlines()][1:]
+    PROFANITY_LIST = [line.decode().strip('\r\n').strip("*") for line in url_stream.readlines()][1:]
+    PROFANITY_LIST.remove("hell")
+    return PROFANITY_LIST
 
 WORDS_TO_FILTER = load_profanity_file()
 
