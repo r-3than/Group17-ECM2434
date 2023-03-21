@@ -9,7 +9,7 @@ import base64
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.utils.html import format_html
-from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
+from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment, StoreItem
 from datetime import datetime
 import logging
 
@@ -177,6 +177,17 @@ class CommentAdmin(admin.ModelAdmin):
     def get_submission(self, comment) -> Submission:
         return comment.submission
 
+class StoreAdmin(admin.ModelAdmin):
+    list_display = ['get_name', 'get_cost', 'photo']
+    fields = ['item_name', 'cost', 'photo']
+
+    @admin.display(description='name')
+    def get_name(self, store) -> StoreItem:
+        return store.item_name
+
+    @admin.display(description='cost')
+    def get_cost(self, store) -> StoreItem:
+        return store.cost
 
 admin.site.unregister(User)
 admin.site.register(Profile, ProfileAdmin)
@@ -187,5 +198,6 @@ admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(Upvote, UpvoteAdmin) # no view for game master
 admin.site.register(Comment, CommentAdmin)
 admin.site.register(Friend) # no view for game master
+admin.site.register(StoreItem, StoreAdmin)
 # otherwise, game master can view but not modify
 # admin has all perms

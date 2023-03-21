@@ -14,8 +14,10 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path,include
-from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access, post, create_comment, account, friends, friends_feed, deleteAccount, signout, addFriend, store
+from projectGreen.views import flag_submission, home,challenge, like_submission,submit,uploadphoto, specific_group_access, post, create_comment, account, friends, friends_feed, deleteAccount, signout, addFriend, store, buy_item, activate_item, deactivate_item
 
 urlpatterns = [
     path('', challenge, ),
@@ -39,6 +41,9 @@ urlpatterns = [
     path('addFriend/',addFriend, name='addFriend'),
 
     path('store/',store, name='store'),
+    path('buy_item/', buy_item),
+    path('activate_item/', activate_item),
+    path('deactivate_item/', deactivate_item),
 
     path('like_submission/',like_submission),
     path('flag_submission/',flag_submission),
@@ -46,4 +51,4 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('microsoft_authentication/', include('microsoft_authentication.urls')),
     
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

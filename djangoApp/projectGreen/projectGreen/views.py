@@ -4,6 +4,7 @@ Authors:
     LB
     TN
     OL
+    JA
 '''
 
 import datetime
@@ -87,6 +88,38 @@ def like_submission(request):
                 checker.first().remove_upvote()
         return HttpResponse({"success":"true"})
 
+@csrf_exempt
+def buy_item(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            username = data['username']
+            item_name = data['item_name']
+            spendable_points = data['spendable_points']
+            itemObj = StoreItem.objects.get(item_name=item_name)
+            if int(spendable_points) >= itemObj.cost:
+                OwnedItem(item_name, username, False)
+    return HttpResponse({"success":"true"})
+
+@csrf_exempt
+def activate_item(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            username = data['username']
+            item_name = data['item_name']
+            OwnedItem.make_active(item_name, username)
+    return HttpResponse({"success":"true"})
+
+@csrf_exempt
+def deactivate_item(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            username = data['username']
+            item_name = data['item_name']
+            OwnedItem.make_inactive(item_name, username)
+    return HttpResponse({"success":"true"})
 
 def home(request):
     context = {}
@@ -246,8 +279,7 @@ def friends_feed(request):
         print("Not signed in")
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
-
-    
+  
 def challenge(request):
     context = {}
     if request.user.is_authenticated:
@@ -272,51 +304,7 @@ def camera(request):
     context = {}
     return HttpResponse(template.render(context, request))
 
-def store(request):
-    context = {}
-    if request.user.is_authenticated:
-        template = loader.get_template('account/store.html')
 
-        CurrentChallenge = ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = CurrentChallenge.get_challenge_description()
-        profileObj = Profile.get_profile(request.user.username)
-        Profile.calculate_spendable_points_by_username(request.user.username)
-        user_points = str(profileObj.points)
-        user_spendable_points = str(profileObj.spendable_points)
-        context["user_points"] = user_points
-        context["user_spendable_points"] = user_spendable_points
-        store_info = {}
-        i = -1
-        StoreItems = StoreItem.objects.all()
-        OwnedItems = OwnedItem.objects.all()
-
-        for item in StoreItems:
-            i += 1
-            item_name = item.item_name
-            item_cost = item.cost
-            is_owned = False
-            for owned in OwnedItems:
-                if item_name == owned.item_name:
-                    is_owned = True
-            if item.photo_bytes != None:
-                photo_b64 = "data:image/png;base64," + base64.b64encode(item.photo_bytes).decode("utf-8")
-            else:
-                photo_b64 = "data:image/png;base64,"
-
-            store_info[i] = {
-                'item_name': item_name,
-                'item_cost': item_cost,
-                'is_owned': is_owned,
-                'photo': photo_b64,
-            }
-
-        context['store'] = store_info
-
-        return HttpResponse(template.render(context, request))
-    else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
 
 
 def submit(request):
@@ -553,6 +541,57 @@ def is_mobile(request):
         return True
     else:
         return False
+
+def store(request):
+    context = {}
+    if request.user.is_authenticated:
+        template = loader.get_template('account/store.html')
+
+        CurrentChallenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        profileObj = Profile.get_profile(request.user.username)
+        Profile.calculate_spendable_points_by_username(request.user.username)
+        user_points = str(profileObj.points)
+        user_spendable_points = str(profileObj.spendable_points)
+        context["user_points"] = user_points
+        context["user_spendable_points"] = user_spendable_points
+        store_info = {}
+        i = -1
+        StoreItems = StoreItem.objects.all()
+        OwnedItems = OwnedItem.objects.filter(username=profileObj.user)
+
+        try:
+            profile_item = OwnedItems.objects.get(username=profileObj.username, is_active=True)
+            context["profile_image"] = profile_item.photo
+        except:
+            pass
+
+        for item in StoreItems:
+            i += 1
+            item_name = item.item_name
+            item_cost = item.cost
+            is_owned = False
+            is_active = False
+            for owned in OwnedItems:
+                if item_name == owned.item_name:
+                    is_owned = True
+                    if owned.is_active == True:
+                        is_active = True
+
+            store_info[i] = {
+                'item_name': item_name,
+                'item_cost': item_cost,
+                'is_owned': is_owned,
+                'is_active': is_active,
+            }
+
+        context['store'] = store_info
+
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names

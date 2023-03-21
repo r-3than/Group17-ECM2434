@@ -120,6 +120,31 @@ class Profile(models.Model):
         self.save()
 
     @classmethod
+    def recalculate_user_points_by_username(cls, username: str):
+        '''
+        Calculates the total points for a user based on submissions and interactions
+        Interactions are only counted / points are only assigned for non-reported submissions
+        '''
+        points = 0
+        # upvote points
+        upvotes_given = Upvote.objects.filter(voter_username=username, submission__reported=False)
+        points += len(upvotes_given)*SCORES['upvote']['given']
+        upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
+        points += len(upvotes_recieved)*SCORES['upvote']['recieved']
+        # comment points
+        comments_given = Comment.objects.filter(comment_username=username, submission__reported=False, reported=False)
+        points += len(comments_given)*SCORES['comment']['given']
+        comments_recieved = Comment.objects.filter(submission__username=username, submission__reported=False, reported=False)
+        points += len(comments_recieved)*SCORES['comment']['recieved']
+        # submission points
+        submissions = Submission.objects.filter(username=username)
+        for sub in submissions:
+            if sub.reported:
+                continue
+            points += SCORES['submission'] * sub.get_punctuality_scaling()
+        Profile.set_points_by_username(username, points)
+
+    @classmethod
     def recalculate_user_points(cls, username: str):
         '''
         Calculates the total points for a user based on submissions and interactions
@@ -699,7 +724,7 @@ class Comment(models.Model):
 class StoreItem(models.Model):
     item_name = models.CharField(max_length=256)
     cost = models.IntegerField(default=0)
-    photo_bytes = models.BinaryField(null=True)
+    photo = models.ImageField(upload_to='uploads/')
 
     @classmethod
     def get_item_cost(cls, item_name: str) -> int:
@@ -752,15 +777,28 @@ class OwnedItem(models.Model):
                 return False
 
     @classmethod
-    def get_active_name(cls) -> str:
+    def make_inactive(cls, item_name: str, username: str) -> bool:
+        '''
+        Removes the active state from the selected active item
+        '''
+        try:
+            active_item = OwnedItem.object.get(is_active=True, username=username)
+            active_item.is_active=False
+        except OwnedItem.DoesNotExist:
+            return False
+
+    @classmethod
+    def get_active_name(cls, username: str) -> str:
         '''
         Gets the name of the active item
         '''
         try:
-            active_item= OwnedItem.object.get(is_active=True)
+            active_item = OwnedItem.object.get(is_active=True, username=username)
             return active_item.item_name
         except OwnedItem.DoesNotExist:
             return ""
+
+
 
     verbose_name = 'OwnedItem'
     verbose_name_plural = 'OwnedItems'

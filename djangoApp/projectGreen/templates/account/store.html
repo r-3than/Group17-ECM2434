@@ -15,7 +15,7 @@
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
 
         <style>
-            .icon {background-image: url("../../static/img/Post1.jpg");}
+            .icon {background-image: {{profile_photo}};}
             .icon {background-position: center;}
         </style>
     </head>
@@ -102,18 +102,88 @@
                     </div>
                 </div>
 
-                {% for item in store %}
+                {% for item, info in store.items %}
                     <div class="item">
-                        {% if item.is_owned == True %}
-                            <img src="../../static/img/Post1.jpg" style="width: 92px; height: 92px; border-radius: 50%; object-fit: none;">
-                            <button class="store btn btn-dark" id="setIncoming">Make Active</button>
+                        <img src="../../static/img/Post1.jpg" style="width: 92px; height: 92px; border-radius: 50%; object-fit: none;">
+                        {% if info.is_owned == False %}
+                            <button class="store btn btn-dark" id="Buy{{user.username}}{{info.item_name}}">Buy: {{ info.item_cost }}</button>
                         {% else %}
-                            <img src="../../static/img/Post1.jpg" style="width: 92px; height: 92px; border-radius: 50%; object-fit: none;">
-                            <button class="store btn btn-dark" id="setCurrent">Buy: {{item.item_name}}</button>
-                            <button class="store btn btn-dark" id="setIncoming">Make Active</button>
+                            {% if info.is_active == False %}
+                                <button class="store btn btn-dark" id="Activate{{user.username}}{{info.item_name}}">Make Active</button>
+                            {% else %}
+                                <button class="store btn btn-dark" id="Deactivate{{user.username}}{{info.item_name}}">Active</button>
+                            {% endif %}
                         {% endif %}
                     </div>
-                {% endfor %}
+                    <script type="text/javascript">
+                        buybutton = document.getElementById("Buy{{user.username}}{{info.item_name}}");
+                        buybutton.onclick = function activate_item() {
+                            var username = "{{user.username}}";
+                            var item_name = "{{info.item_name}}";
+                            var spendable_points = "{{user_spendable_points}}"
+        
+                            var url = window.location.protocol + '//' + location.host + "/buy_item/";
+                            fetch(url, {
+                                method: "POST",
+                                credentials: "include",
+                                headers: {
+                                    Accept: "application/json",
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                    username: username,
+                                    item_name: item_name,
+                                    spendable_points: spendable_points,
+                                }),
+                            })
+                            .then((response) => response.json())
+                            .then((response) => console.log(JSON.stringify(response)));
+                        };
+                        activatebutton = document.getElementById("Activate{{user.username}}{{info.item_name}}");
+                        activatebutton.onclick = function activate_item() {
+                            var username = "{{user.username}}";
+                            var item_name = "{{info.item_name}}";
+        
+                            var url = window.location.protocol + '//' + location.host + "/activate_item/";
+                            fetch(url, {
+                                method: "POST",
+                                credentials: "include",
+                                headers: {
+                                    Accept: "application/json",
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                    username: username,
+                                    item_name: item_name,
+                                }),
+                            })
+                            .then((response) => response.json())
+                            .then((response) => console.log(JSON.stringify(response)));
+                        };
+                        deactivatebutton = document.getElementById("Deactivate{{user.username}}{{info.item_name}}");
+                        deactivatebutton.onclick = function activate_item() {
+                            var username = "{{user.username}}";
+                            var item_name = "{{info.item_name}}";
+        
+                            var url = window.location.protocol + '//' + location.host + "/deactivate_item/";
+                            fetch(url, {
+                                method: "POST",
+                                credentials: "include",
+                                headers: {
+                                    Accept: "application/json",
+                                    "Content-Type": "application/json",
+                                },
+                                body: JSON.stringify({
+                                    username: username,
+                                    item_name: item_name,
+                                }),
+                            })
+                            .then((response) => response.json())
+                            .then((response) => console.log(JSON.stringify(response)));
+                        };
+
+                    </script>
+                    {% endfor %}
             </div>
             <div class="side"></div>
           </main>
