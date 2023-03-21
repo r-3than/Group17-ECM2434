@@ -795,3 +795,8 @@ class Comment(models.Model):
                     log.warning('flagged inappropriate word "{}" in {}\'s comment'.format(word, self.comment_username))
                 return True
         return False
+    
+    verbose_name = 'Comment'
+    verbose_name_plural = 'Comments'
+    class Meta:
+        db_table = 'Comments'
