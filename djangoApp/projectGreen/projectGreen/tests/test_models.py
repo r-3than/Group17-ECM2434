@@ -272,17 +272,8 @@ class FriendTestCase(TestCase):
         self.assertEqual([], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
         f.delete()
 
-<<<<<<< HEAD
         # Returns None when Friend object doesn't exist
         self.assertFalse(Friend.remove_friend('ab123','abc123'))
-=======
-        # TODO
-        # should fail when valid users are not friends
-        # f = Friend.objects.get(left_username='ab123',right_username='abc123') # exists for some reason??
-        # f = Friend.objects.get(left_username='abc123',right_username='ab123') # doesnt exist
-        # with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
-        #     Friend.remove_friend('ab123','abc123')
->>>>>>> 8e2d12793f596d63e71a7687a4218d3bf60a030d
 
 
 class ActiveChallengeTestCase(TestCase):
