@@ -116,13 +116,12 @@
                 </div>
 
                 <div class="row" style="padding: 0px 15px;">
-                    <button class="filter btn btn-dark" id="setCurrent">Current Friends</button>
+                    <button class="filter btn btn-light" id="setCurrent">Current Friends</button>
                     <button class="filter btn btn-dark" id="setIncoming">Incoming Requests</button>
                 </div>
 
                 <div class="friends-list" id="current" style="display: flex;">
                     {% for friend in friends %}
-
                         <div class="friend row rounded-3">
                             <div class="side left">
                                 <div class="icon rounded-circle">{{friend|make_list|first| capfirst}}</div>
@@ -172,17 +171,30 @@
             let current = document.getElementById("current");
             let incoming = document.getElementById("incoming");
 
-            document.getElementById("setCurrent").addEventListener("click", displayCurrent);
-            document.getElementById("setIncoming").addEventListener("click", displayIncoming);
+            let currentBtn = document.getElementById("setCurrent");
+            currentBtn.addEventListener("click", displayCurrent);
+
+            let incomingBtn = document.getElementById("setIncoming");
+            incomingBtn.addEventListener("click", displayIncoming);
 
             function displayCurrent() {
-                current.setAttribute("style", "display: flex;");
-                incoming.setAttribute("style", "display: none;");
+                current.style.display = "flex";
+                currentBtn.classList.remove("btn-dark");
+                currentBtn.classList.add("btn-light");
+
+                incoming.style.display = "none";
+                incomingBtn.classList.remove("btn-light");
+                incomingBtn.classList.add("btn-dark");
             }
 
             function displayIncoming() {
-                current.setAttribute("style", "display: none;");
-                incoming.setAttribute("style", "display: flex;");
+                current.style.display = "none";
+                currentBtn.classList.remove("btn-light");
+                currentBtn.classList.add("btn-dark");
+
+                incoming.style.display = "flex";
+                incomingBtn.classList.remove("btn-dark");
+                incomingBtn.classList.add("btn-light");
             }
           </script>
     </body>

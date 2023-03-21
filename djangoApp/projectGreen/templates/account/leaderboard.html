@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<!--
+    Main Authors:
+        SJ - Design + Styling
+        OJ - Integration
+-->
+{% load static %}
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+        <link href="{% static 'css/leaderboard.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
+        <link href="{% static 'css/leaderboard-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
+        <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+    </head>
+    <body>
+        <header class="row">
+            <div class="side">
+                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#myModal">
+                    Menu
+                  </button>
+            </div>
+            <div class="title centre">
+                <a class="title" href="{% url 'home' %}">BeGreen</a>
+                <br>
+                <a class="subtitle">Today's challenge: {{active_challenge}}</a>
+            </div>
+            <div class="side">
+                <div class="account">
+                    <div style="height: 80%; padding-left: 50%;">
+                        <div class="icon rounded-circle" id="account">{{user.username|make_list|first| capfirst}}</div>
+                    </div>
+                    <div class="points">Score: {{user_points}}</div>
+                </div>
+                <script>
+                    account = document.getElementById("account");
+                    account.onclick = function() {
+                        location.href = "{% url 'account' %}"
+                    }
+                </script>
+            </div>
+        </header>
+        <!-- The Modal -->
+        <div class="modal fade" id="myModal">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content menu">
+
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h4 class="modal-title">Useful Links</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+
+                    <!-- Modal body -->
+                    <div class="modal-body links">
+                        <a href="{% url 'home' %}">Home Feed</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="{% url 'account' %}">Submission History</a> <br>
+                        <a href="{% url 'friends' %}">Manage Friends</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
+                    </div>
+
+                    <!-- Modal footer -->
+                    <div class="modal-footer"></div>
+                </div>
+            </div>
+        </div>    
+        <main class="row">
+            <div class="side left">
+                <div class="links rounded-5">
+                    <a href="{% url 'home' %}">Home Feed</a> <br>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
+                    <a href="{% url 'account' %}">Submission History</a>
+                    <a href="{% url 'friends' %}">Manage Friends</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
+                    <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
+                </div>
+            </div>
+            <div class="centre">
+                <div class="post rounded-5">
+                    <div class="header row">
+                        <div class="leaderboard title"><u>Leaderboard</u></div>
+                    </div>
+                    <div class="categories">
+                        <button id="setFriends" class="btn btn-light">Friends</button>
+                        <button id="setUniversity" class="btn btn-dark">University</button>
+                    </div>
+                    <div class="leaderboard">
+                        <div class="head">
+                            <div class="position">Position</div>
+                            <div class="username">Username</div>
+                            <div class="point-number">Points</div>
+                        </div>
+                        <div class="divider"></div>
+                        <div class="leaders" id="leaders" style="display: none;">
+                            {% if not is_leader %}
+                                <div class="record" style="background-color: var(--exeter-deep-green);">
+                                    <div class="position">{{overall_position}}</div>
+                                    <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                                    <div class="username">{{user.username}}</div>
+                                    <div class="point-number">{{user_points}}</div>
+                                </div>
+                            {% endif %}
+                            <div>
+                                {% for profile in leaders %}
+                                    <div class="record">
+                                        <div class="position">{{forloop.counter}}</div>
+                                        <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        <div class="username">{{profile.user.username}}</div>
+                                        <div class="point-number">{{profile.points}}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="leaders" id="friends">
+                            {% if not is_friend_leader %}
+                                <div class="record" style="background-color: var(--exeter-deep-green);">
+                                    <div class="position">{{friends_position}}</div>
+                                    <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                                    <div class="username">{{user.username}}</div>
+                                    <div class="point-number">{{user_points}}</div>
+                                </div>
+                            {% endif %}
+                            <div>
+                                {% for profile in friends %}
+                                    <div class="record">
+                                        <div class="position">{{forloop.counter}}</div>
+                                        <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        <div class="username">{{profile.user.username}}</div>
+                                        <div class="point-number">{{profile.points}}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>    
+        <script>
+            let friends = document.getElementById("friends");
+            let university = document.getElementById("leaders");
+
+            let friendsBtn = document.getElementById("setFriends");
+            friendsBtn.addEventListener("click", displayFriends);
+
+            let universityBtn = document.getElementById("setUniversity");
+            universityBtn.addEventListener("click", displayUniversity);
+
+            function displayFriends() {
+                friends.style.display = "block";
+                friendsBtn.classList.remove("btn-dark");
+                friendsBtn.classList.add("btn-light");
+
+                university.style.display = "none";
+                universityBtn.classList.remove("btn-light");
+                universityBtn.classList.add("btn-dark");
+            }
+
+            function displayUniversity() {
+                friends.style.display = "none";
+                friendsBtn.classList.remove("btn-light");
+                friendsBtn.classList.add("btn-dark");
+
+                university.style.display = "block";
+                universityBtn.classList.remove("btn-dark");
+                universityBtn.classList.add("btn-light");
+            }
+          </script>
+    </body>
+</html>

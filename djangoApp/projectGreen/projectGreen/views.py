@@ -509,8 +509,6 @@ def deleteAccount(request):
                 print(str(e))
                 return redirect('/account/')
 
-
-
 '''Loads the friends page'''
 def friends(request):
     context = {}
@@ -582,6 +580,52 @@ def declineFriendRequest(request):
             finally:
                 return redirect('/friends/')
             
+def leaderboard(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        template = loader.get_template('account/leaderboard.html')
+
+        profileObj = Profile.get_profile(request.user.username)
+
+        # Get overall leaders & user positon
+        profiles = Profile.objects.order_by('-points')
+        context["is_leader"] = False
+        friend_usernames = Friend.get_friend_usernames(request.user.username)
+        friends = []
+        for index, profile in enumerate(profiles):
+            if profile.user.username == request.user.username:
+                if index < 20:
+                    context["is_leader"] = True
+                else:
+                    context ["overall_position"] = index
+            else:
+                if profile.user.username in friend_usernames:
+                    friends.append(profile)
+        leaders = profiles[:20]
+        context["leaders"] = leaders
+        
+        # Get friend leaders & user position
+        friends.append(profileObj)
+        friends.sort(key=lambda x: x.points, reverse=True)
+        for index, profile in enumerate(friends):
+            if profile.user.username == request.user.username:
+                if index < 20:
+                    context["is_friend_leader"] = True
+                else:
+                    context["friends_position"] = index
+        context["friends"] = friends[:20]
+
+        CurrentChallenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        
+        
+        user_points = str(profileObj.points)
+        context["user_points"] = user_points
+
+        return HttpResponse(template.render(context, request))
+    else:
+        return signin(request)
 '''Unsubscribes a user from email notifiactions'''
 def unsubscribeFromEmails(request):
     if request.user.is_authenticated:
