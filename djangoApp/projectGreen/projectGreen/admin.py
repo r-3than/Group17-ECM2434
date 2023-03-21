@@ -50,9 +50,9 @@ def publish_challenge(modeladmin, request, queryset):
     '''
     Creates active challenge in database linked to queried challenge object
     '''
-    c = queryset[0]
+    challenge = queryset[0]
     ActiveChallenge.objects.all().update(is_expired=True)
-    active_challenge = ActiveChallenge(date=datetime.now(), challenge=c)
+    active_challenge = ActiveChallenge(date=datetime.now(), challenge=challenge)
     active_challenge.save()
 
     send_email_notfication(active_challenge, request)
@@ -62,8 +62,8 @@ def resend_challenge_notification(modeladmin, request, queryset):
     '''
     Resends challenge notification email - intended for use in demo
     '''
-    ac = queryset[0]
-    send_email_notfication(ac, request)
+    active_challenge = queryset[0]
+    send_email_notfication(active_challenge, request)
 
 @admin.action(description='Resynchronise Points')
 def recalculate_points(modeladmin, request, queryset):

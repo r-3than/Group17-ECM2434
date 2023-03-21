@@ -4,7 +4,7 @@ Main Authors:
     LB - Challenge, ActiveChallenge, Submission and Upvote tests
 '''
 
-import base64
+
 import datetime
 import pytz
 
@@ -20,9 +20,9 @@ class ProfileTestCase(TestCase):
 
     def test_user_data(self):
         user = User.objects.get(username='ab123')
-        p = Profile(user=user, points=100)
+        profile = Profile(user=user, points=100)
         data_empty = {
-            'profile': [user, p],
+            'profile': [user, profile],
             'friends_set': set(),
             'submissions': set(),
             'upvotes': {
@@ -34,7 +34,7 @@ class ProfileTestCase(TestCase):
                 'recieved': set()
             }
         }
-        u_data = p.user_data()
+        u_data = profile.user_data()
         self.assertEqual(data_empty['profile'], u_data['profile'])
         self.assertSetEqual(data_empty['friends_set'], u_data['friends_set'])
         self.assertSetEqual(data_empty['submissions'], u_data['submissions'])
@@ -44,8 +44,8 @@ class ProfileTestCase(TestCase):
         self.assertSetEqual(data_empty['comments']['recieved'], u_data['comments']['recieved'])
 
         # initialize env
-        for un in ['bc123', 'cd123', 'ef123']: # extra users
-            User(username=un, password='unsecure_password').save()
+        for username in ['bc123', 'cd123', 'ef123']: # extra users
+            User(username=username, password='unsecure_password').save()
         challenge = Challenge(description='test challenge', time_for_challenge=20)
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
@@ -79,7 +79,7 @@ class ProfileTestCase(TestCase):
         f3 = Friend(left_username='ab123', right_username='ef123', pending=True)
         f3.save()
         data_populated = {
-            'profile': [user, p],
+            'profile': [user, profile],
             'friends_set': {f1, f2, f3},
             'submissions': {sub},
             'upvotes': {
@@ -91,7 +91,7 @@ class ProfileTestCase(TestCase):
                 'recieved': {c1, c2}
             }
         }
-        u_data = p.user_data()
+        u_data = profile.user_data()
         self.assertEqual(data_populated['profile'], u_data['profile'], 'fetched profile/user incorrect')
         self.assertSetEqual(data_populated['friends_set'], u_data['friends_set'], 'fetched friends incorrect')
         self.assertSetEqual(data_populated['submissions'], u_data['submissions'], 'fetched submissions incorrect')
@@ -101,7 +101,7 @@ class ProfileTestCase(TestCase):
         self.assertSetEqual(data_populated['comments']['recieved'], u_data['comments']['recieved'], 'fetched recieved comments incorrect')
 
         # delete user
-        p.user_data(delete=True)
+        profile.user_data(delete=True)
         with self.assertRaises(User.DoesNotExist, msg='user not deleted'):
             User.objects.get(username='ab123')
 
@@ -135,14 +135,14 @@ class ProfileTestCase(TestCase):
 
     def test_get_profile(self):
         user = User.objects.get(username='ab123')
-        p = Profile(user=user)
-        p.save()
-        self.assertEqual(p, Profile.get_profile('ab123'))
+        profile = Profile(user=user)
+        profile.save()
+        self.assertEqual(profile, Profile.get_profile('ab123'))
 
 class FriendTestCase(TestCase):
     def setUp(self):
-        for un in ['ab123','abc123','bc123']:
-            user = User(username=un, password='unsecure_password')
+        for username in ['ab123','abc123','bc123']:
+            user = User(username=username, password='unsecure_password')
             user.save()
         pending_friend = Friend(left_username='ab123',right_username='abc123',pending=True)
         pending_friend.save() # from ab123 to abc123
@@ -182,16 +182,16 @@ class FriendTestCase(TestCase):
             Friend.objects.get(left_username='ef123',right_username='ab123')
 
         # removes manual friend reqest (from setUp)
-        f = Friend.objects.get(left_username='ab123',right_username='abc123')
-        f.delete()
+        friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
+        friendship.delete()
         self.assertEqual([], Friend.get_pending_friend_usernames('ab123'))
         self.assertEqual([], Friend.get_pending_friend_usernames('abc123'))
 
         # creates friend request using class method and accepts
         Friend.create_friend_request('ab123','abc123')
-        f = Friend.objects.get(left_username='ab123',right_username='abc123')
-        f.pending = False
-        f.save()
+        friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
+        friendship.pending = False
+        friendship.save()
         self.assertEqual([], Friend.get_pending_friend_usernames('ab123'), 'residual friend request')
         self.assertEqual([], Friend.get_pending_friend_usernames('abc123'), 'residual friend request')
         self.assertEqual(['bc123','abc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
@@ -203,42 +203,42 @@ class FriendTestCase(TestCase):
 
         # should fail when valid users are already friends
         Friend.create_friend_request('ab123','abc123')
-        f = Friend.objects.get(left_username='ab123',right_username='abc123')
-        f.pending = False
-        f.save()
+        friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
+        friendship.pending = False
+        friendship.save()
         Friend.accept_friend_request('ab123','abc123')
-        self.assertEqual(f.pending, False) # TODO idk what else to do here as it doesnt throw exception atm
-        f.delete()
+        self.assertEqual(friendship.pending, False) # TODO idk what else to do here as it doesnt throw exception atm
+        friendship.delete()
 
         # should succeed when valid friend request exists
         Friend.create_friend_request('ab123','abc123')
-        f = Friend.objects.get(left_username='ab123',right_username='abc123')
-        f.pending = True
-        f.save()
+        friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
+        friendship.pending = True
+        friendship.save()
         Friend.accept_friend_request('ab123','abc123')
-        f = Friend.objects.get(left_username='ab123',right_username='abc123')
-        self.assertEqual(f.pending, False)
+        friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
+        self.assertEqual(friendship.pending, False)
         self.assertEqual([], Friend.get_pending_friend_usernames('ab123'), 'residual friend request')
         self.assertEqual([], Friend.get_pending_friend_usernames('abc123'), 'residual friend request')
         self.assertEqual(['bc123','abc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
         self.assertEqual(['ab123'], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
-        f.delete()
+        friendship.delete()
 
     def test_decline_friend_request(self):
         # should fail when valid users are already friends
         Friend.create_friend_request('ab123','abc123')
-        f = Friend.objects.get(left_username='ab123',right_username='abc123')
-        f.pending = False
-        f.save()
+        friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
+        friendship.pending = False
+        friendship.save()
         Friend.decline_friend_request('ab123','abc123')
-        self.assertEqual(f.pending, False) # TODO idk what else to do here as it doesnt throw exception atm
-        f.delete()
+        self.assertEqual(friendship.pending, False) # TODO idk what else to do here as it doesnt throw exception atm
+        friendship.delete()
 
         # should succeed when valid friend request exists
         Friend.create_friend_request('ab123','abc123')
-        f = Friend.objects.get(left_username='ab123',right_username='abc123')
-        f.pending = True
-        f.save()
+        friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
+        friendship.pending = True
+        friendship.save()
         Friend.decline_friend_request('ab123','abc123')
         with self.assertRaises(Friend.DoesNotExist, msg='friend request not removed'):
             Friend.objects.get(left_username='ab123',right_username='abc123')
@@ -246,36 +246,36 @@ class FriendTestCase(TestCase):
         self.assertEqual([], Friend.get_pending_friend_usernames('abc123'), 'residual friend request')
         self.assertEqual(['bc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
         self.assertEqual([], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
-        f.delete()
+        friendship.delete()
 
     def test_remove_friend(self):
         # should succeed when valid friend request exists
         Friend.create_friend_request('ab123','abc123')
-        f = Friend.objects.get(left_username='ab123',right_username='abc123')
-        f.pending = False
-        f.save()
+        friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
+        friendship.pending = False
+        friendship.save()
         Friend.remove_friend('ab123','abc123')
         with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
-            f = Friend.objects.get(left_username='ab123',right_username='abc123')
+            friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
         with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
-            f = Friend.objects.get(left_username='abc123',right_username='ab123')
+            friendship = Friend.objects.get(left_username='abc123',right_username='ab123')
         self.assertEqual(['bc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
         self.assertEqual([], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
-        f.delete()
+        friendship.delete()
 
         # should succeed when valid friend request exists (reverse)
         Friend.create_friend_request('ab123','abc123')
-        f = Friend.objects.get(left_username='ab123',right_username='abc123')
-        f.pending = False
-        f.save()
+        friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
+        friendship.pending = False
+        friendship.save()
         Friend.remove_friend('abc123','ab123')
         with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
-            f = Friend.objects.get(left_username='ab123',right_username='abc123')
+            friendship = Friend.objects.get(left_username='ab123',right_username='abc123')
         with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
-            f = Friend.objects.get(left_username='abc123',right_username='ab123')
+            friendship = Friend.objects.get(left_username='abc123',right_username='ab123')
         self.assertEqual(['bc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
         self.assertEqual([], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
-        f.delete()
+        friendship.delete()
 
         # Returns None when Friend object doesn't exist
         self.assertFalse(Friend.remove_friend('ab123','abc123'))
@@ -298,20 +298,20 @@ class ActiveChallengeTestCase(TestCase):
         self.assertEqual(submission.username, 'ab123', 'create_submission failed')
 
     def test_get_last_active_challenge(self):
-        c = Challenge.objects.get(description='test challenge')
-        activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,30,0,0,pytz.UTC), challenge=c)
+        challenge = Challenge.objects.get(description='test challenge')
+        activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,30,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save() # latest challenge
-        activechallenge2 = ActiveChallenge(date=datetime.datetime(2023,3,9,10,10,0,0,pytz.UTC), challenge=c)
+        activechallenge2 = ActiveChallenge(date=datetime.datetime(2023,3,9,10,10,0,0,pytz.UTC), challenge=challenge)
         activechallenge2.save()
         latest_challenge = ActiveChallenge.get_last_active_challenge()
         self.assertEqual(activechallenge, latest_challenge)
-        c = Challenge(description='second test challenge', time_for_challenge=10)
-        c.save() # introducing another challenge
-        activechallenge3 = ActiveChallenge(date=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), challenge=c)
+        challenge = Challenge(description='second test challenge', time_for_challenge=10)
+        challenge.save() # introducing another challenge
+        activechallenge3 = ActiveChallenge(date=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), challenge=challenge)
         activechallenge3.save()
         latest_challenge = ActiveChallenge.get_last_active_challenge()
         self.assertEqual(activechallenge, latest_challenge, 'fetched incorrect challenge')
-        activechallenge4 = ActiveChallenge(date=datetime.datetime(2023,3,9,10,45,0,0,pytz.UTC), challenge=c)
+        activechallenge4 = ActiveChallenge(date=datetime.datetime(2023,3,9,10,45,0,0,pytz.UTC), challenge=challenge)
         activechallenge4.save() # new latest
         latest_challenge = ActiveChallenge.get_last_active_challenge()
         self.assertEqual(activechallenge4, latest_challenge, 'didnt fetch new challenge')
@@ -322,8 +322,8 @@ class ActiveChallengeTestCase(TestCase):
 
 class SubmissionTestCase(TestCase):
     def setUp(self):
-        for un in ['ab123','abc123','bc123','cd123','ef123']:
-            user = User(username=un, password='unsecure_password')
+        for username in ['ab123','abc123','bc123','cd123','ef123']:
+            user = User(username=username, password='unsecure_password')
             user.save()
         challenge = Challenge(description='test challenge', time_for_challenge=20,
                                 latitude=50.72228531721723, longitude=-3.531841571481125,
@@ -332,30 +332,28 @@ class SubmissionTestCase(TestCase):
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
         with open("IMG_1379.JPG", "rb") as img:
-            f = img.read()
-            binary_image = bytearray(f)
-            binary_image = bytearray(f)
-        for un in ['ab123','abc123']:
-            submission = Submission(username=un, active_challenge=activechallenge,
+            file = img.read()
+            binary_image = bytearray(file)
+            binary_image = bytearray(file)
+        for username in ['ab123','abc123']:
+            submission = Submission(username=username, active_challenge=activechallenge,
                                     submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC),
                                     photo_bytes=binary_image)
             submission.save()
         reported_submission = Submission(username='bc123', active_challenge=activechallenge,
                                         submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True, reported_by='ab123')
         reported_submission.save()
-        with open('IMG_34123.jpg', 'rb') as img_file2:
-            binary_image2 = base64.b64encode(img_file2.read())
         reviewed_submission = Submission(username='cd123', active_challenge=activechallenge,
                                             submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reviewed=True)
         reviewed_submission.save()
 
     def test_user_has_submitted(self):
-        for un in ['ab123','abc123','bc123','cd123']:
-            self.assertTrue(Submission.user_has_submitted(un), 'user submission not detected')
+        for username in ['ab123','abc123','bc123','cd123']:
+            self.assertTrue(Submission.user_has_submitted(username), 'user submission not detected')
         self.assertFalse(Submission.user_has_submitted('ef123'))
         # add submission to an earlier ActiveChallenge
-        c = Challenge.objects.get(description='test challenge')
-        early_ac = ActiveChallenge(date=datetime.datetime(2023,3,9,9,30,0,0,pytz.UTC), challenge=c)
+        challenge = Challenge.objects.get(description='test challenge')
+        early_ac = ActiveChallenge(date=datetime.datetime(2023,3,9,9,30,0,0,pytz.UTC), challenge=challenge)
         early_ac.save()
         early_ac.create_submission('ef123',datetime.datetime(2023,3,9,9,50,0,0,pytz.UTC))
         self.assertFalse(Submission.user_has_submitted('ef123'))
@@ -498,8 +496,8 @@ class SubmissionTestCase(TestCase):
         self.assertEqual(profile.points, 0)
 
     def test_reinstate_submission(self):
-        for un in ['ab123','bc123','cd123']:
-            Profile.recalculate_user_points_by_username(un)
+        for username in ['ab123','bc123','cd123']:
+            Profile.recalculate_user_points_by_username(username)
         submission = Submission.objects.get(username='ab123')
         submission.create_upvote('cd123')
         submission.create_upvote('bc123') # Create upvotes for the submission
@@ -507,8 +505,8 @@ class SubmissionTestCase(TestCase):
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved']) # 2 upvotes recieved
         submission.report_submission('cd123')
-        for un in ['ab123','bc123']:
-            profile = Profile.objects.get(user__username=un)
+        for username in ['ab123','bc123']:
+            profile = Profile.objects.get(user__username=username)
             self.assertEqual(profile.points, 0)
         profile = Profile.objects.get(user__username='cd123')
         sub = Submission.objects.get(username='cd123')
@@ -592,9 +590,9 @@ class SubmissionTestCase(TestCase):
 
     def test_location_is_valid(self):
         submission = Submission.objects.get(username='ab123')
-        assert(submission.location_is_valid())
+        assert submission.location_is_valid()
         submission2 = Submission.objects.get(username='bc123')
-        assert(not submission2.location_is_valid())
+        assert not submission2.location_is_valid()
 
     def test_location_check_missing_metadata(self):
         submission = Submission.objects.get(username='bc123')
@@ -603,8 +601,8 @@ class SubmissionTestCase(TestCase):
 
 class UpvoteTestCase(TestCase):
     def setUp(self):
-        for un in ['ab123','bc123','cd123']:
-            user = User(username=un, password='unsecure_password')
+        for username in ['ab123','bc123','cd123']:
+            user = User(username=username, password='unsecure_password')
             user.save()
         challenge = Challenge(description='test challenge', time_for_challenge=20)
         challenge.save()
@@ -612,17 +610,17 @@ class UpvoteTestCase(TestCase):
         activechallenge.save()
         submission = Submission(username='ab123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
         submission.save()
-        for un in ['bc123','cd123']:
-            submission.create_upvote(un)
+        for username in ['bc123','cd123']:
+            submission.create_upvote(username)
 
     def test_remove_upvote(self):
-        for un in ['ab123','bc123','cd123']:
-            Profile.recalculate_user_points_by_username(un)
+        for username in ['ab123','bc123','cd123']:
+            Profile.recalculate_user_points_by_username(username)
         profile = Profile.objects.get(user__username='ab123')
         sub = Submission.objects.get(username='ab123')
         self.assertEqual(profile.points, SCORES['submission']*sub.get_punctuality_scaling()+2*SCORES['upvote']['recieved'])
-        for un in ['bc123','cd123']:
-            profile = Profile.objects.get(user__username=un)
+        for username in ['bc123','cd123']:
+            profile = Profile.objects.get(user__username=username)
             self.assertEqual(profile.points, SCORES['upvote']['given'], 'points desync')
         self.assertEqual(len(Upvote.objects.all()), 2)
 
@@ -672,8 +670,8 @@ class UpvoteTestCase(TestCase):
 
 class CommentTestCase(TestCase):
     def setUp(self):
-        for un in ['ab123','bc123','cd123','ef123']:
-            user = User(username=un, password='unsecure_password')
+        for username in ['ab123','bc123','cd123','ef123']:
+            user = User(username=username, password='unsecure_password')
             user.save()
         challenge = Challenge(description='test challenge', time_for_challenge=20)
         challenge.save()
@@ -682,18 +680,18 @@ class CommentTestCase(TestCase):
         submission = Submission(username='ab123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC))
         submission.save()
         submission.create_comment('bc123', 'test comment')
-        c = Comment(submission=submission, comment_username='cd123', content='this is a reviewed comment', reviewed=True)
-        c.save()
-        c = Comment(submission=submission, comment_username='ef123', content='this is a reported commment', reported=True, reported_by='ab123')
-        c.save()
+        comment = Comment(submission=submission, comment_username='cd123', content='this is a reviewed comment', reviewed=True)
+        comment.save()
+        comment = Comment(submission=submission, comment_username='ef123', content='this is a reported commment', reported=True, reported_by='ab123')
+        comment.save()
         submission = Submission(username='cd123', active_challenge=activechallenge, submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reported=True)
         submission.save()
-        c = Comment(submission=submission, comment_username='cd123', content='this is a another reviewed comment', reviewed=True)
-        c.save()
-        c = Comment(submission=submission, comment_username='ab123', content='this is a another reported commment', reported=True, reported_by='bc123')
-        c.save()
-        for un in ['ab123', 'bc123', 'cd123']:
-            Profile.recalculate_user_points_by_username(un)
+        comment = Comment(submission=submission, comment_username='cd123', content='this is a another reviewed comment', reviewed=True)
+        comment.save()
+        comment = Comment(submission=submission, comment_username='ab123', content='this is a another reported commment', reported=True, reported_by='bc123')
+        comment.save()
+        for username in ['ab123', 'bc123', 'cd123']:
+            Profile.recalculate_user_points_by_username(username)
 
     def test_report_comment(self):
         profile = Profile.objects.get(user__username='ab123')
@@ -938,14 +936,14 @@ class CommentTestCase(TestCase):
         self.assertEqual(profile.points, SCORES['comment']['given']) # again, points unchanged
 
     def test_reinstate_comment(self):
-        for un in ['ab123','bc123','cd123','ef123']:
-            Profile.recalculate_user_points_by_username(un)
+        for username in ['ab123','bc123','cd123','ef123']:
+            Profile.recalculate_user_points_by_username(username)
         submission = Submission.objects.get(username='ab123')
         self.assertTrue(submission.report_submission('ab123'))
         profile = Profile.objects.get(user__username='ab123')
         self.assertEqual(profile.points, 0)
-        for un in ['ab123','bc123','ef123']:
-            profile = Profile.objects.get(user__username=un)
+        for username in ['ab123','bc123','ef123']:
+            profile = Profile.objects.get(user__username=username)
             self.assertEqual(profile.points, 0)
         comment = Comment.objects.get(comment_username='ef123')
         self.assertFalse(comment.reinstate_comment())
