@@ -507,8 +507,6 @@ def deleteAccount(request):
                 print(str(e))
                 return redirect('/account/')
 
-
-
 '''Loads the friends page'''
 def friends(request):
     context = {}
@@ -580,6 +578,29 @@ def declineFriendRequest(request):
             finally:
                 return redirect('/friends/')
             
+def leaderboard(request):
+    context = {}
+
+    if request.user.is_authenticated:
+        template = loader.get_template('account/leaderboard.html')
+
+        friends = Friend.get_friend_usernames(request.user.username)
+        context['friends'] = friends
+
+        incoming = Friend.get_pending_friend_usernames(request.user.username)
+        context['incoming'] = incoming
+
+        CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
+        context["user_points"] = user_points
+        context["post_count"] = postCount
+        return HttpResponse(template.render(context, request))
+    else:
+        return signin(request)
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names
