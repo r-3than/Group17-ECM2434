@@ -39,10 +39,13 @@ def load_profanity_file() -> list[str]:
     '''
     url_stream = urllib.request.urlopen(PROFANITY_FILTER_SOURCE_URL)
     LOGGER.info('loaded profanity file from {}'.format(PROFANITY_FILTER_SOURCE_URL))
-    return [line.decode().strip('\n') for line in url_stream.readlines()][1:]
+    BAD_WORDS = [line.decode().strip('\r\n').strip("*") for line in url_stream.readlines()][1:]
+    BAD_WORDS.remove("hell")
+    return BAD_WORDS
 
 WORDS_TO_FILTER = load_profanity_file()
-
+print(WORDS_TO_FILTER)
+input()
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField(default=0)
