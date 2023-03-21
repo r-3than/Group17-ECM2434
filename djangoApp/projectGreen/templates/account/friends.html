@@ -172,17 +172,30 @@
             let current = document.getElementById("current");
             let incoming = document.getElementById("incoming");
 
-            document.getElementById("setCurrent").addEventListener("click", displayCurrent);
-            document.getElementById("setIncoming").addEventListener("click", displayIncoming);
+            let currentBtn = document.getElementById("setCurrent");
+            currentBtn.addEventListener("click", displayCurrent);
+
+            let incomingBtn = document.getElementById("setIncoming");
+            incomingBtn.addEventListener("click", displayIncoming);
 
             function displayCurrent() {
-                current.setAttribute("style", "display: flex;");
-                incoming.setAttribute("style", "display: none;");
+                current.style.display = "flex";
+                currentBtn.classList.remove("btn-outline-dark");
+                currentBtn.classList.add("btn-dark");
+
+                incoming.style.display = "none";
+                incomingBtn.classList.remove("btn-dark");
+                incomingBtn.classList.add("btn-outline-dark");
             }
 
             function displayIncoming() {
-                current.setAttribute("style", "display: none;");
-                incoming.setAttribute("style", "display: flex;");
+                current.style.display = "none";
+                currentBtn.classList.remove("btn-dark");
+                currentBtn.classList.add("btn-outline-dark");
+
+                incoming.style.display = "flex";
+                incomingBtn.classList.remove("btn-outline-dark");
+                incomingBtn.classList.add("btn-dark");
             }
           </script>
     </body>
