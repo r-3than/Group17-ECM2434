@@ -42,9 +42,8 @@ def challenge(request):
     '''
     Displays the page for the current challenge
     '''
-      
     context = {}
-    if request.user.is_authenticated:        
+    if request.user.is_authenticated:
         template = loader.get_template('submit/challenge.html')
         current_challenge =ActiveChallenge.get_last_active_challenge()
         if Submission.user_has_submitted(request.user.username):
@@ -134,7 +133,7 @@ def university_feed(request):
                 photo_b64 = "data:image/png;base64,"+base64.b64encode(submission.photo_bytes).decode("utf-8")
             else:
                 photo_b64 = "data:image/png;base64,"
-            # Dictionary structure to pass to template 
+            # Dictionary structure to pass to template
             checker = Upvote.objects.filter(voter_username=request.user.username,
                 submission_id=submission.id)
             if len(checker) >= 1:
@@ -236,7 +235,7 @@ def friends_feed(request):
                                                 'submission_upvote_count': submission.get_upvote_count(),
                                                 'submission_comment_count': submission.get_comment_count(),
                                                 'submission_has_liked': has_liked,
-                                                }       
+                                                }
         context['submissions'] = submissions_info
 
         return HttpResponse(template.render(context, request))
@@ -338,7 +337,7 @@ def friends(request):
 
         current_challenge =ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = current_challenge.get_challenge_description()
-   
+
         user_profile = Profile.get_profile(request.user.username)
         user_points = str(user_profile.points)
         post_count= Friend.get_friend_post_count(user_profile.user.username,current_challenge)
@@ -365,7 +364,7 @@ def post(request):
 
             submission_id = request.POST.get("submission_id", "")
             submission=Submission.objects.filter(id=submission_id).first()
-       
+
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")
             current_date = date.today().strftime("%d:%m:%Y")
@@ -528,7 +527,7 @@ def upload_photo(request):
                         return redirect('/university-feed/')
                 return redirect('/submit/')
     return redirect('/')
-        
+
 @csrf_exempt
 def flag_submission(request):
     '''
@@ -577,7 +576,7 @@ def create_comment(request):
                 data=json.loads(request.body)
 
                 submission_id = data["submission_id"]
-                submission = Submission.objects.filter(id = submission_id).first()            
+                submission = Submission.objects.filter(id = submission_id).first()
 
                 author = data["author"]
                 content = data["content"]
@@ -627,7 +626,6 @@ def remove_friend(request):
     '''
     Removes an existing friend
     '''
-            
     if request.method == "POST":
         if request.user.is_authenticated:
             try:

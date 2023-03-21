@@ -22,15 +22,15 @@ urlpatterns = [
     # Initial Process:
     path('', challenge),
     path('submit/', submit, name='submit'),
-    
+
     # Feeds:
     path('university-feed/', university_feed, name='university-feed'),
     path('friends-feed/',friends_feed, name='friends-feed'),
-    
+
     # Account Management:
     path('history/', history, name='history'),
     path('friends/', friends, name='friends'),
-    
+
     # Other:
     path('post/', post, name='post'),
     path('leaderboard/', leaderboard, name='leaderboard'),
@@ -45,7 +45,7 @@ urlpatterns = [
     # Comments:
     path('create-comment/', create_comment, name='create-comment'),
     path('flag_comment/', flag_comment),
-    
+
     # Friends:
     path('addFriend/', add_friend, name='addFriend'),
     path('removeFriend/', remove_friend, name='removeFriend'),
