@@ -15,8 +15,10 @@
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
 
         <style>
-            .icon {background-image: {{profile_photo}};}
-            .icon {background-position: center;}
+            .icon {
+                background-image: url('{{ profile_image }}');
+                background-position: center;
+            }
         </style>
     </head>
     <body>

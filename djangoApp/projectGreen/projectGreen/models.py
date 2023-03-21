@@ -734,7 +734,7 @@ class StoreItem(models.Model):
         try:
             item = StoreItem.objects.get(item_name=item_name)
             return item.cost
-        except Store.DoesNotExist:
+        except StoreItem.DoesNotExist:
             return -1
 
     verbose_name = 'StoreItem'

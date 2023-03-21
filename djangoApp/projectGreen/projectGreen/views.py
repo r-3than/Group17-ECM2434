@@ -13,6 +13,7 @@ from sre_constants import SUCCESS
 import time
 from django.http import HttpResponse
 from django.shortcuts import redirect
+from projectGreen.settings import MEDIA_ROOT
 
 from microsoft_authentication.auth.auth_decorators import microsoft_login_required
 from django.contrib.auth import logout
@@ -558,11 +559,13 @@ def store(request):
         store_info = {}
         i = -1
         StoreItems = StoreItem.objects.all()
-        OwnedItems = OwnedItem.objects.filter(username=profileObj.user)
+        OwnedItems = OwnedItem.objects.filter(username=request.user.username)
 
         try:
-            profile_item = OwnedItems.objects.get(username=profileObj.username, is_active=True)
-            context["profile_image"] = profile_item.photo
+            profile_item_name = OwnedItems.get(is_active=True).item_name
+            item = StoreItem.objects.get(item_name=profile_item_name)
+            context["profile_image"] = item.photo.url
+            print(context["profile_image"])
         except:
             pass
 
