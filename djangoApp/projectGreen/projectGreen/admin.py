@@ -17,33 +17,50 @@ import logging
 
 LOGGER = logging.getLogger('django')
 
-@admin.action(description='Publish challenge')
-def publish_challenge(modeladmin, request, queryset):
-    c = queryset[0]
-    date = datetime.now().strftime('%Y-%m-%d')
-    try:
-        ActiveChallenge.objects.get(date=date)
-        print('Challenge has already been set today')
-        return
-    except ActiveChallenge.DoesNotExist:
-        ActiveChallenge.objects.all().update(is_expired=True)
-        ac = ActiveChallenge(date=datetime.now(), challenge=c)
-        ac.save()
-
+def send_email_notfication(active_challenge: ActiveChallenge, request):
+    '''
+    Send a notification to all users via email, using the notification.html template
+    '''
+    submission_link = request.build_absolute_uri(reverse('submit'))
+    unsubscribe_link = request.build_absolute_uri(reverse('unsubscribe'))
     context = {
-        'date': ac.date.strftime('%d/%m/%Y'),
-        'description': ac.get_challenge_description(),
-        'url': request.build_absolute_uri(reverse('submit'))
+        'date': active_challenge.date.strftime('%d/%m/%Y'),
+        'description': active_challenge.get_challenge_description(),
+        'url': {
+            'submission': submission_link,
+            'unsubscribe': unsubscribe_link
+        }
     }
     plain_text = render_to_string('notification/notification.txt', context)
     html = render_to_string('notification/notification.html', context)
     
     for user in User.objects.all():
-        try:
-            user.email_user('Time to BeGreen!',message=plain_text, html_message=html, from_email='djangotestemail31@gmail.com')
-        except:
-            LOGGER.error("Message to ", user.email, "failed to send.")
+        p = Profile.get_profile(user.username)
+        if p.subscribed_to_emails:
+            try:
+                user.email_user('Time to BeGreen!',message=plain_text, html_message=html, from_email='djangotestemail31@gmail.com')
+            except:
+                LOGGER.error("Message to ", user.email, "failed to send.")
 
+@admin.action(description='Publish Challenge')
+def publish_challenge(modeladmin, request, queryset):
+    '''
+    Creates active challenge in database linked to queried challenge object
+    '''
+    c = queryset[0]
+    ActiveChallenge.objects.all().update(is_expired=True)
+    ac = ActiveChallenge(date=datetime.now(), challenge=c)
+    ac.save()
+
+    send_email_notfication(ac, request)
+
+@admin.action(description='Resend Email Notification')
+def resend_challenge_notification(modeladmin, request, queryset):
+    '''
+    Resends challenge notification email - intended for use in demo
+    '''
+    ac = queryset[0]
+    send_email_notfication(ac, request)
 
 @admin.action(description='Resynchronise Points')
 def recalculate_points(modeladmin, request, queryset):
@@ -120,7 +137,7 @@ class ChallengesAdmin(admin.ModelAdmin):
 class ActiveChallengesAdmin(admin.ModelAdmin):
     list_display = ['date', 'get_challenge_id', 'get_challenge_description', 'get_time_for_challenge', 'get_latitude', 'get_longitude', 'get_allowed_distance', 'is_expired']
     ordering = ['date']
-    actions = []
+    actions = [resend_challenge_notification]
 
     @admin.display(ordering='challenge__id', description='challenge_id')
     def get_challenge_id(self, active_challenge) -> int:

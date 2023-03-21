@@ -446,6 +446,7 @@ def account(request):
         profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
         context["user_points"] = user_points
+        context["is_subscribed"] = profileObj.subscribed_to_emails
 
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
@@ -624,6 +625,30 @@ def leaderboard(request):
         return HttpResponse(template.render(context, request))
     else:
         return signin(request)
+'''Unsubscribes a user from email notifiactions'''
+def unsubscribeFromEmails(request):
+    if request.user.is_authenticated:
+        try:
+            profile = Profile.get_profile(request.user.username)
+            profile.subscribed_to_emails = False
+            profile.save()
+        except Exception as e:
+            print(str(e))
+        finally:
+            return redirect('/account/')
+        
+'''Resubscribes a user to email notifiactions'''
+def resubscribeToEmails(request):
+    if request.user.is_authenticated:
+        try:
+            profile = Profile.get_profile(request.user.username)
+            profile.subscribed_to_emails = True
+            profile.save()
+        except Exception as e:
+            print(str(e))
+        finally:
+            return redirect('/account/')
+            
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names
