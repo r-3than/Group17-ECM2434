@@ -345,7 +345,7 @@ class Friend(models.Model):
         friends_right = Friend.objects.filter(right_username=username, pending=False)
         all_friends = friends + [friend.left_username for friend in friends_right]
         return all_friends
-  
+
     @classmethod
     def get_friend_post_count(cls, friend_username: str, active_challenge: 'ActiveChallenge') -> int:
         '''
@@ -394,7 +394,7 @@ class ActiveChallenge(models.Model):
         s.sum_of_interactions = lambda_user*s.get_punctuality_scaling()*SCORES['submission']
         if create_submission_instance:
             s.save()
-        Profile.add_points_by_username(username, SCORES['submission']*s.get_punctuality_scaling())                         
+        Profile.add_points_by_username(username, SCORES['submission']*s.get_punctuality_scaling())         
 
     @classmethod
     def get_last_active_challenge(cls) -> 'ActiveChallenge':
@@ -407,7 +407,7 @@ class ActiveChallenge(models.Model):
             c = Challenge(description='')
             ac = ActiveChallenge(date=dt.now(), challenge=c)
         return ac
-    
+
     def get_challenge_description(self) -> str:
         '''
         Returns the challenge description asociated with an ActiveChallenge object
@@ -536,7 +536,7 @@ class Submission(models.Model):
                 upvote.remove_upvote(delete_instance)
             for comment in self.get_comments():
                 comment.remove_comment(delete_instance)
-        if delete_instance: 
+        if delete_instance:
             self.delete()
         return not self.reported
 
@@ -591,26 +591,26 @@ class Submission(models.Model):
             return False
         else:
             return True
-        
+
     def get_upvotes(self) -> list['Upvote']:
         '''
         Gets list of Upvotes for this submission
         '''
         return Upvote.objects.filter(submission=self)
-    
+
     def get_comments(self) -> list['Comment']:
         '''
         Gets list of Comments for this submission
         Reported comments are excluded from this list
         '''
         return Comment.objects.filter(submission=self, reported=False)
-    
+
     def get_upvote_count(self) -> int:
         '''
         Gets the number of Upvotes for a submission
         '''
         return len(self.get_upvotes())
-    
+
     def get_comment_count(self) -> int:
         '''
         Gets the number of Comments for a submission
@@ -638,7 +638,7 @@ class Submission(models.Model):
                 return True
 
         return False
-    
+
     def location_check_missing_metadata(self, latitude:str, longitude:str) -> bool:
         '''
         Checks if the GPS coordinates of a user are within the challenge allowed distance
@@ -653,7 +653,7 @@ class Submission(models.Model):
         # Check if the image is near the challenge location
         if distance_to_challenge <= allowed_distance:
             return True
-        
+
         return False
 
     verbose_name = 'Submission'
@@ -664,7 +664,7 @@ class Submission(models.Model):
             models.UniqueConstraint(fields=['username','active_challenge'],
                                     name='single_submission_per_active_challenge')
         ]
-   
+
 class Upvote(models.Model):
     submission = models.ForeignKey(Submission, models.CASCADE, null=True)
     voter_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
@@ -781,7 +781,7 @@ class Comment(models.Model):
         if condition:
             Profile.add_points_by_username(self.comment_username, -SCORES['comment']['given'])
             Profile.add_points_by_username(self.submission.username, -SCORES['comment']['recieved'])
-        if delete_instance: 
+        if delete_instance:
             self.delete()
         return condition
 
@@ -808,7 +808,7 @@ class Comment(models.Model):
                     log.warning('flagged inappropriate word "{}" in {}\'s comment'.format(word, self.comment_username))
                 return True
         return False
-    
+
     verbose_name = 'Comment'
     verbose_name_plural = 'Comments'
     class Meta:
