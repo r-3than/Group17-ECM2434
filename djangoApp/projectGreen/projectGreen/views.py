@@ -584,21 +584,40 @@ def leaderboard(request):
     if request.user.is_authenticated:
         template = loader.get_template('account/leaderboard.html')
 
+        profileObj = Profile.get_profile(request.user.username)
+
+        # Get overall leaders & user positon
         profiles = Profile.objects.order_by('-points')
+        context["is_leader"] = False
+        friend_usernames = Friend.get_friend_usernames(request.user.username)
+        friends = []
+        for index, profile in enumerate(profiles):
+            if profile.user.username == request.user.username:
+                if index < 20:
+                    context["is_leader"] = True
+                else:
+                    context ["overall_position"] = index
+            else:
+                if profile.user.username in friend_usernames:
+                    friends.append(profile)
         leaders = profiles[:20]
         context["leaders"] = leaders
+        
+        # Get friend leaders & user position
+        friends.append(profileObj)
+        friends.sort(key=lambda x: x.points, reverse=True)
+        for index, profile in enumerate(friends):
+            if profile.user.username == request.user.username:
+                if index < 20:
+                    context["is_friend_leader"] = True
+                else:
+                    context["friends_position"] = index
+        context["friends"] = friends[:20]
 
-        friend_usernames = Friend.get_friend_usernames(request.user.username)
-        friend_leaders = []
-        for profile in profiles:
-            if profile.user.username in friend_usernames:
-                friend_leaders.append(profile)
-        context["friends"] = friend_leaders
-
-        CurrentChallenge =ActiveChallenge.get_last_active_challenge()
+        CurrentChallenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
         
-        profileObj = Profile.get_profile(request.user.username)
+        
         user_points = str(profileObj.points)
         context["user_points"] = user_points
 

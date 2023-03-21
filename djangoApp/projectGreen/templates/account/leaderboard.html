@@ -55,10 +55,12 @@
 
                     <!-- Modal body -->
                     <div class="modal-body links">
+                        <a href="{% url 'home' %}">Home Feed</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <a href="{% url 'account' %}">Submission History</a> <br>
-                        <a href="">Friends' Submissions</a> <br>
-                        <a href="">University Submissions</a> <br>
-                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
+                        <a href="{% url 'friends' %}">Manage Friends</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
                     </div>
 
                     <!-- Modal footer -->
@@ -69,68 +71,103 @@
         <main class="row">
             <div class="side left">
                 <div class="links rounded-5">
+                    <a href="{% url 'home' %}">Home Feed</a> <br>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="{% url 'account' %}">Submission History</a>
-                    <a href="">Friends' Submissions</a>
-                    <a href="">University Submissions</a>
+                    <a href="{% url 'friends' %}">Manage Friends</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                 </div>
             </div>
             <div class="centre">
                 <div class="post rounded-5">
-                    
-                    <!-- Title -->
                     <div class="header row">
                         <div class="leaderboard title"><u>Leaderboard</u></div>
                     </div>
-
-                    <!-- Category Buttons -->
                     <div class="categories">
-                        <button id="setFriends" class="btn btn-dark">Friends</button>
+                        <button id="setFriends" class="btn btn-light">Friends</button>
                         <button id="setUniversity" class="btn btn-dark">University</button>
                     </div>
-                    
-                    <!-- Leaderboard Table -->
                     <div class="leaderboard">
-                        
-                        <!-- Leaderboard Columns -->
                         <div class="head">
                             <div class="position">Position</div>
                             <div class="username">Username</div>
                             <div class="point-number">Points</div>
                         </div>
-                        
                         <div class="divider"></div>
-                        
-                        <div class="body" id="leaders" style="display: none;">
-                            {% for profile in leaders %}
-                                <div class="record">
-                                    <div class="position">{{forloop.counter}}</div>
-                                    <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
-                                    <div class="username">{{profile.user.username}}</div>
-                                    <div class="point-number">{{profile.points}}</div>
+                        <div class="leaders" id="leaders" style="display: none;">
+                            {% if not is_leader %}
+                                <div class="record" style="background-color: var(--exeter-deep-green);">
+                                    <div class="position">{{overall_position}}</div>
+                                    <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                                    <div class="username">{{user.username}}</div>
+                                    <div class="point-number">{{user_points}}</div>
                                 </div>
-                            {% endfor %}
+                            {% endif %}
+                            <div>
+                                {% for profile in leaders %}
+                                    <div class="record">
+                                        <div class="position">{{forloop.counter}}</div>
+                                        <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        <div class="username">{{profile.user.username}}</div>
+                                        <div class="point-number">{{profile.points}}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         </div>
-
-                        <div class="body" id="friends">
-                            {% for profile in friends %}
-                                <div class="record">
-                                    <div class="position">{{forloop.counter}}</div>
-                                    <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
-                                    <div class="username">{{profile.user.username}}</div>
-                                    <div class="point-number">{{profile.points}}</div>
+                        <div class="leaders" id="friends">
+                            {% if not is_friend_leader %}
+                                <div class="record" style="background-color: var(--exeter-deep-green);">
+                                    <div class="position">{{friends_position}}</div>
+                                    <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                                    <div class="username">{{user.username}}</div>
+                                    <div class="point-number">{{user_points}}</div>
                                 </div>
-                            {% endfor %}
+                            {% endif %}
+                            <div>
+                                {% for profile in friends %}
+                                    <div class="record">
+                                        <div class="position">{{forloop.counter}}</div>
+                                        <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        <div class="username">{{profile.user.username}}</div>
+                                        <div class="point-number">{{profile.points}}</div>
+                                    </div>
+                                {% endfor %}
+                            </div>
                         </div>
-
                     </div>
-                
                 </div>
             </div>
-            <div class="break"></div>
-                <br style="user-select: none;"> <br style="user-select: none;">
-              </div>
-              <div class="side"></div>
         </main>    
+        <script>
+            let friends = document.getElementById("friends");
+            let university = document.getElementById("leaders");
+
+            let friendsBtn = document.getElementById("setFriends");
+            friendsBtn.addEventListener("click", displayFriends);
+
+            let universityBtn = document.getElementById("setUniversity");
+            universityBtn.addEventListener("click", displayUniversity);
+
+            function displayFriends() {
+                friends.style.display = "block";
+                friendsBtn.classList.remove("btn-dark");
+                friendsBtn.classList.add("btn-light");
+
+                university.style.display = "none";
+                universityBtn.classList.remove("btn-light");
+                universityBtn.classList.add("btn-dark");
+            }
+
+            function displayUniversity() {
+                friends.style.display = "none";
+                friendsBtn.classList.remove("btn-light");
+                friendsBtn.classList.add("btn-dark");
+
+                university.style.display = "block";
+                universityBtn.classList.remove("btn-dark");
+                universityBtn.classList.add("btn-light");
+            }
+          </script>
     </body>
 </html>

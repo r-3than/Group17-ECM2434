@@ -10,6 +10,15 @@ body {
     font-family: "Inter";
 }
 
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    overflow-y: scroll;
+}
+
 .row:after {
     content: "";
     display: table;
@@ -88,7 +97,7 @@ div.account {
 }
 
 main {
-    height: auto;
+    height: calc(100% - 130px);
     width: auto;
     content: "";
 }
@@ -104,8 +113,8 @@ main {
     color: white;
     width: 85%;
     min-width: 593px;
-    height: 1000px;
-    /* aspect-ratio: 6/5; */
+    height: auto;
+    max-height: 800px;
     padding: 15px;
     margin: auto;
     position: relative;
@@ -165,8 +174,7 @@ main {
     box-shadow: 1px 5px 12px black;
 }
 
-.leaderboard .record {
-    /*border: 1px solid white;*/
+.record {
     height: 60px;
     width: 100%;
     border-radius: 8px;
@@ -176,14 +184,25 @@ main {
     background-color: var(--exeter-deep-green);
 }
 
+.leaders {
+    overflow-y: scroll;
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+}
+
+.leaders::-webkit-scrollbar {
+    display: none;
+}
+
 .record .position {
     float: left;
     text-align:left;
     font-weight: bold;
     font-size: large;
     margin-left: 28px;
-    margin-top: 15px;
     width:20%;
+    height: 60px;
+    line-height: 60px;
 }
 
 .record .icon {
@@ -193,6 +212,7 @@ main {
     height: 45px;
     line-height: 45px;
     margin: 5px;
+    margin-top: 7.5px;
     background-color: var(--exeter-dark-green);
     color: white;
     text-align: center;
@@ -204,27 +224,33 @@ main {
     float: left;
     text-align:center;
     width:12%;
-    margin-top: 15px;
+    height: 60px;
+    line-height: 60px;
+    font-weight: bold;
 }
 
 .record .point-number {
     float: left;
-    margin-top: 15px;
     text-align:right;
     width:44%;
     font-weight: bold;
+    height: 60px;
+    line-height: 60px;
 }
 
 .record:nth-child(1) {
     background: gold;
+    color: black;
 }
 
 .record:nth-child(2) {
     background: #c0c0c0;
+    color: black;
 }
 
 .record:nth-child(3) {
     background: #cd7f32;
+    color: black;
 }
 
 .side {
@@ -248,29 +274,28 @@ header .side {
 .links {
     background-color: var(--exeter-dark-green);
     color: white;
-    /* width: 75%; */
     width: 360px;
-    /* height: 37vh; */
     height: 360px;
     padding: 6%;
     padding-left: 9%;
     margin: auto;
     position: sticky;
     top: 200px;
-    /* font-size: 1.3vw; */
     font-size: 24px;
     font-weight: 500;
     box-shadow: 1px 5px 10px #202020;
     line-height: 300%;
-    overflow-y: auto;
+    overflow-y: hidden;
 }
 
 main .left {
     min-width: 400px;
+    min-height: 100%;
 }
 
 main > .centre {
     min-width: 600px;
+    min-height: 100%;
 }
 
 .links a {
