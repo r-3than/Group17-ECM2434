@@ -610,14 +610,6 @@ class Submission(models.Model):
 
         if self.photo_bytes != None:
             img_bytes = self.photo_bytes
-            # Decode the base64 string of the image and extract the metadata
-            # img = Image.frombytes("RGBA", (width, height), raw_data)
-            # photo_b64 = base64.b64decode(self.photo_bytes)
-            '''
-            with open("output.txt", "w") as f:
-                f.write(str(photo_b64))
-                f.close()
-            '''
             img = Image.open(io.BytesIO(img_bytes))
             submission_lat, submission_lon = process_GPS_data(img)
             submission_distance_to_challenge = distance((challenge_lat, challenge_lon), (submission_lat, submission_lon)).km
