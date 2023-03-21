@@ -584,11 +584,8 @@ def leaderboard(request):
     if request.user.is_authenticated:
         template = loader.get_template('account/leaderboard.html')
 
-        friends = Friend.get_friend_usernames(request.user.username)
-        context['friends'] = friends
-
-        incoming = Friend.get_pending_friend_usernames(request.user.username)
-        context['incoming'] = incoming
+        leaders = Profile.objects.order_by('-points')[:20]
+        context["leaders"] = leaders
 
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = CurrentChallenge.get_challenge_description()

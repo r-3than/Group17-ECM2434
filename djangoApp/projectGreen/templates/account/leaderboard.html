@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <!--
     Main Authors:
-        SJ - Design
-        SJ - Styling
+        SJ - Design + Styling
+        OJ - Integration
 -->
 {% load static %}
 <html lang="en">
@@ -102,41 +102,14 @@
                         <div class="divider"></div>
                         
                         <div class="body">
-                            
-                            <div class="record">
-                                <div class="position">1</div>
-                                <div class="icon rounded-circle">T</div>
-                                <div class="username">tn337</div>
-                                <div class="point-number">124</div>
-                            </div>
-
-                            <div class="record">
-                                <div class="position">2</div>
-                                <div class="icon rounded-circle">S</div>
-                                <div class="username">sj546</div>
-                                <div class="point-number">96</div>
-                            </div>
-
-                            <div class="record">
-                                <div class="position">3</div>
-                                <div class="icon rounded-circle">L</div>
-                                <div class="username">lbb203</div>
-                                <div class="point-number">73</div>
-                            </div>
-
-                            <div class="record">
-                                <div class="position">4</div>
-                                <div class="icon rounded-circle">E</div>
-                                <div class="username">er545</div>
-                                <div class="point-number">45</div>
-                            </div>
-
-                            <div class="record">
-                                <div class="position">5</div>
-                                <div class="icon rounded-circle">O</div>
-                                <div class="username">omj202</div>
-                                <div class="point-number">39</div>
-                            </div>
+                            {% for profile in leaders %}
+                                <div class="record">
+                                    <div class="position">{{forloop.counter}}</div>
+                                    <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                    <div class="username">{{profile.user.username}}</div>
+                                    <div class="point-number">{{profile.points}}</div>
+                                </div>
+                            {% endfor %}
                         </div>
 
                     </div>
