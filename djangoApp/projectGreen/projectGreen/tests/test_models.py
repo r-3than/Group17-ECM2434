@@ -192,6 +192,92 @@ class FriendTestCase(TestCase):
         self.assertEqual(['ab123'], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
         self.assertEqual(['ab123'], Friend.get_friend_usernames('bc123'), 'bc123 friend list incorrect')
 
+    def test_accept_friend_request(self):
+        # TODO does it need checks to see if user exists?
+
+        # should fail when valid users are already friends
+        Friend.create_friend_request('ab123','abc123')
+        f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        f.pending = False
+        f.save()
+        Friend.accept_friend_request('ab123','abc123')
+        self.assertEqual(f.pending, False) # TODO idk what else to do here as it doesnt throw exception atm
+        f.delete()
+            
+        # should succeed when valid friend request exists
+        Friend.create_friend_request('ab123','abc123')
+        f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        f.pending = True
+        f.save()
+        Friend.accept_friend_request('ab123','abc123')
+        f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        self.assertEqual(f.pending, False)
+        self.assertEqual([], Friend.get_pending_friend_usernames('ab123'), 'residual friend request')
+        self.assertEqual([], Friend.get_pending_friend_usernames('abc123'), 'residual friend request')
+        self.assertEqual(['bc123','abc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
+        self.assertEqual(['ab123'], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
+        f.delete()
+
+    def test_decline_friend_request(self):
+        # should fail when valid users are already friends
+        Friend.create_friend_request('ab123','abc123')
+        f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        f.pending = False
+        f.save()
+        Friend.decline_friend_request('ab123','abc123')
+        self.assertEqual(f.pending, False) # TODO idk what else to do here as it doesnt throw exception atm
+        f.delete()
+            
+        # should succeed when valid friend request exists
+        Friend.create_friend_request('ab123','abc123')
+        f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        f.pending = True
+        f.save()
+        Friend.decline_friend_request('ab123','abc123')
+        with self.assertRaises(Friend.DoesNotExist, msg='friend request not removed'):
+            Friend.objects.get(left_username='ab123',right_username='abc123')
+        self.assertEqual([], Friend.get_pending_friend_usernames('ab123'), 'residual friend request')
+        self.assertEqual([], Friend.get_pending_friend_usernames('abc123'), 'residual friend request')
+        self.assertEqual(['bc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
+        self.assertEqual([], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
+        f.delete()
+
+    def test_remove_friend(self):
+        # should succeed when valid friend request exists
+        Friend.create_friend_request('ab123','abc123')
+        f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        f.pending = False
+        f.save()
+        Friend.remove_friend('ab123','abc123')
+        with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
+            f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
+            f = Friend.objects.get(left_username='abc123',right_username='ab123')
+        self.assertEqual(['bc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
+        self.assertEqual([], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
+        f.delete()
+
+        # should succeed when valid friend request exists (reverse)
+        Friend.create_friend_request('ab123','abc123')
+        f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        f.pending = False
+        f.save()
+        Friend.remove_friend('abc123','ab123')
+        with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
+            f = Friend.objects.get(left_username='ab123',right_username='abc123')
+        with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
+            f = Friend.objects.get(left_username='abc123',right_username='ab123')
+        self.assertEqual(['bc123'], Friend.get_friend_usernames('ab123'), 'ab123 friend list incorrect')
+        self.assertEqual([], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
+        f.delete()
+
+        # should fail when valid users are not friends
+        # f = Friend.objects.get(left_username='ab123',right_username='abc123') # exists for some reason??
+        # f = Friend.objects.get(left_username='abc123',right_username='ab123') # doesnt exist
+        with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
+            Friend.remove_friend('ab123','abc123')
+
+
 class ActiveChallengeTestCase(TestCase):
     def setUp(self):
         user = User(username='ab123', password='unsecure_password')

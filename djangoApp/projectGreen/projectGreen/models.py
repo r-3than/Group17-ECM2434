@@ -227,6 +227,7 @@ class Friend(models.Model):
 
     @classmethod
     def accept_friend_request(cls, from_username: str, to_username: str):
+        # TODO IS THIS EVEN NECESSARY?
         # checks that users exist
         try:
             User.objects.get(username=from_username)
@@ -250,6 +251,7 @@ class Friend(models.Model):
             return
         except Friend.DoesNotExist:
             LOGGER.warning('the friend request from "{}" to "{}" does not exist'.format(from_username, to_username))
+            pass
     
     @classmethod
     def decline_friend_request(cls, from_username: str, to_username: str):
@@ -296,6 +298,7 @@ class Friend(models.Model):
             f.delete()
             return
         except Friend.DoesNotExist:
+            LOGGER.warning('the friendship between "{}" and "{}" does not exist'.format(from_username, to_username))
             pass
 
         # check friend object exists (alternate direction)
@@ -305,6 +308,7 @@ class Friend(models.Model):
             return
         except Friend.DoesNotExist:
             LOGGER.warning('the friendship between "{}" and "{}" does not exist'.format(from_username, to_username))
+            pass
 
     @classmethod
     def get_pending_friend_usernames(cls, username: str) -> list[str]:
