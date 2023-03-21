@@ -45,6 +45,7 @@ WORDS_TO_FILTER = load_profanity_file()
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField(default=0)
+    spendable_points = models.IntegerField(default=0)
     number_of_submissions_removed = models.IntegerField(default=0)
     number_of_comments_removed = models.IntegerField(default=0)
     number_of_false_reports = models.IntegerField(default=0)
@@ -119,7 +120,7 @@ class Profile(models.Model):
         self.save()
 
     @classmethod
-    def recalculate_user_points_by_username(cls, username: str):
+    def recalculate_user_points(cls, username: str):
         '''
         Calculates the total points for a user based on submissions and interactions
         Interactions are only counted / points are only assigned for non-reported submissions
@@ -175,6 +176,22 @@ class Profile(models.Model):
         '''
         Profile.add_points_by_username(username, 0)
         return Profile.objects.get(user__username=username)
+
+    @classmethod
+    def calculate_spendable_points_by_username(cls, username: str):
+        '''
+        Caluculates the points a profile has left to spend by subtracting the cost of all the items they own from their points
+        '''
+        profile = Profile.objects.get(user__username=username)
+        spendable_points_value = profile.points
+        items = OwnedItem.objects.filter(username=username)
+        for item in items:
+            item_name = item.item_name            
+            store_item = StoreItem.objects.get(item_name=item_name)
+            spendable_points_value -= store_item.cost
+
+        profile.spendable_points = spendable_points_value
+        profile.save()
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
@@ -678,3 +695,74 @@ class Comment(models.Model):
                 LOGGER.warning('flagged inappropriate word "{}" in {}\'s comment'.format(word, self.comment_username))
                 return True
         return False
+
+class StoreItem(models.Model):
+    item_name = models.CharField(max_length=256)
+    cost = models.IntegerField(default=0)
+    photo_bytes = models.BinaryField(null=True)
+
+    @classmethod
+    def get_item_cost(cls, item_name: str) -> int:
+        '''
+        Gets the cost in points of the item
+        '''
+        try:
+            item = StoreItem.objects.get(item_name=item_name)
+            return item.cost
+        except Store.DoesNotExist:
+            return -1
+
+    verbose_name = 'StoreItem'
+    verbose_name_plural = 'StoreItems'
+    class Meta:
+        db_table = 'StoreItems'
+
+class OwnedItem(models.Model):
+    item_name = models.CharField(max_length=256)
+    username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+    is_active = models.BooleanField(default=False)
+
+    @classmethod
+    def owns_item(cls, item_name: str, username: str) -> bool:
+        '''
+        Checks if a user owns an item
+        '''
+        try:
+            OwnedItem.objects.get(item_name=item_name, username=username)
+            return True
+        except OwnedItem.DoesNotExist:
+            return False
+
+    @classmethod
+    def make_active(cls, item_name: str, username: str) -> bool:
+        '''
+        Removes the active state from the current active item and adds it to the new one
+        '''
+        if OwnedItem.owns_item(item_name, username) == True:
+            try:
+                current_active_item = OwnedItem.object.get(is_active=True)
+                current_active_item.is_active=False
+            except:
+                pass
+            try:
+                new_active_item = OwnedItem.object.get(item_name=item_name, username=username)
+                new_active_item.is_active=True
+                return True
+            except OwnedItem.DoesNotExist:
+                return False
+
+    @classmethod
+    def get_active_name(cls) -> str:
+        '''
+        Gets the name of the active item
+        '''
+        try:
+            active_item= OwnedItem.object.get(is_active=True)
+            return active_item.item_name
+        except OwnedItem.DoesNotExist:
+            return ""
+
+    verbose_name = 'OwnedItem'
+    verbose_name_plural = 'OwnedItems'
+    class Meta:
+        db_table = 'OwnedItems'
