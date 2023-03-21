@@ -446,6 +446,7 @@ def account(request):
         profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
         context["user_points"] = user_points
+        context["is_subscribed"] = profileObj.subscribed_to_emails
 
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
