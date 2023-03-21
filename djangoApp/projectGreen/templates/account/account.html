@@ -55,10 +55,10 @@
                         <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
                         <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <div style="width: 100%; height: 50px;">
-                            <button type="button" class="btn btn-dark mt-2" id="unsubscribe" style="float: left; width: 47.5%; height: 50px;" {% if is_subscribed is False %}disabled{% endif %} aria-disabled="{% if is_subscribed is True %}false{% else %}true{% endif %}">Unsubscribe</button>
-                            <button type="button" class="btn btn-dark mt-2" id="resubscribe" style="float: right; width: 47.5%; height: 50px;" {% if is_subscribed is True %}disabled{% endif %}  aria-disabled="{% if is_subscribed is False %}false{% else %}true{% endif %}"">Resubscribe</button>
+                            <button type="button" class="btn btn-dark mt-2" id="unsubscribe-mobile" style="float: left; width: 47.5%; height: 50px;" {% if is_subscribed is False %}disabled{% endif %} aria-disabled="{% if is_subscribed is True %}false{% else %}true{% endif %}">Unsubscribe</button>
+                            <button type="button" class="btn btn-dark mt-2" id="resubscribe-mobile" style="float: right; width: 47.5%; height: 50px;" {% if is_subscribed is True %}disabled{% endif %}  aria-disabled="{% if is_subscribed is False %}false{% else %}true{% endif %}"">Resubscribe</button>
                         </div>
-                        <button type="button" class="btn btn-dark mt-2" id="signOut" style="width: 100%; height: 50px;">Sign Out</button>
+                        <button type="button" class="btn btn-dark mt-2" id="signOut-mobile" style="width: 100%; height: 50px;">Sign Out</button>
                         <button type="button" class="btn btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#deleteAccountModal" style="width: 100%; height: 50px;">Delete Account</button>
                     </div>
             
@@ -106,14 +106,23 @@
                     <button type="button" class="btn btn-danger mt-1" data-bs-toggle="modal" data-bs-target="#deleteAccountModal" style="width: 100%; height: 50px;">Delete Account</button>
                 </div>
                 <script>
-                    signOut = document.getElementById("signOut");
-                    signOut.onclick = function() {
-                        location.href = "{% url 'signout' %}"
-                    }
-                    
-                    unsubscribe = document.getElementById("unsubscribe");
-                    unsubscribe.onclick = function() {
-                        location.href = "{% url 'unsubscribe' %}"
+                    var mobile = ["","-mobile"]
+                    for(var i=0; i<2; i++) {
+                        var ext = mobile[i]
+                        signOut = document.getElementById("signOut"+ext);
+                        signOut.onclick = function() {
+                            location.href = "{% url 'signout' %}"
+                        }
+                        
+                        unsubscribe = document.getElementById("unsubscribe"+ext);
+                        unsubscribe.onclick = function() {
+                            location.href = "{% url 'unsubscribe' %}"
+                        }
+
+                        resubscribe = document.getElementById("resubscribe"+ext);
+                        resubscribe.onclick = function() {
+                            location.href = "{% url 'resubscribe' %}"
+                        }
                     }
                 </script>
             </div>

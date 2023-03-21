@@ -581,11 +581,25 @@ def declineFriendRequest(request):
             finally:
                 return redirect('/friends/')
             
+'''Unsubscribes a user from email notifiactions'''
 def unsubscribeFromEmails(request):
     if request.user.is_authenticated:
         try:
             profile = Profile.get_profile(request.user.username)
-            profile.unsubscribe()
+            profile.subscribed_to_emails = False
+            profile.save()
+        except Exception as e:
+            print(str(e))
+        finally:
+            return redirect('/account/')
+        
+'''Resubscribes a user to email notifiactions'''
+def resubscribeToEmails(request):
+    if request.user.is_authenticated:
+        try:
+            profile = Profile.get_profile(request.user.username)
+            profile.subscribed_to_emails = True
+            profile.save()
         except Exception as e:
             print(str(e))
         finally:

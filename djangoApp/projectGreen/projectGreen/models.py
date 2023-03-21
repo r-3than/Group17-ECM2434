@@ -80,13 +80,6 @@ class Profile(models.Model):
             u.delete() # profile deleted by cascade
         if fetch: return data
 
-    def unsubscribe(self):
-        if not self.subscribed_to_emails:
-            LOGGER.warning('User {} already unsubscribed'.format(self.user.username))
-        else:
-            self.subscribed_to_emails = False
-            self.save()
-
     @classmethod
     def set_points_by_username(cls, username: str, points_value: int):
         '''
