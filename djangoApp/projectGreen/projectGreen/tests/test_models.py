@@ -4,6 +4,7 @@ Main Authors:
     LB - Challenge, ActiveChallenge, Submission and Upvote tests
 '''
 
+import io
 import unittest
 import datetime
 import pytz
@@ -271,12 +272,8 @@ class FriendTestCase(TestCase):
         self.assertEqual([], Friend.get_friend_usernames('abc123'), 'abc123 friend list incorrect')
         f.delete()
 
-        # TODO
-        # should fail when valid users are not friends
-        # f = Friend.objects.get(left_username='ab123',right_username='abc123') # exists for some reason??
-        # f = Friend.objects.get(left_username='abc123',right_username='ab123') # doesnt exist
-        # with self.assertRaises(Friend.DoesNotExist, msg='friendship shouldn\'t exist'):
-        #     Friend.remove_friend('ab123','abc123')
+        # Returns None when Friend object doesn't exist
+        self.assertFalse(Friend.remove_friend('ab123','abc123'))
 
 
 class ActiveChallengeTestCase(TestCase):
@@ -330,10 +327,10 @@ class SubmissionTestCase(TestCase):
         challenge.save()
         activechallenge = ActiveChallenge(date=datetime.datetime(2023,3,9,10,0,0,0,pytz.UTC), challenge=challenge)
         activechallenge.save()
-        binary_image = b""
-        print(binary_image)
-        with open('IMG_1379.JPG', 'rb') as img_file:
-            binary_image += base64.b64encode(img_file.read())
+        with open("IMG_1379.JPG", "rb") as img:
+            f = img.read()
+            binary_image = bytearray(f)
+            binary_image = bytearray(f)
         for un in ['ab123','abc123']:
             submission = Submission(username=un, active_challenge=activechallenge,
                                     submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC),
@@ -345,8 +342,7 @@ class SubmissionTestCase(TestCase):
         with open('IMG_34123.jpg', 'rb') as img_file2:
             binary_image2 = base64.b64encode(img_file2.read())
         reviewed_submission = Submission(username='cd123', active_challenge=activechallenge,
-                                            submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC),
-                                            photo_bytes=binary_image2, reviewed=True)
+                                            submission_time=datetime.datetime(2023,3,9,10,15,0,0,pytz.UTC), reviewed=True)
         reviewed_submission.save()
 
     def test_user_has_submitted(self):
@@ -360,12 +356,16 @@ class SubmissionTestCase(TestCase):
         early_ac.create_submission('ef123',datetime.datetime(2023,3,9,9,50,0,0,pytz.UTC))
         self.assertFalse(Submission.user_has_submitted('ef123'))
 
+    def test_is_for_active_challenge(self):
+        submission = Submission.objects.get(username='ab123')
+        self.assertTrue(submission.is_for_active_challenge(), 'is_for_active_challenge failed')
+
     def test_get_minutes_late(self):
         submission = Submission.objects.get(username='ab123')
         minutes = submission.get_minutes_late()
         self.assertEqual(minutes, 15, 'get_minutes_late failed')
     
-    def test_punctuality_scaling(self):
+    def test_get_punctuality_scaling(self):
         submission = Submission.objects.get(username='ab123')
         scaled_points = submission.get_punctuality_scaling()
         self.assertEqual(scaled_points, 2)
@@ -585,15 +585,18 @@ class SubmissionTestCase(TestCase):
         reported_comment.save()
         self.assertEqual(submission.get_comment_count(), 2, 'get_comment_count failed')
     
-    '''
     def test_location_is_valid(self):
         submission = Submission.objects.get(username='ab123')
         assert(submission.location_is_valid())
         submission2 = Submission.objects.get(username='bc123')
         assert(not submission2.location_is_valid())
-        #submission3 = Submission.objects.get(username='cd123')
-        #assert(not submission3.location_is_valid())
-    '''
+
+    def test_location_check_missing_metadata(self):
+        submission = Submission.objects.get(username='bc123')
+        self.assertTrue(submission.location_check_missing_metadata('50.73473', '-3.533968'))
+        self.assertFalse(submission.location_check_missing_metadata('55.94585', '-3.231052'))
+
+        
 
 
 class UpvoteTestCase(TestCase):

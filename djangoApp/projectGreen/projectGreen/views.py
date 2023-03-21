@@ -48,6 +48,7 @@ def uploadphoto(request):
             submission_time=current_date)
             # Check location
             if active_challenge.challenge.allowed_distance == 0.0:
+                newSubmission.save()
                 return redirect('/home/')
             else:
                 try:
