@@ -580,6 +580,16 @@ def declineFriendRequest(request):
             finally:
                 return redirect('/friends/')
             
+def unsubscribeFromEmails(request):
+    if request.user.is_authenticated:
+        try:
+            profile = Profile.get_profile(request.user.username)
+            profile.unsubscribe()
+        except Exception as e:
+            print(str(e))
+        finally:
+            return redirect('/account/')
+            
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names

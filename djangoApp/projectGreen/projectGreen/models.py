@@ -46,6 +46,7 @@ WORDS_TO_FILTER = load_profanity_file()
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField(default=0)
+    subscribed_to_emails = models.BooleanField(default=True)
     number_of_submissions_removed = models.IntegerField(default=0)
     number_of_comments_removed = models.IntegerField(default=0)
     number_of_false_reports = models.IntegerField(default=0)
@@ -78,6 +79,13 @@ class Profile(models.Model):
                 f.delete()
             u.delete() # profile deleted by cascade
         if fetch: return data
+
+    def unsubscribe(self):
+        if not self.subscribed_to_emails:
+            LOGGER.warning('User {} already unsubscribed'.format(self.user.username))
+        else:
+            self.subscribed_to_emails = False
+            self.save()
 
     @classmethod
     def set_points_by_username(cls, username: str, points_value: int):
