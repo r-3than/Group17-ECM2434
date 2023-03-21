@@ -15,7 +15,7 @@ import io
 from PIL import Image
 import urllib.request
 from geopy.distance import distance
-from projectGreen.extract_metadata import process_GPS_data
+from imageMetadata.extract_metadata import process_GPS_data
 from projectGreen.settings import PROFANITY_FILTER_SOURCE_URL
 
 LOGGER = logging.getLogger(__name__)
