@@ -5,15 +5,18 @@ Main Author:
 Sub-Author:
     LB - Initial Challenge model view; code review
 '''
+
 import base64
+import logging
+
+from datetime import datetime
 from django.contrib import admin
 from django.contrib.auth.models import User
-from django.utils.html import format_html
 from django.template.loader import render_to_string
 from django.urls import reverse
+from django.utils.html import format_html
+
 from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
-from datetime import datetime
-import logging
 
 LOGGER = logging.getLogger('django')
 
@@ -33,14 +36,14 @@ def send_email_notfication(active_challenge: ActiveChallenge, request):
     }
     plain_text = render_to_string('notification/notification.txt', context)
     html = render_to_string('notification/notification.html', context)
-    
+
     for user in User.objects.all():
-        p = Profile.get_profile(user.username)
-        if p.subscribed_to_emails:
+        user_profile = Profile.get_profile(user.username)
+        if user_profile.subscribed_to_emails:
             try:
                 user.email_user('Time to BeGreen!',message=plain_text, html_message=html, from_email='djangotestemail31@gmail.com')
             except:
-                LOGGER.error("Message to ", user.email, "failed to send.")
+                LOGGER.error(("Message to ", user.email, "failed to send."))
 
 @admin.action(description='Publish Challenge')
 def publish_challenge(modeladmin, request, queryset):
@@ -49,10 +52,10 @@ def publish_challenge(modeladmin, request, queryset):
     '''
     c = queryset[0]
     ActiveChallenge.objects.all().update(is_expired=True)
-    ac = ActiveChallenge(date=datetime.now(), challenge=c)
-    ac.save()
+    active_challenge = ActiveChallenge(date=datetime.now(), challenge=c)
+    active_challenge.save()
 
-    send_email_notfication(ac, request)
+    send_email_notfication(active_challenge, request)
 
 @admin.action(description='Resend Email Notification')
 def resend_challenge_notification(modeladmin, request, queryset):
@@ -115,11 +118,11 @@ class UserAdmin(admin.ModelAdmin):
     @admin.display(ordering='profile__points', description='Points')
     def get_points(self, user) -> int:
         return user.profile.points
-    
+
     @admin.display(ordering='', description='Friends')
     def get_friends(self, user) -> list[str]:
         return Friend.get_friend_usernames(user.username)
-    
+
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ['get_username', 'points', 'number_of_submissions_removed', 'number_of_comments_removed', 'number_of_false_reports']
     ordering = ['number_of_submissions_removed', 'number_of_comments_removed', 'number_of_false_reports']
@@ -142,27 +145,27 @@ class ActiveChallengesAdmin(admin.ModelAdmin):
     @admin.display(ordering='challenge__id', description='challenge_id')
     def get_challenge_id(self, active_challenge) -> int:
         return active_challenge.challenge.id
-    
+
     @admin.display(ordering='challenge__description', description='description')
     def get_challenge_description(self, active_challenge) -> str:
         return active_challenge.challenge.description
-    
+
     @admin.display(ordering='challenge__time_for_challenge', description='time_for_challenge')
     def get_time_for_challenge(self, active_challenge) -> int:
         return active_challenge.challenge.time_for_challenge
-    
+
     @admin.display(ordering='challenge__latitude', description='latitude')
     def get_latitude(self, active_challenge) -> int:
         return active_challenge.challenge.latitude
-    
+
     @admin.display(ordering='challenge__longitude', description='longitude')
     def get_longitude(self, active_challenge) -> int:
         return active_challenge.challenge.longitude
-    
+
     @admin.display(ordering='challenge__allowed_distance', description='allowed_distance')
     def get_allowed_distance(self, active_challenge) -> int:
         return active_challenge.challenge.allowed_distance
-    
+
 class SubmissionAdmin(admin.ModelAdmin):
     list_display = ['username', 'get_challenge_date', 'submission_time', 'get_minutes_late', 'get_submission', 'reported', 'reviewed']
     ordering = ['-reported', 'reviewed', 'username']
@@ -171,15 +174,15 @@ class SubmissionAdmin(admin.ModelAdmin):
     @admin.display(ordering='challenge__challenge_date', description='challenge_date')
     def get_challenge_date(self, submission) -> datetime:
         return submission.active_challenge.date
-    
+
     @admin.display(description='minuites_late')
     def get_minutes_late(self, submission) -> int:
         return submission.get_minutes_late()
-    
+
     @admin.display(description='Photo')
     def get_submission(self, submission) -> str:
         ''' Fixed by ER '''
-        if submission.photo_bytes != None:
+        if submission.photo_bytes is not None:
             photo_url=base64.b64encode(submission.photo_bytes).decode("utf-8")
             return format_html("<img src='data:image/png;base64,{decoded}'>".format(decoded=photo_url))
         else:
@@ -193,7 +196,7 @@ class UpvoteAdmin(admin.ModelAdmin):
     @admin.display(ordering='submission__submission', description='submission')
     def get_submission(self, upvote) -> Submission:
         return upvote.submission
-    
+
 class CommentAdmin(admin.ModelAdmin):
     list_display = ['get_submission', 'comment_username', 'content', 'reported', 'reviewed']
     ordering = ['-reported', 'reviewed', 'comment_username']

@@ -24,7 +24,7 @@ urlpatterns = [
     path('submit/', submit, name='submit'),
     
     # Feeds:
-    path('home/', home, name='home'),
+    path('university-feed/', university_feed, name='university-feed'),
     path('friends-feed/',friends_feed, name='friends-feed'),
     
     # Account Management:
@@ -38,7 +38,7 @@ urlpatterns = [
 
     # Functions:
     # Posts:
-    path('uploadphoto/', uploadphoto),
+    path('uploadphoto/', upload_photo),
     path('like_submission/', like_submission),
     path('flag_submission/', flag_submission),
 
@@ -47,18 +47,18 @@ urlpatterns = [
     path('flag_comment/', flag_comment),
     
     # Friends:
-    path('addFriend/', addFriend, name='addFriend'),
-    path('removeFriend/', removeFriend, name='removeFriend'),
-    path('acceptFriendRequest/', acceptFriendRequest, name='acceptFriendRequest'),
-    path('declineFriendRequest/', declineFriendRequest, name='declineFriendRequest'),
+    path('addFriend/', add_friend, name='addFriend'),
+    path('removeFriend/', remove_friend, name='removeFriend'),
+    path('acceptFriendRequest/', accept_friend_request, name='acceptFriendRequest'),
+    path('declineFriendRequest/', decline_friend_request, name='declineFriendRequest'),
 
     # Accounts:
-    path('deleteAccount/', deleteAccount, name='deleteAccount'),
+    path('deleteAccount/', delete_account, name='deleteAccount'),
     path('signout/', signout, name='signout'),
 
     # Emails:
-    path('unsubscribe/', unsubscribeFromEmails, name='unsubscribe'),
-    path('resubscribe/', resubscribeToEmails, name='resubscribe'),
+    path('unsubscribe/', unsubscribe_from_emails, name='unsubscribe'),
+    path('resubscribe/', resubscribe_to_emails, name='resubscribe'),
 
     # Other:
     path('specific_group_access', specific_group_access, ),
