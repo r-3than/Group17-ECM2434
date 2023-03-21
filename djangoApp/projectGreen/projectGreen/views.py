@@ -498,9 +498,6 @@ def signout(request):
 def deleteAccount(request):
     if request.method == "POST":
         if request.user.is_authenticated:
-            print("Found profiles:", len(Profile.objects.values_list()))
-            for x in Profile.objects.all():
-                print(x.user.username)
             try:
                 accountObj = Profile.objects.filter(user__username=request.user.username).first()
                 accountObj.user_data(fetch=False, delete=True)
@@ -520,12 +517,9 @@ def friends(request):
         template = loader.get_template('account/friends.html')
 
         friends = Friend.get_friend_usernames(request.user.username)
-        print(friends)
-
         context['friends'] = friends
 
         incoming = Friend.get_pending_friend_usernames(request.user.username)
-
         context['incoming'] = incoming
 
         CurrentChallenge =ActiveChallenge.get_last_active_challenge()
@@ -549,8 +543,43 @@ def addFriend(request):
                 Friend.create_friend_request(request.user.username, recipient)
             finally:
                 return redirect('/friends/')
+            
+'''Removes an existing friend'''        
+def removeFriend(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                friend_username = request.POST.get("friend_name")
+                Friend.remove_friend(request.user.username, friend_username)
+            except Exception as e:
+                print(str(e))
+            finally:
+                return redirect('/friends/')
 
+'''Accepts a pending friend'''  
+def acceptFriendRequest(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                friend_username = request.POST.get("friend_name")
+                Friend.accept_friend_request(friend_username, request.user.username)
+            except Exception as e:
+                print(str(e))
+            finally:
+                return redirect('/friends/')
 
+'''Removes a pending friend'''
+def declineFriendRequest(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            try:
+                friend_username = request.POST.get("friend_name")
+                Friend.decline_friend_request(friend_username, request.user.username)
+            except Exception as e:
+                print(str(e))
+            finally:
+                return redirect('/friends/')
+            
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names

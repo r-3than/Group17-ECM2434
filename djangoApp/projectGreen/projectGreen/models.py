@@ -226,6 +226,87 @@ class Friend(models.Model):
             f.save()
 
     @classmethod
+    def accept_friend_request(cls, from_username: str, to_username: str):
+        # checks that users exist
+        try:
+            User.objects.get(username=from_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(from_username))
+            return
+        try:
+            User.objects.get(username=to_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(to_username))
+            return
+        
+        # check friend object exists and accept
+        try: 
+            f = Friend.objects.get(left_username=from_username, right_username=to_username)
+            if f.pending:
+                f.pending = False
+                f.save()
+            else:
+                LOGGER.warning('{} and {} are already friends.'.format(from_username, to_username))
+            return
+        except Friend.DoesNotExist:
+            LOGGER.warning('the friend request from "{}" to "{}" does not exist'.format(from_username, to_username))
+    
+    @classmethod
+    def decline_friend_request(cls, from_username: str, to_username: str):
+        # checks that users exist
+        try:
+            User.objects.get(username=from_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(from_username))
+            return
+        try:
+            User.objects.get(username=to_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(to_username))
+            return
+        
+        # check friend object exists and delete
+        try: 
+            f = Friend.objects.get(left_username=from_username, right_username=to_username)
+            if f.pending:
+                f.delete()
+            else:
+                LOGGER.warning('{} and {} are already friends.'.format(from_username, to_username))
+            return
+        except Friend.DoesNotExist:
+            LOGGER.warning('the friend request from "{}" to "{}" does not exist'.format(from_username, to_username))
+        
+    @classmethod
+    def remove_friend(cls, from_username: str, to_username: str):
+        # checks that users exist
+        try:
+            User.objects.get(username=from_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(from_username))
+            return
+        try:
+            User.objects.get(username=to_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(to_username))
+            return
+        
+        # check friend object exists
+        try: 
+            f = Friend.objects.get(left_username=from_username, right_username=to_username)
+            f.delete()
+            return
+        except Friend.DoesNotExist:
+            pass
+
+        # check friend object exists (alternate direction)
+        try: 
+            f = Friend.objects.get(left_username=to_username, right_username=from_username)
+            f.delete()
+            return
+        except Friend.DoesNotExist:
+            LOGGER.warning('the friendship between "{}" and "{}" does not exist'.format(from_username, to_username))
+
+    @classmethod
     def get_pending_friend_usernames(cls, username: str) -> list[str]:
         '''
         Fetchs all friend connections to a user flagged as pending
