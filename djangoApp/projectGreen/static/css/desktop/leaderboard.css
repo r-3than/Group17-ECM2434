@@ -275,7 +275,7 @@ header .side {
     background-color: var(--exeter-dark-green);
     color: white;
     width: 360px;
-    height: 360px;
+    height: 340px;
     padding: 6%;
     padding-left: 9%;
     margin: auto;
@@ -284,7 +284,7 @@ header .side {
     font-size: 24px;
     font-weight: 500;
     box-shadow: 1px 5px 10px #202020;
-    line-height: 300%;
+    line-height: 250%;
     overflow-y: hidden;
 }
 
