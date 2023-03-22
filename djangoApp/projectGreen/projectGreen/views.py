@@ -157,6 +157,12 @@ def challenge(request):
         context["user_points"] = user_points
         context["post_count"] = post_count
 
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
+
         return HttpResponse(template.render(context, request))
     else:
         return signin(request)
@@ -257,24 +263,16 @@ def university_feed(request):
             # Not ideal but ensures points sync
             user_profile = Profile.objects.filter(id=request.user.id).first()
             has_reviewed = submission.reviewed
-            try: # Fetches profile picture for submission user
-                submission_user_item = OwnedItem.objects.get(username=submission.username, is_active=True)
-                submission_user_profile_picture = StoreItem.objects.get(item_name=submission_user_item.item_name)
-                is_active = True
-                profile_image = submission_user_profile_picture.photo.url
-                text_colour = '#'+submission_user_profile_picture.text_colour
-            except:
-                is_active = False
-                profile_image = None
-                text_colour = None
+            # Fetches profile picture for submission user
+            submission_user_item = OwnedItem.get_active_item_data(submission.username)
                 
             submissions_info[submission.id] = {
                                                'submission_id': submission.id,
                                                'submission_user_displayname': user_display_name,
                                                'submission_user_profile_picture': {
-                                                    'is_active': is_active,
-                                                    'image': profile_image,
-                                                    'text': text_colour
+                                                    'is_active': submission_user_item['is_active'],
+                                                    'image': submission_user_item['image'],
+                                                    'text': submission_user_item['text']
                                                },
                                                'submission_username': submission.username,
                                                'submission_time': submission_time_form,
@@ -363,7 +361,7 @@ def friends_feed(request):
                 Profile.recalculate_user_points_by_username(submission.username)
 
                 # Fetches profile picture for submission user
-                submission_user_item = OwnedItem.get_active_item_data(request.user.username)
+                submission_user_item = OwnedItem.get_active_item_data(submission.username)
                 
                 submissions_info[submission.id] = {
                                                 'submission_id': submission.id,
@@ -495,42 +493,14 @@ def friends(request):
         user_friends = Friend.get_friend_usernames(request.user.username)
         friend_items = []
         for friend_username in user_friends:
-            try: # Fetches profile picture for submission user
-                friend_item = OwnedItem.objects.get(username=friend_username, is_active=True)
-                friend_profile_picture = StoreItem.objects.get(item_name=friend_item.item_name)
-                is_active = True
-                profile_image = friend_profile_picture.photo.url
-                text_colour = '#'+friend_profile_picture.text_colour
-            except:
-                is_active = False
-                profile_image = None
-                text_colour = None
-            friend_items.append({
-                'is_active': is_active,
-                'image': profile_image,
-                'text': text_colour
-            })
+            friend_items.append(OwnedItem.get_active_item_data(friend_username))
         context['friends'] = zip(user_friends, friend_items)
             
 
         incoming = Friend.get_pending_friend_usernames(request.user.username)
         incoming_items = []
         for incoming_username in incoming:
-            try: # Fetches profile picture for submission user
-                incoming_item = OwnedItem.objects.get(username=incoming_username, is_active=True)
-                incoming_profile_picture = StoreItem.objects.get(item_name=incoming_item.item_name)
-                is_active = True
-                profile_image = incoming_profile_picture.photo.url
-                text_colour = '#'+incoming_profile_picture.text_colour
-            except:
-                is_active = False
-                profile_image = None
-                text_colour = None
-            incoming_items.append({
-                'is_active': is_active,
-                'image': profile_image,
-                'text': text_colour
-            })
+            incoming_items.append(OwnedItem.get_active_item_data(incoming_username))
         context['incoming'] = zip(incoming, incoming_items)
 
         current_challenge =ActiveChallenge.get_last_active_challenge()
