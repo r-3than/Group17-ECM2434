@@ -73,6 +73,7 @@ LOGGING = {
     },
 }
 
+broadcastURL = "http://localhost:8000" # change this url to the hosting url and make sure below
 ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com","localhost"]
 CSRF_TRUSTED_ORIGINS = ['https://projectgreen.grayitsolutions.com',"http://localhost:8000"]
 
@@ -157,7 +158,7 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-broadcastURL = "http://localhost:8000" # makes it easier when hosting so i can just change this url
+
 
 
 MICROSOFT = {
@@ -208,4 +209,4 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 SITE_ID = 1
 
-PROFANITY_FILTER_SOURCE_URL = 'https://www.cs.cmu.edu/~biglou/resources/bad-words.txt'
+PROFANITY_FILTER_SOURCE_URL = 'https://storage.googleapis.com/google-code-archive-downloads/v2/code.google.com/badwordslist/badwords.txt'

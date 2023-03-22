@@ -5,18 +5,20 @@ Sub-Author:
     LB - Challenge model helper functions; overall code review, location checking
 '''
 
+import io
+import logging
+import math
+import urllib.request
+
+from datetime import datetime as dt
 from django.db import models
 from django.contrib.auth.models import User
-from datetime import datetime as dt
-import math
-import logging
-import base64
-import io
-from PIL import Image
-import urllib.request
 from geopy.distance import distance
-from projectGreen.extract_metadata import process_GPS_data
+from PIL import Image
+
 from projectGreen.settings import PROFANITY_FILTER_SOURCE_URL
+
+from .imageMetadata.extract_metadata import process_GPS_data
 
 LOGGER = logging.getLogger(__name__)
 GAMEMASTER_LOGGER = logging.getLogger('gameMaster')
@@ -39,13 +41,16 @@ def load_profanity_file() -> list[str]:
     '''
     url_stream = urllib.request.urlopen(PROFANITY_FILTER_SOURCE_URL)
     LOGGER.info('loaded profanity file from {}'.format(PROFANITY_FILTER_SOURCE_URL))
-    return [line.decode().strip('\n') for line in url_stream.readlines()][1:]
+    PROFANITY_LIST = [line.decode().strip('\r\n').strip("*") for line in url_stream.readlines()][1:]
+    PROFANITY_LIST.remove("hell")
+    return PROFANITY_LIST
 
 WORDS_TO_FILTER = load_profanity_file()
 
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField(default=0)
+    subscribed_to_emails = models.BooleanField(default=True)
     number_of_submissions_removed = models.IntegerField(default=0)
     number_of_comments_removed = models.IntegerField(default=0)
     number_of_false_reports = models.IntegerField(default=0)
@@ -56,28 +61,29 @@ class Profile(models.Model):
         Will delete all this data if delete flag is set
         '''
         data = {}
-        u = self.user
-        data['profile'] = [u, self]
-        data['friends_set'] = set(Friend.objects.filter(left_username=u.username)).union(list(Friend.objects.filter(right_username=u.username)))
-        data['submissions'] = set(Submission.objects.filter(username=u.username))
+        user = self.user
+        data['profile'] = [user, self]
+        data['friends_set'] = set(Friend.objects.filter(left_username=user.username)).union(list(Friend.objects.filter(right_username=user.username)))
+        data['submissions'] = set(Submission.objects.filter(username=user.username))
         data['upvotes'] = {'given':set(), 'recieved':set()}
-        data['upvotes']['given'] = set(Upvote.objects.filter(voter_username=u.username))
+        data['upvotes']['given'] = set(Upvote.objects.filter(voter_username=user.username))
         data['comments'] = {'given':set(), 'recieved':set()}
-        data['comments']['given'] = set(Comment.objects.filter(comment_username=u.username))
-        for sub in data['submissions']:
-            data['upvotes']['recieved'].update(sub.get_upvotes())
-            data['comments']['recieved'].update(sub.get_comments())
+        data['comments']['given'] = set(Comment.objects.filter(comment_username=user.username))
+        for submission in data['submissions']:
+            data['upvotes']['recieved'].update(submission.get_upvotes())
+            data['comments']['recieved'].update(submission.get_comments())
         if delete:
-            for sub in data['submissions']:
-                sub.remove_submission()
-            for up in data['upvotes']['given']:
-                up.remove_upvote()
-            for c in data['comments']['given']:
-                c.remove_comment()
-            for f in data['friends_set']:
-                f.delete()
-            u.delete() # profile deleted by cascade
-        if fetch: return data
+            for submission in data['submissions']:
+                submission.remove_submission()
+            for upvote in data['upvotes']['given']:
+                upvote.remove_upvote()
+            for comment in data['comments']['given']:
+                comment.remove_comment()
+            for friend in data['friends_set']:
+                friend.delete()
+            user.delete() # profile deleted by cascade
+        if fetch:
+            return data
 
     @classmethod
     def set_points_by_username(cls, username: str, points_value: int):
@@ -88,8 +94,8 @@ class Profile(models.Model):
             profile = Profile.objects.get(user__username=username)
             profile.points = points_value
         except Profile.DoesNotExist:
-            u = User.objects.get(username=username)
-            profile = Profile(user=u, points=points_value)
+            user = User.objects.get(username=username)
+            profile = Profile(user=user, points=points_value)
         profile.save()
 
     def set_points(self, points_value: int):
@@ -108,8 +114,8 @@ class Profile(models.Model):
             profile = Profile.objects.get(user__username=username)
             profile.points += points_to_add
         except Profile.DoesNotExist:
-            u = User.objects.get(username=username)
-            profile = Profile(user=u, points=points_to_add)
+            user = User.objects.get(username=username)
+            profile = Profile(user=user, points=points_to_add)
         profile.save()
 
     def add_points(self, points_to_add: int):
@@ -131,11 +137,13 @@ class Profile(models.Model):
         points += len(upvotes_given)*SCORES['upvote']['given']
         upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
         points += len(upvotes_recieved)*SCORES['upvote']['recieved']
+
         # comment points
         comments_given = Comment.objects.filter(comment_username=username, submission__reported=False, reported=False)
         points += len(comments_given)*SCORES['comment']['given']
         comments_recieved = Comment.objects.filter(submission__username=username, submission__reported=False, reported=False)
         points += len(comments_recieved)*SCORES['comment']['recieved']
+
         # submission points
         submissions = Submission.objects.filter(username=username)
         for sub in submissions:
@@ -156,11 +164,13 @@ class Profile(models.Model):
         points += len(upvotes_given)*SCORES['upvote']['given']
         upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
         points += len(upvotes_recieved)*SCORES['upvote']['recieved']
+
         # comment points
         comments_given = Comment.objects.filter(comment_username=username, submission__reported=False, reported=False)
         points += len(comments_given)*SCORES['comment']['given']
         comments_recieved = Comment.objects.filter(submission__username=username, submission__reported=False, reported=False)
         points += len(comments_recieved)*SCORES['comment']['recieved']
+
         # submission points
         submissions = Submission.objects.filter(username=username)
         for sub in submissions:
@@ -204,10 +214,10 @@ class Friend(models.Model):
         except User.DoesNotExist:
             LOGGER.warning('the queried user "{}" does not exist'.format(to_username))
             return
-        
+
         try: # check if friend object already exists
-            f = Friend.objects.get(left_username=from_username, right_username=to_username)
-            if f.pending:
+            friendship = Friend.objects.get(left_username=from_username, right_username=to_username)
+            if friendship.pending:
                 LOGGER.warning('friend request from {} to {} is still pending.'.format(from_username, to_username))
             else:
                 LOGGER.warning('{} and {} are already friends.'.format(from_username, to_username))
@@ -215,15 +225,107 @@ class Friend(models.Model):
         except Friend.DoesNotExist:
             pass
         try: # check if friend object already exists (alternate direction)
-            f = Friend.objects.get(left_username=to_username, right_username=from_username)
-            if f.pending:
-                f.pending = False
-                f.save()
+            friendship = Friend.objects.get(left_username=to_username, right_username=from_username)
+            if friendship.pending:
+                friendship.pending = False
+                friendship.save()
             else:
                 LOGGER.warning('{} and {} are already friends.'.format(from_username, to_username))
         except Friend.DoesNotExist: # creates friend object
-            f = Friend(left_username=from_username, right_username=to_username, pending=True)
-            f.save()
+            friendship = Friend(left_username=from_username, right_username=to_username, pending=True)
+            friendship.save()
+
+    @classmethod
+    def accept_friend_request(cls, from_username: str, to_username: str):
+        '''
+        Accepts a pending friend request
+        i.e. sets pending to False
+        '''
+        # TODO IS THIS EVEN NECESSARY?
+        # checks that users exist
+        try:
+            User.objects.get(username=from_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(from_username))
+            return
+        try:
+            User.objects.get(username=to_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(to_username))
+            return
+
+        # check friend object exists and accept
+        try:
+            friendship = Friend.objects.get(left_username=from_username, right_username=to_username)
+            if friendship.pending:
+                friendship.pending = False
+                friendship.save()
+            else:
+                LOGGER.warning('{} and {} are already friends.'.format(from_username, to_username))
+            return
+        except Friend.DoesNotExist:
+            LOGGER.warning('the friend request from "{}" to "{}" does not exist'.format(from_username, to_username))
+
+    @classmethod
+    def decline_friend_request(cls, from_username: str, to_username: str):
+        '''
+        Removes a pending friend object
+        '''
+        # checks that users exist
+        try:
+            User.objects.get(username=from_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(from_username))
+            return
+        try:
+            User.objects.get(username=to_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(to_username))
+            return
+
+        # check friend object exists and delete
+        try:
+            friendship = Friend.objects.get(left_username=from_username, right_username=to_username)
+            if friendship.pending:
+                friendship.delete()
+            else:
+                LOGGER.warning('{} and {} are already friends.'.format(from_username, to_username))
+            return
+        except Friend.DoesNotExist:
+            LOGGER.warning('the friend request from "{}" to "{}" does not exist'.format(from_username, to_username))
+
+    @classmethod
+    def remove_friend(cls, from_username: str, to_username: str):
+        '''
+        Remove non-pending friend object
+        '''
+        # checks that users exist
+        try:
+            User.objects.get(username=from_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(from_username))
+            return
+        try:
+            User.objects.get(username=to_username)
+        except User.DoesNotExist:
+            LOGGER.warning('the queried user "{}" does not exist'.format(to_username))
+            return
+
+        # check friend object exists
+        try:
+            friendship = Friend.objects.get(left_username=from_username, right_username=to_username)
+            friendship.delete()
+            return
+        except Friend.DoesNotExist:
+            LOGGER.warning('the friendship between "{}" and "{}" does not exist'.format(from_username, to_username))
+
+        # check friend object exists (alternate direction)
+        try:
+            friendship = Friend.objects.get(left_username=to_username, right_username=from_username)
+            friendship.delete()
+            return
+        except Friend.DoesNotExist:
+            LOGGER.warning('the friendship between "{}" and "{}" does not exist'.format(from_username, to_username))
 
     @classmethod
     def get_pending_friend_usernames(cls, username: str) -> list[str]:
@@ -244,18 +346,18 @@ class Friend(models.Model):
         friends_right = Friend.objects.filter(right_username=username, pending=False)
         all_friends = friends + [friend.left_username for friend in friends_right]
         return all_friends
-    
+
     @classmethod
-    def get_friend_post_count(cls, username: str, active_challenge: 'ActiveChallenge') -> int:
+    def get_friend_post_count(cls, friend_username: str, active_challenge: 'ActiveChallenge') -> int:
         '''
         Counts the number of friends who have posted for the given challenge
         '''
-        friend_usernames = Friend.get_friend_usernames(username)
+        friend_usernames = Friend.get_friend_usernames(friend_username)
         valid_submissions = []
-        for un in friend_usernames:
+        for friend_username in friend_usernames:
             try:
-                s = Submission.objects.get(username=un, active_challenge=active_challenge, reported=False)
-                valid_submissions.append(s)
+                submission = Submission.objects.get(username=friend_username, active_challenge=active_challenge, reported=False)
+                valid_submissions.append(submission)
             except Submission.DoesNotExist:
                 pass
         return len(valid_submissions)
@@ -264,7 +366,6 @@ class Friend(models.Model):
     verbose_name_plural = 'Friends'
     class Meta:
         db_table = 'Friends'
-
 
 class Challenge(models.Model):
     description = models.CharField(max_length=200)
@@ -290,19 +391,24 @@ class ActiveChallenge(models.Model):
         '''
         profile = Profile.get_profile(username)
         lambda_user = math.log(1+len(Friend.get_friend_usernames(username)))*math.sqrt(profile.points)
-        s = Submission(username=username, active_challenge=self, submission_time=submission_time)
-        s.sum_of_interactions = lambda_user*s.get_punctuality_scaling()*SCORES['submission']
+        submission = Submission(username=username, active_challenge=self, submission_time=submission_time)
+        submission.sum_of_interactions = lambda_user*submission.get_punctuality_scaling()*SCORES['submission']
         if create_submission_instance:
-            s.save()
-        Profile.add_points_by_username(username, SCORES['submission']*s.get_punctuality_scaling())                         
+            submission.save()
+        Profile.add_points_by_username(username, SCORES['submission']*submission.get_punctuality_scaling())
 
     @classmethod
     def get_last_active_challenge(cls) -> 'ActiveChallenge':
         '''
         Returns the most recent (current) ActiveChallenge object
         '''
-        return ActiveChallenge.objects.latest('date')
-    
+        try:
+            active_challenge = ActiveChallenge.objects.latest('date')
+        except ActiveChallenge.DoesNotExist:
+            challenge = Challenge(description='')
+            active_challenge = ActiveChallenge(date=dt.now(), challenge=challenge)
+        return active_challenge
+
     def get_challenge_description(self) -> str:
         '''
         Returns the challenge description asociated with an ActiveChallenge object
@@ -329,12 +435,16 @@ class Submission(models.Model):
         '''
         Checks if a user has submitted for the most recent challenge
         '''
-        ac = ActiveChallenge.get_last_active_challenge()
+        active_challenge = ActiveChallenge.get_last_active_challenge()
         try:
-            Submission.objects.get(username=username, active_challenge=ac)
+            Submission.objects.get(username=username, active_challenge=active_challenge)
             return True
         except Submission.DoesNotExist:
             return False
+
+    def is_for_active_challenge(self) -> bool:
+        active_challenge = ActiveChallenge.get_last_active_challenge()
+        return self.active_challenge == active_challenge
 
     def get_minutes_late(self) -> int:
         '''
@@ -342,7 +452,7 @@ class Submission(models.Model):
         '''
         late = self.submission_time - self.active_challenge.date
         return late.total_seconds() // 60
-    
+
     def get_punctuality_scaling(self) -> float:
         '''
         Value used to scale the points awarded for a submission
@@ -390,26 +500,26 @@ class Submission(models.Model):
             self.save()
             if is_suitable:
                 self.reinstate_submission()
-                p = Profile.get_profile(self.reported_by)
+                profile = Profile.get_profile(self.reported_by)
                 try:
-                    p.number_of_false_reports += 1
+                    profile.number_of_false_reports += 1
                 except :
-                    p.number_of_false_reports = 1
-                p.save()
-                if p.number_of_false_reports > MISCONDUCT_THRESHOLDS['false_reports']:
+                    profile.number_of_false_reports = 1
+                profile.save()
+                if profile.number_of_false_reports > MISCONDUCT_THRESHOLDS['false_reports']:
                     for log in [LOGGER, GAMEMASTER_LOGGER]:
-                        log.info('user {} has made over {} false reports'.format(p.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
+                        log.info('user {} has made over {} false reports'.format(profile.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
             else:
-                u = User.objects.get(username=self.username)
+                user = User.objects.get(username=self.username)
                 try:
-                    p = Profile.objects.get(user=u)
-                    p.number_of_submissions_removed += 1
+                    profile = Profile.objects.get(user=user)
+                    profile.number_of_submissions_removed += 1
                 except Profile.DoesNotExist:
-                    p = Profile(user=u, number_of_submissions_removed=1)
-                p.save()
-                if p.number_of_submissions_removed > MISCONDUCT_THRESHOLDS['submissions_removed']:
+                    profile = Profile(user=user, number_of_submissions_removed=1)
+                profile.save()
+                if profile.number_of_submissions_removed > MISCONDUCT_THRESHOLDS['submissions_removed']:
                     for log in [LOGGER, GAMEMASTER_LOGGER]:
-                        log.info('user {} has had over {} submissions removed'.format(p.user.username, MISCONDUCT_THRESHOLDS['submissions_removed']))
+                        log.info('user {} has had over {} submissions removed'.format(profile.user.username, MISCONDUCT_THRESHOLDS['submissions_removed']))
                 self.delete()
             return True
         return False
@@ -427,7 +537,8 @@ class Submission(models.Model):
                 upvote.remove_upvote(delete_instance)
             for comment in self.get_comments():
                 comment.remove_comment(delete_instance)
-        if delete_instance: self.delete()
+        if delete_instance:
+            self.delete()
         return not self.reported
 
     def reinstate_submission(self):
@@ -451,13 +562,13 @@ class Submission(models.Model):
             Upvote.objects.get(submission=self, voter_username=voter_username)
             return False
         except Upvote.DoesNotExist:
-            u = Upvote(submission=self, voter_username=voter_username)
+            upvote = Upvote(submission=self, voter_username=voter_username)
             profile = Profile.get_profile(voter_username)
-            u.lambda_user = math.log(1+len(Friend.get_friend_usernames(voter_username)))*math.sqrt(profile.points)
-            self.sum_of_interactions += u.lambda_user*self.get_punctuality_scaling()*SCORES['upvote']['recieved']
+            upvote.lambda_user = math.log(1+len(Friend.get_friend_usernames(voter_username)))*math.sqrt(profile.points)
+            self.sum_of_interactions += upvote.lambda_user*self.get_punctuality_scaling()*SCORES['upvote']['recieved']
             self.save()
             if create_upvote_instance:
-                u.save()
+                upvote.save()
             Profile.add_points_by_username(self.username, SCORES['upvote']['recieved'])
             Profile.add_points_by_username(voter_username, SCORES['upvote']['given'])
             return True
@@ -467,40 +578,40 @@ class Submission(models.Model):
         Creates comment object for this submission in database and syncronises points
         Returns False if comment was flagged for profanity
         '''
-        c = Comment(submission=self, comment_username=comment_username, content=comment_content)
+        comment = Comment(submission=self, comment_username=comment_username, content=comment_content)
         profile = Profile.get_profile(comment_username)
-        c.lambda_user = math.log(1+len(Friend.get_friend_usernames(comment_username)))*math.sqrt(profile.points)
-        self.sum_of_interactions += c.lambda_user*self.get_punctuality_scaling()*SCORES['comment']['recieved']
+        comment.lambda_user = math.log(1+len(Friend.get_friend_usernames(comment_username)))*math.sqrt(profile.points)
+        self.sum_of_interactions += comment.lambda_user*self.get_punctuality_scaling()*SCORES['comment']['recieved']
         self.save()
         if create_comment_instance:
-            c.save()
+            comment.save()
         Profile.add_points_by_username(self.username, SCORES['comment']['recieved'])
         Profile.add_points_by_username(comment_username, SCORES['comment']['given'])
-        if c.inappropriate_language_filter():
-            c.report_comment('admin')
+        if comment.inappropriate_language_filter():
+            comment.report_comment('admin')
             return False
         else:
             return True
-        
+
     def get_upvotes(self) -> list['Upvote']:
         '''
         Gets list of Upvotes for this submission
         '''
         return Upvote.objects.filter(submission=self)
-    
+
     def get_comments(self) -> list['Comment']:
         '''
         Gets list of Comments for this submission
         Reported comments are excluded from this list
         '''
         return Comment.objects.filter(submission=self, reported=False)
-    
+
     def get_upvote_count(self) -> int:
         '''
         Gets the number of Upvotes for a submission
         '''
         return len(self.get_upvotes())
-    
+
     def get_comment_count(self) -> int:
         '''
         Gets the number of Comments for a submission
@@ -518,16 +629,8 @@ class Submission(models.Model):
         challenge_lon = self.active_challenge.challenge.longitude
         allowed_distance = self.active_challenge.challenge.allowed_distance
 
-        if self.photo_bytes != None:
+        if self.photo_bytes is not None:
             img_bytes = self.photo_bytes
-            # Decode the base64 string of the image and extract the metadata
-            # img = Image.frombytes("RGBA", (width, height), raw_data)
-            # photo_b64 = base64.b64decode(self.photo_bytes)
-            '''
-            with open("output.txt", "w") as f:
-                f.write(str(photo_b64))
-                f.close()
-            '''
             img = Image.open(io.BytesIO(img_bytes))
             submission_lat, submission_lon = process_GPS_data(img)
             submission_distance_to_challenge = distance((challenge_lat, challenge_lon), (submission_lat, submission_lon)).km
@@ -536,7 +639,7 @@ class Submission(models.Model):
                 return True
 
         return False
-    
+
     def location_check_missing_metadata(self, latitude:str, longitude:str) -> bool:
         '''
         Checks if the GPS coordinates of a user are within the challenge allowed distance
@@ -551,7 +654,7 @@ class Submission(models.Model):
         # Check if the image is near the challenge location
         if distance_to_challenge <= allowed_distance:
             return True
-        
+
         return False
 
     verbose_name = 'Submission'
@@ -562,7 +665,7 @@ class Submission(models.Model):
             models.UniqueConstraint(fields=['username','active_challenge'],
                                     name='single_submission_per_active_challenge')
         ]
-    
+
 class Upvote(models.Model):
     submission = models.ForeignKey(Submission, models.CASCADE, null=True)
     voter_username = models.CharField(max_length=USERNAME_MAX_LENGTH)
@@ -644,26 +747,26 @@ class Comment(models.Model):
             if is_suitable:
                 self.reinstate_comment()
                 if self.reported_by != 'admin':
-                    p = Profile.get_profile(self.reported_by)
+                    profile = Profile.get_profile(self.reported_by)
                     try:
-                        p.number_of_false_reports += 1
+                        profile.number_of_false_reports += 1
                     except :
-                        p.number_of_false_reports = 1
-                    p.save()
-                    if p.number_of_false_reports > MISCONDUCT_THRESHOLDS['false_reports']:
+                        profile.number_of_false_reports = 1
+                    profile.save()
+                    if profile.number_of_false_reports > MISCONDUCT_THRESHOLDS['false_reports']:
                         for log in [LOGGER, GAMEMASTER_LOGGER]:
-                            log.info('user {} has made over {} false reports'.format(p.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
+                            log.info('user {} has made over {} false reports'.format(profile.user.username, MISCONDUCT_THRESHOLDS['false_reports']))
             else:
-                u = User.objects.get(username=self.comment_username)
+                user = User.objects.get(username=self.comment_username)
                 try:
-                    p = Profile.objects.get(user=u)
-                    p.number_of_comments_removed += 1
+                    profile = Profile.objects.get(user=user)
+                    profile.number_of_comments_removed += 1
                 except Profile.DoesNotExist:
-                    p = Profile(user=u, number_of_comments_removed=1)
-                p.save()
-                if p.number_of_comments_removed > MISCONDUCT_THRESHOLDS['comments_removed']:
+                    profile = Profile(user=user, number_of_comments_removed=1)
+                profile.save()
+                if profile.number_of_comments_removed > MISCONDUCT_THRESHOLDS['comments_removed']:
                     for log in [LOGGER, GAMEMASTER_LOGGER]:
-                        log.info('user {} has had over {} comments removed'.format(p.user.username, MISCONDUCT_THRESHOLDS['comments_removed']))
+                        log.info('user {} has had over {} comments removed'.format(profile.user.username, MISCONDUCT_THRESHOLDS['comments_removed']))
                 self.delete()
             return True
         return False
@@ -679,7 +782,8 @@ class Comment(models.Model):
         if condition:
             Profile.add_points_by_username(self.comment_username, -SCORES['comment']['given'])
             Profile.add_points_by_username(self.submission.username, -SCORES['comment']['recieved'])
-        if delete_instance: self.delete()
+        if delete_instance:
+            self.delete()
         return condition
 
     def reinstate_comment(self) -> bool:
@@ -705,3 +809,8 @@ class Comment(models.Model):
                     log.warning('flagged inappropriate word "{}" in {}\'s comment'.format(word, self.comment_username))
                 return True
         return False
+
+    verbose_name = 'Comment'
+    verbose_name_plural = 'Comments'
+    class Meta:
+        db_table = 'Comments'
