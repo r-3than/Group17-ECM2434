@@ -165,7 +165,6 @@ main {
     float: left;
     width: 86%;
     height: fit-content;
-    /* aspect-ratio: 6/5; */
     padding: 0px;
     position: relative;
 }
@@ -174,32 +173,33 @@ main {
     height: 45px;
     aspect-ratio: 1/1;
     margin: 10px;
-    position: absolute;
     z-index: 500;
-    right: 8px;
+    right: 0px;
     background-color: var(--exeter-dark-green);
     color: white;
     text-align: center;
     font-weight: 400;
     line-height: 45px;
     font-size: 32px;
+    float: left;
+    position: absolute;
 }
 
 .img {
-    width: 100%;
+    max-width: 100%;
+    width: fit-content;
     height: auto;
-    /* aspect-ratio: 6/5; */
     overflow: hidden;
-    /* margin-top: -60px;
-    position: absolute;
-    top: 60px;
-    left: -8px; */
+    margin: auto;
     box-shadow: 1px 5px 12px black;
+    display: flex;
+    justify-content: center;
+    position: relative;
 }
 
 .img img {
     max-width: 100%;
-    max-height: 700px;
+    /* max-height: 700px; */
 }
 
 .divider {
