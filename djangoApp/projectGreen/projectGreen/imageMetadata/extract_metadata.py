@@ -77,7 +77,7 @@ def process_GPS_data(img: Image):
 #source_image = Image.open('IMG_1379.jpg')
 #process_GPS_data(source_image)
 
-
+'''
 if __name__ == '__main__':
     source_image = Image.open('IMG_1379.jpg')
     exif_data = source_image._getexif()
@@ -99,12 +99,12 @@ if __name__ == '__main__':
         else:
             print('{0:25}: {1}'.format(tag, data))
 
-
-"""
+'''
+'''
 DateTime can be used to check if the photo was taken
     (a) after the challenge is set and
     (b) within the time window
 GPSInfo contains data which can be used to check location-specific challenges
 
 GDPR note: no other metadata should be extracted/stored unless it is used for the purposes outlined above
-"""
+'''
