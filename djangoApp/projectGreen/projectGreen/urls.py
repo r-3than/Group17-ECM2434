@@ -60,20 +60,21 @@ urlpatterns = [
     path('deleteAccount/', views.delete_account, name='deleteAccount'),
     path('signout/', views.signout, name='signout'),
 
+    # Store:
     path('store/',views.store, name='store'),
-    path('buy_item/', views.buy_item),
-    path('activate_item/', views.activate_item),
-    path('deactivate_item/', views.deactivate_item),
+    path('buy_item/', views.buy_item, name='buyItem'),
+    path('activate_item/', views.activate_item, name='activateItem'),
+    path('deactivate_item/', views.deactivate_item, name='deactivateItem'),
 
+    # Submission Interactions:
     path('like_submission/',views.like_submission),
     path('flag_submission/',views.flag_submission),
-    path('specific_group_access', views.specific_group_access, ),
 
     # Emails:
     path('unsubscribe/', views.unsubscribe_from_emails, name='unsubscribe'),
     path('resubscribe/', views.resubscribe_to_emails, name='resubscribe'),
 
-        # Other:
+    # Other:
     path('specific_group_access', views.specific_group_access, ),
     path('admin/', admin.site.urls),
     path('microsoft_authentication/', include('microsoft_authentication.urls')),

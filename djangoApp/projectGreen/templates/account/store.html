@@ -8,6 +8,7 @@
     <head>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" href="../../static/favicon.ico">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
         <link href="{% static 'css/store.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
@@ -38,7 +39,7 @@
             <div class="side">
                 <div class="account">
                     <div style="height: 80%; padding-left: 50%;">
-                        <div class="icon rounded-circle">{{user.username|make_list|first| capfirst}}</div>
+                        <div class="icon rounded-circle">{{username|make_list|first| capfirst}}</div>
                     </div>
                     <div class="points">Score: {{user_points}}</div>
                 </div>
@@ -88,11 +89,11 @@
                 <div class="overview rounded-5">
                     <div class="main-pic" style="margin: auto;">
                         <div class="icon rounded-circle">
-                            {{user.username|make_list|first| capfirst}}
+                            {{username|make_list|first| capfirst}}
                         </div>
                     </div>
                     <div style="text-decoration: underline;">
-                        @{{user.username}}
+                        @{{username}}
                     </div>
                     <div>
                         Score: {{user_points}}
@@ -105,89 +106,94 @@
                         Points left to spend: {{user_spendable_points}}
                     </div>
                 </div>
-
                 {% for item, info in store.items %}
-                    <div class="item">
-                        <img src="{{ info.image }}" style="width: 92px; height: 92px; border-radius: 50%; object-fit: none; border: solid 2px; border-color: {{ info.text }};">
-                        {% if info.is_owned == False %}
-                            <button class="store btn btn-dark" id="Buy{{user.username}}{{info.item_name}}">Buy: {{ info.item_cost }}</button>
+                <div class="item">
+                    <img src="{{ info.image }}" style="width: 92px; height: 92px; border-radius: 50%; object-fit: none; border: solid 2px; border-color: {{ info.text }};">
+                    {% if info.is_owned is False %}
+                        <button class="store btn btn-dark" id="Buy{{username}}{{info.item_name}}">Buy: {{ info.item_cost }}</button>
+                        <script type="text/javascript">
+                            buybutton = document.getElementById("Buy{{username}}{{info.item_name}}");
+                            buybutton.onclick = function activate_item() {
+                                alert('buy');
+                                var username = "{{username}}";
+                                var item_name = "{{info.item_name}}";
+                                var spendable_points = "{{user_spendable_points}}"
+            
+                                var url = window.location.protocol + '//' + location.host + "/buy_item/";
+                                fetch(url, {
+                                    method: "POST",
+                                    credentials: "include",
+                                    headers: {
+                                        Accept: "application/json",
+                                        "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                        username: username,
+                                        item_name: item_name,
+                                        spendable_points: spendable_points,
+                                    }),
+                                })
+                                .then((response) => response.json())
+                                .then((response) => console.log(JSON.stringify(response)));
+                            };
+                        </script>
+                    {% else %}
+                        {% if info.is_active is False %}
+                            <button class="store btn btn-dark" id="Activate{{username}}{{info.item_name}}">Make Active</button>
+                            <script>
+                                activatebutton = document.getElementById("Activate{{username}}{{info.item_name}}");
+                                activatebutton.onclick = function activate_item() {
+                                    alert('activate');
+                                    var username = "{{username}}";
+                                    var item_name = "{{info.item_name}}";
+                
+                                    var url = window.location.protocol + '//' + location.host + "/activate_item/";
+                                    fetch(url, {
+                                        method: "POST",
+                                        credentials: "include",
+                                        headers: {
+                                            Accept: "application/json",
+                                            "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                            username: username,
+                                            item_name: item_name,
+                                        }),
+                                    })
+                                    .then((response) => response.json())
+                                    .then((response) => console.log(JSON.stringify(response)));
+                                };
+                            </script>
                         {% else %}
-                            {% if info.is_active == False %}
-                                <button class="store btn btn-dark" id="Activate{{user.username}}{{info.item_name}}">Make Active</button>
-                            {% else %}
-                                <button class="store btn btn-dark" id="Deactivate{{user.username}}{{info.item_name}}" disabled aria-disabled="true">Active</button>
-                            {% endif %}
+                            <button class="store btn btn-dark" id="Deactivate{{username}}{{info.item_name}}" disabled aria-disabled="true">Active</button>
+                            <script>
+                                deactivatebutton = document.getElementById("Deactivate{{username}}{{info.item_name}}");
+                                deactivatebutton.onclick = function activate_item() {
+                                    alert('deactivate');
+                                    var username = "{{username}}";
+                                    var item_name = "{{info.item_name}}";
+                
+                                    var url = window.location.protocol + '//' + location.host + "/deactivate_item/";
+                                    fetch(url, {
+                                        method: "POST",
+                                        credentials: "include",
+                                        headers: {
+                                            Accept: "application/json",
+                                            "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                            username: username,
+                                            item_name: item_name,
+                                        }),
+                                    })
+                                    .then((response) => response.json())
+                                    .then((response) => console.log(JSON.stringify(response)));
+                                };
+                            </script>
                         {% endif %}
-                    </div>
-                    <script type="text/javascript">
-                        buybutton = document.getElementById("Buy{{user.username}}{{info.item_name}}");
-                        buybutton.onclick = function activate_item() {
-                            var username = "{{user.username}}";
-                            var item_name = "{{info.item_name}}";
-                            var spendable_points = "{{user_spendable_points}}"
-        
-                            var url = window.location.protocol + '//' + location.host + "/buy_item/";
-                            fetch(url, {
-                                method: "POST",
-                                credentials: "include",
-                                headers: {
-                                    Accept: "application/json",
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                    username: username,
-                                    item_name: item_name,
-                                    spendable_points: spendable_points,
-                                }),
-                            })
-                            .then((response) => response.json())
-                            .then((response) => console.log(JSON.stringify(response)));
-                        };
-                        activatebutton = document.getElementById("Activate{{user.username}}{{info.item_name}}");
-                        activatebutton.onclick = function activate_item() {
-                            var username = "{{user.username}}";
-                            var item_name = "{{info.item_name}}";
-        
-                            var url = window.location.protocol + '//' + location.host + "/activate_item/";
-                            fetch(url, {
-                                method: "POST",
-                                credentials: "include",
-                                headers: {
-                                    Accept: "application/json",
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                    username: username,
-                                    item_name: item_name,
-                                }),
-                            })
-                            .then((response) => response.json())
-                            .then((response) => console.log(JSON.stringify(response)));
-                        };
-                        deactivatebutton = document.getElementById("Deactivate{{user.username}}{{info.item_name}}");
-                        deactivatebutton.onclick = function activate_item() {
-                            var username = "{{user.username}}";
-                            var item_name = "{{info.item_name}}";
-        
-                            var url = window.location.protocol + '//' + location.host + "/deactivate_item/";
-                            fetch(url, {
-                                method: "POST",
-                                credentials: "include",
-                                headers: {
-                                    Accept: "application/json",
-                                    "Content-Type": "application/json",
-                                },
-                                body: JSON.stringify({
-                                    username: username,
-                                    item_name: item_name,
-                                }),
-                            })
-                            .then((response) => response.json())
-                            .then((response) => console.log(JSON.stringify(response)));
-                        };
-
-                    </script>
-                    {% endfor %}
+                    {% endif %}
+                </div>
+                {% endfor %}
             </div>
             <div class="side"></div>
           </main>

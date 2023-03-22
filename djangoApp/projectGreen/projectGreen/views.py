@@ -127,7 +127,7 @@ def buy_item(request):
                 p = Profile.get_profile(username)
                 p.spendable_points -= itemObj.cost
                 p.save()
-    return HttpResponse({"success":"true"})
+        return HttpResponse({"success":"true"})
 
 @csrf_exempt
 def activate_item(request):
@@ -137,7 +137,7 @@ def activate_item(request):
             username = data['username']
             item_name = data['item_name']
             OwnedItem.make_active(item_name, username)
-    return HttpResponse({"success":"true"})
+        return HttpResponse({"success":"true"})
 
 @csrf_exempt
 def deactivate_item(request):
@@ -147,7 +147,7 @@ def deactivate_item(request):
             username = data['username']
             item_name = data['item_name']
             OwnedItem.make_inactive(item_name, username)
-    return HttpResponse({"success":"true"})
+        return HttpResponse({"success":"true"})
 
 def challenge(request):
     '''
@@ -861,43 +861,37 @@ def store(request):
 
         CurrentChallenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = CurrentChallenge.get_challenge_description()
-        profileObj = Profile.get_profile(request.user.username)
+        context["username"] = request.user.username
         Profile.calculate_spendable_points_by_username(request.user.username)
+        profileObj = Profile.get_profile(request.user.username)
         user_points = str(profileObj.points)
         user_spendable_points = str(profileObj.spendable_points)
         context["user_points"] = user_points
         context["user_spendable_points"] = user_spendable_points
-        store_info = {}
-        i = -1
-        StoreItems = StoreItem.objects.all()
-        OwnedItems = OwnedItem.objects.filter(username=request.user.username)
 
         try:
-            profile_item_name = OwnedItems.get(is_active=True).item_name
+            profile_item_name = OwnedItem.objects.get(username=request.user.username, is_active=True).item_name
             item = StoreItem.objects.get(item_name=profile_item_name)
             context["profile_image"] = item.photo.url
             context["text_colour"] = '#'+item.text_colour
         except:
             pass
-
+        
+        store_info = {}
+        StoreItems = StoreItem.objects.all()
         for item in StoreItems:
-            i += 1
-            item_name = item.item_name
-            item_cost = item.cost
-            is_owned = False
-            is_active = False
-            for owned in OwnedItems:
-                if item_name == owned.item_name:
-                    is_owned = True
-                    if owned.is_active == True:
-                        is_active = True
+            is_owned = OwnedItem.owns_item(item.item_name, request.user.username)
+            if is_owned:
+                is_active = OwnedItem.objects.get(item_name=item.item_name, username=request.user.username).is_active
+            else:
+                is_active = False
 
             profile_image = item.photo.url
             text_colour = '#'+item.text_colour
 
-            store_info[i] = {
-                'item_name': item_name,
-                'item_cost': item_cost,
+            store_info[item.id] = {
+                'item_name': item.item_name,
+                'item_cost':  item.cost,
                 'is_owned': is_owned,
                 'is_active': is_active,
                 'image': profile_image,

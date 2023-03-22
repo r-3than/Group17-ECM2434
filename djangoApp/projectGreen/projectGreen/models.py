@@ -897,9 +897,10 @@ class OwnedItem(models.Model):
         '''
         if OwnedItem.owns_item(item_name, username) == True:
             try:
-                current_active_item = OwnedItem.objects.get(is_active=True)
-                current_active_item.is_active=False
-                current_active_item.save()
+                current_active_items = OwnedItem.objects.filter(username=username, is_active=True)
+                current_active_items.update(is_active=False)
+                for item in current_active_items:
+                    item.save()
             except:
                 pass
             try:
@@ -916,7 +917,7 @@ class OwnedItem(models.Model):
         Removes the active state from the selected active item
         '''
         try:
-            active_item = OwnedItem.objects.get(is_active=True, username=username)
+            active_item = OwnedItem.objects.get(is_active=True, username=username, item_name=item_name)
             active_item.is_active=False
             active_item.save()
         except OwnedItem.DoesNotExist:
