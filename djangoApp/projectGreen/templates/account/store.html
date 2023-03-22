@@ -11,8 +11,8 @@
         <link rel="icon" href="../../static/favicon.ico">
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
         <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
-        <link href="{% static 'css/store.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
-        <link href="{% static 'css/store-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
+        <link href="{% static 'css/desktop/store.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
+        <link href="{% static 'css/mobile/store-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
         
         <style>
@@ -114,7 +114,6 @@
                         <script type="text/javascript">
                             buybutton = document.getElementById("Buy{{username}}{{info.item_name}}");
                             buybutton.onclick = function activate_item() {
-                                alert('buy');
                                 var username = "{{username}}";
                                 var item_name = "{{info.item_name}}";
                                 var spendable_points = "{{user_spendable_points}}"
@@ -144,7 +143,6 @@
                             <script>
                                 activatebutton = document.getElementById("Activate{{username}}{{info.item_name}}");
                                 activatebutton.onclick = function activate_item() {
-                                    alert('activate');
                                     var username = "{{username}}";
                                     var item_name = "{{info.item_name}}";
                 
@@ -167,11 +165,10 @@
                                 };
                             </script>
                         {% else %}
-                            <button class="store btn btn-dark" id="Deactivate{{username}}{{info.item_name}}" disabled aria-disabled="true">Active</button>
+                            <button class="store btn btn-light" id="Deactivate{{username}}{{info.item_name}}">Active</button>
                             <script>
                                 deactivatebutton = document.getElementById("Deactivate{{username}}{{info.item_name}}");
                                 deactivatebutton.onclick = function activate_item() {
-                                    alert('deactivate');
                                     var username = "{{username}}";
                                     var item_name = "{{info.item_name}}";
                 
