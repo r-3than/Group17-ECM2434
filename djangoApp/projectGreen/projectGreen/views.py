@@ -355,19 +355,6 @@ def friends_feed(request):
         template = loader.get_template('home/sign-in.html')
         return HttpResponse(template.render(context, request))
   
-def challenge(request):
-    context = {}
-    if request.user.is_authenticated:
-        template = loader.get_template('home/challenge.html')
-        CurrentChallenge =ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = CurrentChallenge.get_challenge_description()
-        profileObj = Profile.get_profile(request.user.username)
-        user_points = str(profileObj.points)
-        postCount= Friend.get_friend_post_count(profileObj.user.username,CurrentChallenge)
-        context["user_points"] = user_points
-        context["post_count"] = postCount
-        return signin(request)
-
 #endregion
 
 #region Account Management
