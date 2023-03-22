@@ -68,8 +68,6 @@ urlpatterns = [
     path('like_submission/',views.like_submission),
     path('flag_submission/',views.flag_submission),
     path('specific_group_access', views.specific_group_access, ),
-    path('admin/', admin.site.urls),
-    path('microsoft_authentication/', include('microsoft_authentication.urls')),
 
     # Emails:
     path('unsubscribe/', views.unsubscribe_from_emails, name='unsubscribe'),
