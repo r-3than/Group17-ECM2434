@@ -15,6 +15,8 @@ Including another URLconf
 """
 
 from django.contrib import admin
+from django.conf import settings
+from django.conf.urls.static import static
 from django.urls import path,include
 
 from projectGreen import views
@@ -58,6 +60,16 @@ urlpatterns = [
     path('deleteAccount/', views.delete_account, name='deleteAccount'),
     path('signout/', views.signout, name='signout'),
 
+    # Store:
+    path('store/',views.store, name='store'),
+    path('buy_item/', views.buy_item, name='buyItem'),
+    path('activate_item/', views.activate_item, name='activateItem'),
+    path('deactivate_item/', views.deactivate_item, name='deactivateItem'),
+
+    # Submission Interactions:
+    path('like_submission/',views.like_submission),
+    path('flag_submission/',views.flag_submission),
+
     # Emails:
     path('unsubscribe/', views.unsubscribe_from_emails, name='unsubscribe'),
     path('resubscribe/', views.resubscribe_to_emails, name='resubscribe'),
@@ -66,4 +78,6 @@ urlpatterns = [
     path('specific_group_access', views.specific_group_access, ),
     path('admin/', admin.site.urls),
     path('microsoft_authentication/', include('microsoft_authentication.urls')),
-]
+    
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+

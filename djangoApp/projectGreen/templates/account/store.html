@@ -1,0 +1,211 @@
+<!doctype html>
+<!--
+    Main Author:
+        JA - Design + Integration
+-->
+{% load static %}
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="icon" href="../../static/favicon.ico">
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.3/dist/js/bootstrap.bundle.min.js"></script>
+        <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-GLhlTQ8iRABdZLl6O3oVMWSktQOp6b7In1Zl3/Jr59b6EGGoI1aFkw7cmDA6j6gD" crossorigin="anonymous">
+        <link href="{% static 'css/desktop/store.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
+        <link href="{% static 'css/mobile/store-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
+        <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+        
+        {% if is_active is True %}
+        <style>
+            .main-pic .icon,
+            .account .icon {
+                background-image: url('{{ profile_image }}');
+                background-position: center;
+                color: {{ text_colour }};
+            }
+        </style>
+        {% endif %}
+        <title>Store</title>
+    </head>
+    <body>
+        <header class="row">
+            <div class="side">
+                <button type="button" class="btn btn-primary trigger-menu" data-bs-toggle="modal" data-bs-target="#menuModal">
+                    Menu
+                </button>
+            </div>
+            <div class="title centre">
+                <a class="title" href="{% url 'university-feed' %}">BeGreen</a>
+                <br>
+                <a class="subtitle">Today's challenge: {{active_challenge}}</a>
+            </div>
+            <div class="side">
+                <div class="account">
+                    <div style="height: 80%; padding-left: 50%;">
+                        <div class="icon rounded-circle">{{username|make_list|first| capfirst}}</div>
+                    </div>
+                    <div class="points">Score: {{user_points}}</div>
+                </div>
+                <script>
+                    account = document.getElementById("account");
+                    account.onclick = function() {
+                        location.href = "{% url 'history' %}"
+                    }
+                </script>
+            </div>
+        </header>
+        <!-- The Links Modal -->
+        <div class="modal fade" id="menuModal">
+            <div class="modal-dialog modal-fullscreen">
+                <div class="modal-content menu">
+            
+                    <!-- Modal Header -->
+                    <div class="modal-header">
+                        <h4 class="modal-title">Useful Links</h4>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+            
+                    <!-- Modal body -->
+                    <div class="modal-body links">
+                        <a href="{% url 'university-feed' %}">Home Feed</a> <br>
+                        <a href="{% url 'history' %}">Submission History</a> <br>
+                        <a href="{% url 'friends' %}">Manage Friends</a> <br>
+                        <a href="{% url 'leaderboard' %}">Leaderboard</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                        <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
+                        <div style="background-color: white; height: 5px; width: 80%;"></div>
+                    </div>
+            
+                    <!-- Modal footer -->
+                    <div class="modal-footer"></div>
+                </div>
+            </div>
+        </div>
+        
+        <main class="row">
+
+            <div class="side left">
+                <div class="links rounded-5">
+                    <a href="{% url 'university-feed' %}">Home Feed</a> <br>
+                    <a href="{% url 'history' %}">Submission History</a> <br>
+                    <a href="{% url 'friends' %}">Manage Friends</a>
+                    <a href="{% url 'leaderboard' %}">Leaderboard</a>
+                    <div style="background-color: white; height: 5px; width: 80%;"></div>
+                    <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
+                </div>
+            </div>
+
+            <div class="centre">
+                <div class="overview rounded-5">
+                    <div class="main-pic" style="margin: auto;">
+                        <div class="icon rounded-circle">
+                            {{username|make_list|first| capfirst}}
+                        </div>
+                    </div>
+                    <div style="text-decoration: underline;">
+                        @{{username}}
+                    </div>
+                    <div>
+                        Score: {{user_points}}
+                    </div>
+                    <div>
+                        You joined BeGreen 3 months ago
+                    </div>
+                    <br>
+                    <div style="bottom: 0px;">
+                        Points left to spend: {{user_spendable_points}}
+                    </div>
+                </div>
+                {% for item, info in store.items %}
+                <div class="item">
+                    <img src="{{ info.image }}" style="width: 92px; height: 92px; border-radius: 50%; object-fit: none; border: solid 2px; border-color: {{ info.text }};">
+                    {% if info.is_owned is False %}
+                        <button class="store btn btn-dark" id="Buy{{username}}{{info.item_name}}">Buy: {{ info.item_cost }}</button>
+                        <script type="text/javascript">
+                            buybutton = document.getElementById("Buy{{username}}{{info.item_name}}");
+                            buybutton.onclick = function activate_item() {
+                                var username = "{{username}}";
+                                var item_name = "{{info.item_name}}";
+                                var spendable_points = "{{user_spendable_points}}"
+            
+                                var url = window.location.protocol + '//' + location.host + "/buy_item/";
+                                fetch(url, {
+                                    method: "POST",
+                                    credentials: "include",
+                                    headers: {
+                                        Accept: "application/json",
+                                        "Content-Type": "application/json",
+                                    },
+                                    body: JSON.stringify({
+                                        username: username,
+                                        item_name: item_name,
+                                        spendable_points: spendable_points,
+                                    }),
+                                })
+                                .then((response) => response.json())
+                                .then((response) => console.log(JSON.stringify(response)));
+                                window.location.reload();
+                            };
+                        </script>
+                    {% else %}
+                        {% if info.is_active is False %}
+                            <button class="store btn btn-dark" id="Activate{{username}}{{info.item_name}}">Make Active</button>
+                            <script>
+                                activatebutton = document.getElementById("Activate{{username}}{{info.item_name}}");
+                                activatebutton.onclick = function activate_item() {
+                                    var username = "{{username}}";
+                                    var item_name = "{{info.item_name}}";
+                
+                                    var url = window.location.protocol + '//' + location.host + "/activate_item/";
+                                    fetch(url, {
+                                        method: "POST",
+                                        credentials: "include",
+                                        headers: {
+                                            Accept: "application/json",
+                                            "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                            username: username,
+                                            item_name: item_name,
+                                        }),
+                                    })
+                                    .then((response) => response.json())
+                                    .then((response) => console.log(JSON.stringify(response)));
+                                    window.location.reload();
+                                };
+                            </script>
+                        {% else %}
+                            <button class="store btn btn-light" id="Deactivate{{username}}{{info.item_name}}">Active</button>
+                            <script>
+                                deactivatebutton = document.getElementById("Deactivate{{username}}{{info.item_name}}");
+                                deactivatebutton.onclick = function activate_item() {
+                                    var username = "{{username}}";
+                                    var item_name = "{{info.item_name}}";
+                
+                                    var url = window.location.protocol + '//' + location.host + "/deactivate_item/";
+                                    fetch(url, {
+                                        method: "POST",
+                                        credentials: "include",
+                                        headers: {
+                                            Accept: "application/json",
+                                            "Content-Type": "application/json",
+                                        },
+                                        body: JSON.stringify({
+                                            username: username,
+                                            item_name: item_name,
+                                        }),
+                                    })
+                                    .then((response) => response.json())
+                                    .then((response) => console.log(JSON.stringify(response)));
+                                    window.location.reload();
+                                };
+                            </script>
+                        {% endif %}
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+            <div class="side"></div>
+          </main>
+    </body>
+</html>

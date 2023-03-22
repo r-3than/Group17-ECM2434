@@ -50,6 +50,7 @@ WORDS_TO_FILTER = load_profanity_file()
 class Profile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE)
     points = models.IntegerField(default=0)
+    spendable_points = models.IntegerField(default=0)
     subscribed_to_emails = models.BooleanField(default=True)
     number_of_submissions_removed = models.IntegerField(default=0)
     number_of_comments_removed = models.IntegerField(default=0)
@@ -152,6 +153,31 @@ class Profile(models.Model):
             points += SCORES['submission'] * sub.get_punctuality_scaling()
         Profile.set_points_by_username(username, points)
 
+    @classmethod
+    def recalculate_user_points(cls, username: str):
+        '''
+        Calculates the total points for a user based on submissions and interactions
+        Interactions are only counted / points are only assigned for non-reported submissions
+        '''
+        points = 0
+        # upvote points
+        upvotes_given = Upvote.objects.filter(voter_username=username, submission__reported=False)
+        points += len(upvotes_given)*SCORES['upvote']['given']
+        upvotes_recieved = Upvote.objects.filter(submission__username=username, submission__reported=False)
+        points += len(upvotes_recieved)*SCORES['upvote']['recieved']
+        # comment points
+        comments_given = Comment.objects.filter(comment_username=username, submission__reported=False, reported=False)
+        points += len(comments_given)*SCORES['comment']['given']
+        comments_recieved = Comment.objects.filter(submission__username=username, submission__reported=False, reported=False)
+        points += len(comments_recieved)*SCORES['comment']['recieved']
+        # submission points
+        submissions = Submission.objects.filter(username=username)
+        for sub in submissions:
+            if sub.reported:
+                continue
+            points += SCORES['submission'] * sub.get_punctuality_scaling()
+        Profile.set_points_by_username(username, points)
+
     def recalculate_user_points(self):
         '''
         Calculates the total points for a user based on submissions and interactions
@@ -186,6 +212,22 @@ class Profile(models.Model):
         '''
         Profile.add_points_by_username(username, 0)
         return Profile.objects.get(user__username=username)
+
+    @classmethod
+    def calculate_spendable_points_by_username(cls, username: str):
+        '''
+        Caluculates the points a profile has left to spend by subtracting the cost of all the items they own from their points
+        '''
+        profile = Profile.objects.get(user__username=username)
+        spendable_points_value = profile.points
+        items = OwnedItem.objects.filter(username=username)
+        for item in items:
+            item_name = item.item_name            
+            store_item = StoreItem.objects.get(item_name=item_name)
+            spendable_points_value -= store_item.cost
+
+        profile.spendable_points = spendable_points_value
+        profile.save()
 
     verbose_name = 'Profile'
     verbose_name_plural = 'Profiles'
@@ -810,6 +852,114 @@ class Comment(models.Model):
                 return True
         return False
 
+class StoreItem(models.Model):
+    item_name = models.CharField(max_length=256)
+    cost = models.IntegerField(default=0)
+    photo = models.ImageField(upload_to='uploads/')
+    text_colour = models.CharField(max_length=6, default='FFFFFF')
+
+    @classmethod
+    def get_item_cost(cls, item_name: str) -> int:
+        '''
+        Gets the cost in points of the item
+        '''
+        try:
+            item = StoreItem.objects.get(item_name=item_name)
+            return item.cost
+        except StoreItem.DoesNotExist:
+            return -1
+
+    verbose_name = 'StoreItem'
+    verbose_name_plural = 'StoreItems'
+    class Meta:
+        db_table = 'StoreItems'
+
+class OwnedItem(models.Model):
+    item_name = models.CharField(max_length=256)
+    username = models.CharField(max_length=USERNAME_MAX_LENGTH)
+    is_active = models.BooleanField(default=False)
+
+    @classmethod
+    def owns_item(cls, item_name: str, username: str) -> bool:
+        '''
+        Checks if a user owns an item
+        '''
+        try:
+            OwnedItem.objects.get(item_name=item_name, username=username)
+            return True
+        except OwnedItem.DoesNotExist:
+            return False
+
+    @classmethod
+    def make_active(cls, item_name: str, username: str) -> bool:
+        '''
+        Removes the active state from the current active item and adds it to the new one
+        '''
+        if OwnedItem.owns_item(item_name, username) == True:
+            try:
+                current_active_items = OwnedItem.objects.filter(username=username, is_active=True)
+                current_active_items.update(is_active=False)
+                for item in current_active_items:
+                    item.save()
+            except:
+                pass
+            try:
+                new_active_item = OwnedItem.objects.get(item_name=item_name, username=username)
+                new_active_item.is_active=True
+                new_active_item.save()
+                return True
+            except OwnedItem.DoesNotExist:
+                return False
+
+    @classmethod
+    def make_inactive(cls, item_name: str, username: str) -> bool:
+        '''
+        Removes the active state from the selected active item
+        '''
+        try:
+            active_item = OwnedItem.objects.get(is_active=True, username=username, item_name=item_name)
+            active_item.is_active=False
+            active_item.save()
+        except OwnedItem.DoesNotExist:
+            return False
+
+    @classmethod
+    def get_active_name(cls, username: str) -> str:
+        '''
+        Gets the name of the active item
+        '''
+        try:
+            active_item = OwnedItem.objects.get(is_active=True, username=username)
+            return active_item.item_name
+        except OwnedItem.DoesNotExist:
+            return ""
+        
+    @classmethod
+    def get_active_item_data(cls, username: str) -> dict:
+        '''
+        Fetches a dictionary of data about a user's active item, if it exists
+        '''
+        try:
+            friend_profile_picture = StoreItem.objects.get(item_name=OwnedItem.get_active_name(username))
+            is_active = True
+            profile_image = friend_profile_picture.photo.url
+            text_colour = '#'+friend_profile_picture.text_colour
+        except:
+            is_active = False
+            profile_image = None
+            text_colour = None
+        return {
+            'is_active': is_active,
+            'image': profile_image,
+            'text': text_colour
+        }
+
+
+
+    verbose_name = 'OwnedItem'
+    verbose_name_plural = 'OwnedItems'
+    class Meta:
+        db_table = 'OwnedItems'
     verbose_name = 'Comment'
     verbose_name_plural = 'Comments'
     class Meta:

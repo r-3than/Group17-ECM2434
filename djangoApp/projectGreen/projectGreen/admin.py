@@ -14,8 +14,9 @@ from django.contrib.auth.models import User
 from django.template.loader import render_to_string
 from django.urls import reverse
 from django.utils.html import format_html
-
-from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment
+from projectGreen.models import Profile, Friend, Challenge, ActiveChallenge, Submission, Upvote, Comment, StoreItem, OwnedItem
+from datetime import datetime
+import logging
 
 LOGGER = logging.getLogger('django')
 
@@ -205,6 +206,11 @@ class CommentAdmin(admin.ModelAdmin):
     def get_submission(self, comment) -> Submission:
         return comment.submission
 
+class StoreAdmin(admin.ModelAdmin):
+    list_display = ['item_name', 'cost', 'photo', 'text_colour']
+    
+class OwnedItemAdmin(admin.ModelAdmin):
+    list_display = ['item_name', 'username', 'is_active']
 
 admin.site.unregister(User)
 admin.site.register(Profile, ProfileAdmin)
@@ -215,5 +221,7 @@ admin.site.register(Submission, SubmissionAdmin)
 admin.site.register(Upvote, UpvoteAdmin) # no view for game master
 admin.site.register(Comment, CommentAdmin)
 admin.site.register(Friend) # no view for game master
+admin.site.register(StoreItem, StoreAdmin)
+admin.site.register(OwnedItem, OwnedItemAdmin)
 # otherwise, game master can view but not modify
 # admin has all perms
