@@ -377,3 +377,9 @@ main .side {
 .break {
     height: 25px;
 }
+
+.item {
+    padding-top: 30px;
+    padding-left: 10%;
+    width: 90%;
+}
