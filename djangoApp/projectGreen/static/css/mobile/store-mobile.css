@@ -69,7 +69,6 @@ header div.account {
     height: 100%;
     aspect-ratio: 1/1;
     background-color: var(--exeter-dark-green);
-    background-image: url("../img/Post2.jpg");
     background-position: center;
     color: white;
     text-align: center;
@@ -133,7 +132,6 @@ header div.account {
     aspect-ratio: 1/1;
     z-index: 500;
     background-color: var(--exeter-dark-green);
-    background-image: url("../img/Post2.jpg");
     background-position: center;
     color: white;
     text-align: center;
