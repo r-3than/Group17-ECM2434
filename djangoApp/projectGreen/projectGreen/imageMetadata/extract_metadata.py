@@ -1,4 +1,8 @@
 """
+Main Authors:
+    TN - Metadata Extraction Functions
+    LB - Coordinate Conversion
+
 Metadata extraction:
 https://www.thepythoncode.com/article/extracting-image-metadata-in-python
 GPS data decoding:
@@ -42,14 +46,12 @@ def extract_metadata(img: Image) -> dict[dict, dt]:
             out['DateTime'] = dt.strptime(date_string, '%Y:%m:%d %H:%M:%S')
     return out
 
-
 def extract_metadata_from_filepath(filepath: str) -> dict[dict, dt]:
     '''
     Wrapper for extract_metadata function with filepath input
     '''
     source_image = Image.open(filepath)
     return extract_metadata(source_image)
-
 
 def coordinates_to_decdegrees(lat:list, lon:list):
     '''
@@ -63,7 +65,6 @@ def coordinates_to_decdegrees(lat:list, lon:list):
         dd_longitude = -dd_longitude
     return (dd_latitude, dd_longitude)
 
-
 def process_GPS_data(img: Image):
     data = extract_metadata(img)
     gps_info = data['GPSInfo']
@@ -72,14 +73,10 @@ def process_GPS_data(img: Image):
     d_lat, d_lon = coordinates_to_decdegrees(latitude, longitude)
     return d_lat, d_lon
     # USE GEOPY to calculate distance in models
-    
 
-#source_image = Image.open('IMG_1379.jpg')
-#process_GPS_data(source_image)
 
-'''
 if __name__ == '__main__':
-    source_image = Image.open('IMG_1379.jpg')
+    source_image = Image.open('IMG_1379.JPG')
     exif_data = source_image._getexif()
 
     for tag_id in exif_data:
@@ -99,7 +96,6 @@ if __name__ == '__main__':
         else:
             print('{0:25}: {1}'.format(tag, data))
 
-'''
 '''
 DateTime can be used to check if the photo was taken
     (a) after the challenge is set and

@@ -45,6 +45,7 @@ urlpatterns = [
     path('uploadphoto/', views.upload_photo),
     path('like_submission/', views.like_submission),
     path('flag_submission/', views.flag_submission),
+    path('deletePost/', views.delete_post, name='deletePost'),
 
     # Comments:
     path('create-comment/', views.create_comment, name='create-comment'),

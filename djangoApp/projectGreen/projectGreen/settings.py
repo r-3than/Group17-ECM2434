@@ -22,17 +22,10 @@ MEDIA_URL = '/uploads/'
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = open("/etc/key.txt").read().strip()
+SECRET_KEY = 'django-insecure-*f-8r*xtx6mljgv8pdcp^^)z&y&80r1p_iyf!y_lf=*0600$ca'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
-
-#Store images information
-# CURRENT_PATH = os.path.abspath(os.path.dirname(__file__).decode('utf-8'))
-
-# STORE_PHOTOS_ROOT = os.path.join(CURRENT_PATH, 'storePhotos').replace('\\','/')
-
-# STORE_PHOTOS_URL = '/storePhotos/'
 
 LOGGING = {
     'version': 1,
@@ -166,9 +159,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-
-
-
 MICROSOFT = {
     "app_id": "24bdff02-06db-48b9-b65a-da869ccd651d",
     "app_secret": "mXr8Q~b8BO9E9gI~Lv38QCFcO2G45Rc27nv6AajQ",
@@ -193,11 +183,8 @@ MICROSOFT_CREATE_NEW_DJANGO_USER = True  # Optional, default value is True
 # https://docs.djangoproject.com/en/4.1/topics/i18n/
 
 LANGUAGE_CODE = 'en-us'
-
 TIME_ZONE = 'UTC'
-
 USE_I18N = True
-
 USE_TZ = True
 
 
