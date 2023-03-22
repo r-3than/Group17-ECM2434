@@ -63,7 +63,7 @@ def uploadphoto(request):
             if has_submitted == True:
                 replace_submission=Submission.objects.get(username=request.user.username, active_challenge=active_challenge)
                 replace_submission.delete()
-             ## -> 
+
             current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
             newSubmission = Submission(username=request.user.username,
             active_challenge=active_challenge,
@@ -77,15 +77,6 @@ def uploadphoto(request):
                 
             return redirect('/home/')
                 
-        """
-        data=json.loads(request.body)
-        print(data)
-        img_data = data["img"]
-        img_data = base64.b64decode(img_data.split(",")[1])
-        with open(str(request.user)+".png", "wb") as fh:
-            fh.write(img_data)
-        return HttpResponse({"success":"true"})
-        """
 @csrf_exempt
 def flag_submission(request):
      if request.method == "POST":
@@ -186,16 +177,11 @@ def submit(request):
         context["user_points"] = user_points
         context["post_count"] = post_count
 
-        try: # Fetches user's profile picture
-            item = OwnedItem.objects.get(username=request.user.username, is_active=True)
-            profile_picture = StoreItem.objects.get(item_name=item.item_name)
-            context["is_active"] = True
-            context["profile_image"] = profile_picture.photo.url
-            context["text_colour"] = '#'+profile_picture.text_colour
-        except:
-            context["is_active"] = False
-            context["profile_image"] = None
-            context["text_colour"] = None
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
 
         return HttpResponse(template.render(context, request))
     else:
@@ -217,16 +203,12 @@ def university_feed(request):
         user_profile = Profile.get_profile(request.user.username)
         user_points = str(user_profile.points)
         context["user_points"] = user_points
-        try: # Fetches user's profile picture
-            item = OwnedItem.objects.get(username=request.user.username, is_active=True)
-            profile_picture = StoreItem.objects.get(item_name=item.item_name)
-            context["is_active"] = True
-            context["profile_image"] = profile_picture.photo.url
-            context["text_colour"] = '#'+profile_picture.text_colour
-        except:
-            context["is_active"] = False
-            context["profile_image"] = None
-            context["text_colour"] = None
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
+
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
@@ -326,16 +308,11 @@ def friends_feed(request):
         user_points = str(user_profile.points)
         context["user_points"] = user_points
 
-        try: # Fetches user's profile picture
-            item = OwnedItem.objects.get(username=request.user.username, is_active=True)
-            profile_picture = StoreItem.objects.get(item_name=item.item_name)
-            context["is_active"] = True
-            context["profile_image"] = profile_picture.photo.url
-            context["text_colour"] = '#'+profile_picture.text_colour
-        except:
-            context["is_active"] = False
-            context["profile_image"] = None
-            context["text_colour"] = None
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
 
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
@@ -385,24 +362,16 @@ def friends_feed(request):
                     has_liked = 0
                 Profile.recalculate_user_points_by_username(submission.username)
 
-                try: # Fetches profile picture for submission user
-                    submission_user_item = OwnedItem.objects.get(username=submission.username, is_active=True)
-                    submission_user_profile_picture = StoreItem.objects.get(item_name=submission_user_item.item_name)
-                    is_active = True
-                    profile_image = submission_user_profile_picture.photo.url
-                    text_colour = '#'+submission_user_profile_picture.text_colour
-                except:
-                    is_active = False
-                    profile_image = None
-                    text_colour = None
+                # Fetches profile picture for submission user
+                submission_user_item = OwnedItem.get_active_item_data(request.user.username)
                 
                 submissions_info[submission.id] = {
                                                 'submission_id': submission.id,
                                                 'submission_user_displayname': user_display_name,
                                                 'submission_user_profile_picture': {
-                                                    'is_active': is_active,
-                                                    'image': profile_image,
-                                                    'text': text_colour
+                                                    'is_active': submission_user_item["is_active"],
+                                                    'image': submission_user_item["image"],
+                                                    'text': submission_user_item["text"]
                                                 },
                                                 'submission_username': submission.username,
                                                 'submission_time': submission_time_form,
@@ -445,16 +414,11 @@ def history(request):
         current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
         date_difference = current_date - user_join_date
 
-        try: # Fetches user's profile picture
-            item = OwnedItem.objects.get(username=request.user.username, is_active=True)
-            profile_picture = StoreItem.objects.get(item_name=item.item_name)
-            context["is_active"] = True
-            context["profile_image"] = profile_picture.photo.url
-            context["text_colour"] = '#'+profile_picture.text_colour
-        except:
-            context["is_active"] = False
-            context["profile_image"] = None
-            context["text_colour"] = None
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
 
         if date_difference.days:
             display_date = str(date_difference.days) + " days"
@@ -522,16 +486,11 @@ def friends(request):
     if request.user.is_authenticated:
         template = loader.get_template('account/friends.html')
 
-        try: # Fetches user's profile picture
-            item = OwnedItem.objects.get(username=request.user.username, is_active=True)
-            profile_picture = StoreItem.objects.get(item_name=item.item_name)
-            context["is_active"] = True
-            context["profile_image"] = profile_picture.photo.url
-            context["text_colour"] = '#'+profile_picture.text_colour
-        except:
-            context["is_active"] = False
-            context["profile_image"] = None
-            context["text_colour"] = None
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
 
         user_friends = Friend.get_friend_usernames(request.user.username)
         friend_items = []
@@ -601,6 +560,12 @@ def post(request):
             active_challenge = ActiveChallenge.get_last_active_challenge()
             context["active_challenge"] = active_challenge.get_challenge_description()
 
+            # Fetches user's profile picture
+            item = OwnedItem.get_active_item_data(request.user.username)
+            context["is_active"] = item["is_active"]
+            context["profile_image"] = item["image"]
+            context["text_colour"] = item["text"]
+
             submission_id = request.POST.get("submission_id", "")
             submission=Submission.objects.filter(id=submission_id).first()
 
@@ -646,9 +611,17 @@ def post(request):
             user_points = str(user_profile.points)
             context["user_points"] = user_points
 
+            # Fetches profile picture for submission user
+            submission_user_item = OwnedItem.get_active_item_data(submission.username)
+
             context['submission'] = {
                                                'id': submission.id,
                                                'user_displayname': user_display_name,
+                                               'user_profile_picture': {
+                                                    'is_active': submission_user_item["is_active"],
+                                                    'image': submission_user_item["image"],
+                                                    'text': submission_user_item["text"]
+                                                },
                                                'username': submission.username,
                                                'time': submission_time_form,
                                                'photo': photo_b64,
@@ -679,16 +652,11 @@ def leaderboard(request):
 
         user_profile = Profile.get_profile(request.user.username)
 
-        try: # Fetches user's profile picture
-            item = OwnedItem.objects.get(username=request.user.username, is_active=True)
-            profile_picture = StoreItem.objects.get(item_name=item.item_name)
-            context["is_active"] = True
-            context["profile_image"] = profile_picture.photo.url
-            context["text_colour"] = '#'+profile_picture.text_colour
-        except:
-            context["is_active"] = False
-            context["profile_image"] = None
-            context["text_colour"] = None
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
 
         # Get overall leaders & user positon
         profiles = Profile.objects.order_by('-points')
@@ -705,18 +673,26 @@ def leaderboard(request):
                 if profile.user.username in friend_usernames:
                     user_friends.append(profile)
         leaders = profiles[:20]
-        context["leaders"] = leaders
+        leader_items = []
+        for profile in leaders:
+            leader_items.append(OwnedItem.get_active_item_data(profile.user.username))
+        context["leaders"] = zip(leaders, leader_items)
 
         # Get friend leaders & user position
         user_friends.append(user_profile)
-        user_friends.sort(key=lambda x: x.points, reverse=True)
+        friend_items = []
+        for profile in user_friends:
+            friend_items.append(OwnedItem.get_active_item_data(profile.user.username))
+        friends_list = list(zip(user_friends, friend_items))
+        friends_list.sort(key=lambda x: x[0].points, reverse=True)
+        context["friends"] = friends_list[:20]
+
         for index, profile in enumerate(user_friends):
             if profile.user.username == request.user.username:
                 if index < 20:
                     context["is_friend_leader"] = True
                 else:
                     context["friends_position"] = index
-        context["friends"] = user_friends[:20]
 
         current_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = current_challenge.get_challenge_description()
@@ -1001,13 +977,11 @@ def store(request):
         context["user_points"] = user_points
         context["user_spendable_points"] = user_spendable_points
 
-        try:
-            profile_item_name = OwnedItem.objects.get(username=request.user.username, is_active=True).item_name
-            item = StoreItem.objects.get(item_name=profile_item_name)
-            context["profile_image"] = item.photo.url
-            context["text_colour"] = '#'+item.text_colour
-        except:
-            pass
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
         
         store_info = {}
         StoreItems = StoreItem.objects.all()

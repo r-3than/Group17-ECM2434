@@ -933,6 +933,26 @@ class OwnedItem(models.Model):
             return active_item.item_name
         except OwnedItem.DoesNotExist:
             return ""
+        
+    @classmethod
+    def get_active_item_data(cls, username: str) -> dict:
+        '''
+        Fetches a dictionary of data about a user's active item, if it exists
+        '''
+        try:
+            friend_profile_picture = StoreItem.objects.get(item_name=OwnedItem.get_active_name(username))
+            is_active = True
+            profile_image = friend_profile_picture.photo.url
+            text_colour = '#'+friend_profile_picture.text_colour
+        except:
+            is_active = False
+            profile_image = None
+            text_colour = None
+        return {
+            'is_active': is_active,
+            'image': profile_image,
+            'text': text_colour
+        }
 
 
 

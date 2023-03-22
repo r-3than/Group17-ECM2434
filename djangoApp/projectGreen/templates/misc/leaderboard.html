@@ -114,10 +114,14 @@
                                 </div>
                             {% endif %}
                             <div>
-                                {% for profile in leaders %}
+                                {% for profile, item in leaders %}
                                     <div class="record">
                                         <div class="position">{{forloop.counter}}</div>
+                                        {% if item.is_active is True %}
+                                        <div class="icon rounded-circle" style="background-image: url('{{ item.image }}'); background-position: center; color: {{ item.text }};">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        {% else %}
                                         <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        {% endif %}
                                         <div class="username">{{profile.user.username}}</div>
                                         <div class="point-number">{{profile.points}}</div>
                                     </div>
@@ -134,10 +138,14 @@
                                 </div>
                             {% endif %}
                             <div>
-                                {% for profile in friends %}
+                                {% for profile, item in friends %}
                                     <div class="record">
                                         <div class="position">{{forloop.counter}}</div>
+                                        {% if item.is_active is True %}
+                                        <div class="icon rounded-circle" style="background-image: url('{{ item.image }}'); background-position: center; color: {{ item.text }};">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        {% else %}
                                         <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        {% endif %}
                                         <div class="username">{{profile.user.username}}</div>
                                         <div class="point-number">{{profile.points}}</div>
                                     </div>

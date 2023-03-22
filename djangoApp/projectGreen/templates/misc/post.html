@@ -15,6 +15,15 @@
         <link href="{% static 'css/desktop/post.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
         <link href="{% static 'css/mobile/post-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+        {% if is_active is True %}
+        <style>
+            .account .icon {
+                background-image: url('{{ profile_image }}');
+                background-position: center;
+                color: {{ text_colour }};
+            }
+        </style>
+        {% endif %}
     </head>
     <body>
         <header class="row">
@@ -89,7 +98,11 @@
                     <div class="row">
                         <div class="side"></div>
                         <div class="centre">
+                            {% if submission.user_profile_picture.is_active is True %}
+                            <div class="icon rounded-circle" style="background-image: url('{{ submission.user_profile_picture.image }}'); background-position: center; color: {{ submission.user_profile_picture.text }};">{{submission.username|make_list|first| capfirst}}</div>
+                            {% else %}
                             <div class="icon rounded-circle">{{submission.username|make_list|first| capfirst}}</div>
+                            {% endif %}
                             <div class="img rounded-5">
                                 <a href=" {{submission.photo}}" target="_blank">
                                     <img src="{{submission.photo}}">

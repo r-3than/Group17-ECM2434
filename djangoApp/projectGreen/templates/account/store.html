@@ -15,6 +15,7 @@
         <link href="{% static 'css/mobile/store-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
         
+        {% if is_active is True %}
         <style>
             .main-pic .icon,
             .account .icon {
@@ -23,6 +24,7 @@
                 color: {{ text_colour }};
             }
         </style>
+        {% endif %}
     </head>
     <body>
         <header class="row">
