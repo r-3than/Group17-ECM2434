@@ -1,5 +1,0 @@
-Collecting pillow
-  Downloading Pillow-9.4.0-cp310-cp310-manylinux_2_28_x86_64.whl (3.4 MB)
-     ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ 3.4/3.4 MB 17.1 MB/s eta 0:00:00
-Installing collected packages: pillow
-Successfully installed pillow-9.4.0
