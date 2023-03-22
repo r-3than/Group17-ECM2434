@@ -362,6 +362,7 @@ def history(request):
                                                 'time': submission_time_form,
                                                 'photo': photo_b64,
                                                 'upvote_count': submission.get_upvote_count(),
+                                                'comment_count': submission.get_comment_count(),
                                                 })
         context['months'] = submissions_by_month
 
