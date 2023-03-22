@@ -22,7 +22,7 @@ MEDIA_URL = '/uploads/'
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'django-insecure-*f-8r*xtx6mljgv8pdcp^^)z&y&80r1p_iyf!y_lf=*0600$ca'
+SECRET_KEY = open("/etc/key.txt").read().strip()
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -133,7 +133,7 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_PORT = 587
-EMAIL_HOST_USER = 'djangotestemail31@gmail.com'  
+EMAIL_HOST_USER = 'djangotestemail31@gmail.com'
 EMAIL_HOST_PASSWORD = 'nrsrhztfmmwyqzey'
 
 # Database
@@ -183,8 +183,8 @@ LOGIN_URL = "/microsoft_authentication/login"
 LOGIN_REDIRECT_URL = "/"  # optional and can be changed to any other url
 
 
-# True: creates new Django User after valid microsoft authentication. 
-# False: it will only allow those users which are already created in Django User model and 
+# True: creates new Django User after valid microsoft authentication.
+# False: it will only allow those users which are already created in Django User model and
 # will validate the email using Microsoft.
 MICROSOFT_CREATE_NEW_DJANGO_USER = True  # Optional, default value is True
 
