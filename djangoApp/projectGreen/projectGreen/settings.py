@@ -81,7 +81,7 @@ LOGGING = {
     },
 }
 
-broadcastURL = "https://projectgreen.grayitsolutions.com" # change this url to the hosting url and make sure below
+broadcastURL = "http://localhost:8000" # change this url to the hosting url and make sure below
 ALLOWED_HOSTS = ["projectgreen.grayitsolutions.com","localhost"]
 CSRF_TRUSTED_ORIGINS = ['https://projectgreen.grayitsolutions.com',"http://localhost:8000"]
 
