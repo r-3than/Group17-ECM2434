@@ -9,19 +9,8 @@ Authors:
 '''
 
 import datetime
-import os
-from sre_constants import SUCCESS
-import time
-from django.http import HttpResponse
-from django.shortcuts import redirect
-from projectGreen.settings import MEDIA_ROOT
-
-import datetime
 import base64
 import json
-
-from datetime import date, timedelta
-
 
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
@@ -49,96 +38,6 @@ def signin(request):
     active_challenge = ActiveChallenge.get_last_active_challenge()
     context["active_challenge"] = active_challenge.get_challenge_description()
     return HttpResponse(template.render(context, request))
-
-@csrf_exempt
-def uploadphoto(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            upload=request.FILES["upload_pic"]
-            picture_bytes = b""
-            for data in upload:
-                picture_bytes += data
-            has_submitted = Submission.user_has_submitted(request.user.username)
-            active_challenge = ActiveChallenge.objects.last()
-            if has_submitted == True:
-                replace_submission=Submission.objects.get(username=request.user.username, active_challenge=active_challenge)
-                replace_submission.delete()
-
-            current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
-            newSubmission = Submission(username=request.user.username,
-            active_challenge=active_challenge,
-            reported=False,
-            reviewed=False,
-            photo_bytes=picture_bytes,
-            submission_time=current_date)
-            # Check location
-            if active_challenge.challenge.allowed_distance == 0.0 or newSubmission.location_is_valid():
-                newSubmission.save()
-                
-            return redirect('/home/')
-                
-@csrf_exempt
-def flag_submission(request):
-     if request.method == "POST":
-        if request.user.is_authenticated:
-            data=json.loads(request.body)
-            submission_id = data["submission_id"]
-            submssionObj=Submission.objects.filter(id=submission_id).first()
-            submssionObj.report_submission(request.user.username)
-
-        return HttpResponse({"success":"true"})
-
-@csrf_exempt
-def like_submission(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            data=json.loads(request.body)
-            submission_id = data["submission_id"]
-            checker = Upvote.objects.filter(voter_username=request.user.username,
-                submission_id=submission_id)
-            if len(checker) < 1:
-                SubmissionObj = Submission.objects.filter(id=submission_id).first()
-                SubmissionObj.create_upvote(request.user.username)
-            else:
-                checker.first().remove_upvote()
-        return HttpResponse({"success":"true"})
-
-@csrf_exempt
-def buy_item(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            data=json.loads(request.body)
-            username = data['username']
-            item_name = data['item_name']
-            spendable_points = data['spendable_points']
-            itemObj = StoreItem.objects.get(item_name=item_name)
-            if int(spendable_points) >= itemObj.cost:
-                item_instance = OwnedItem(item_name=item_name, username=username, is_active=False)
-                item_instance.save()
-                p = Profile.get_profile(username)
-                p.spendable_points -= itemObj.cost
-                p.save()
-        return HttpResponse({"success":"true"})
-
-@csrf_exempt
-def activate_item(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            data=json.loads(request.body)
-            username = data['username']
-            item_name = data['item_name']
-            OwnedItem.make_active(item_name, username)
-        return HttpResponse({"success":"true"})
-
-@csrf_exempt
-def deactivate_item(request):
-    if request.method == "POST":
-        if request.user.is_authenticated:
-            data=json.loads(request.body)
-            username = data['username']
-            item_name = data['item_name']
-            OwnedItem.make_inactive(item_name, username)
-        return HttpResponse({"success":"true"})
 
 def challenge(request):
     '''
@@ -228,8 +127,8 @@ def university_feed(request):
         for submission in submissions:
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")
-            current_date = date.today().strftime("%d:%m:%Y")
-            current_year = date.today().strftime("%Y")
+            current_date = datetime.date.today().strftime("%d:%m:%Y")
+            current_year = datetime.date.today().strftime("%Y")
 
             # Only display submission year if different from current year
             if submission_year != current_year:
@@ -237,7 +136,7 @@ def university_feed(request):
             # Only display submission date if different from current date
             elif submission_date != current_date:
                 # Display "Yesterday" if submission is from previous day
-                if current_date == (submission.submission_time + timedelta(days = 1)).strftime("%d:%m:%Y"):
+                if current_date == (submission.submission_time + datetime.timedelta(days = 1)).strftime("%d:%m:%Y"):
                     submission_time_form = submission.submission_time.strftime("Yesterday, %H:%M")
                 # Display actual date otherwise
                 else:
@@ -327,8 +226,8 @@ def friends_feed(request):
 
                 submission_date = submission.submission_time.strftime("%d:%m:%Y")
                 submission_year = submission.submission_time.strftime("%Y")
-                current_date = date.today().strftime("%d:%m:%Y")
-                current_year = date.today().strftime("%Y")
+                current_date = datetime.date.today().strftime("%d:%m:%Y")
+                current_year = datetime.date.today().strftime("%Y")
 
                 # Only display submission year if different from current year
                 if submission_year != current_year:
@@ -336,7 +235,7 @@ def friends_feed(request):
                 # Only display submission date if different from current date
                 elif submission_date != current_date:
                     # Display "Yesterday" if submission is from previous day
-                    if current_date == (submission.submission_time + timedelta(days = 1)).strftime("%d:%m:%Y"):
+                    if current_date == (submission.submission_time + datetime.timedelta(days = 1)).strftime("%d:%m:%Y"):
                         submission_time_form = submission.submission_time.strftime("Yesterday, %H:%M")
                     # Display actual date otherwise
                     else:
@@ -389,11 +288,6 @@ def friends_feed(request):
 #endregion
 
 #region Account Management
-
-def camera(request):
-    template = loader.get_template('camera/camera.html')
-    context = {}
-    return HttpResponse(template.render(context, request))
 
 def history(request):
     '''
@@ -468,6 +362,7 @@ def history(request):
                                                 'time': submission_time_form,
                                                 'photo': photo_b64,
                                                 'upvote_count': submission.get_upvote_count(),
+                                                'comment_count': submission.get_comment_count(),
                                                 })
         context['months'] = submissions_by_month
 
@@ -514,6 +409,56 @@ def friends(request):
         return HttpResponse(template.render(context, request))
     else:
         return signin(request)
+    
+def store(request):
+    context = {}
+    if request.user.is_authenticated:
+        template = loader.get_template('account/store.html')
+
+        CurrentChallenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        context["username"] = request.user.username
+        Profile.calculate_spendable_points_by_username(request.user.username)
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        user_spendable_points = str(profileObj.spendable_points)
+        context["user_points"] = user_points
+        context["user_spendable_points"] = user_spendable_points
+
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
+        
+        store_info = {}
+        StoreItems = StoreItem.objects.all()
+        for item in StoreItems:
+            is_owned = OwnedItem.owns_item(item.item_name, request.user.username)
+            if is_owned:
+                is_active = OwnedItem.objects.get(item_name=item.item_name, username=request.user.username).is_active
+            else:
+                is_active = False
+
+            profile_image = item.photo.url
+            text_colour = '#'+item.text_colour
+
+            store_info[item.id] = {
+                'item_name': item.item_name,
+                'item_cost':  item.cost,
+                'is_owned': is_owned,
+                'is_active': is_active,
+                'image': profile_image,
+                'text': text_colour
+            }
+
+        context['store'] = store_info
+
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
 
 #endregion
 
@@ -541,8 +486,8 @@ def post(request):
 
             submission_date = submission.submission_time.strftime("%d:%m:%Y")
             submission_year = submission.submission_time.strftime("%Y")
-            current_date = date.today().strftime("%d:%m:%Y")
-            current_year = date.today().strftime("%Y")
+            current_date = datetime.date.today().strftime("%d:%m:%Y")
+            current_year = datetime.date.today().strftime("%Y")
 
             # Only display submission year if different from current year
             if submission_year != current_year:
@@ -550,7 +495,7 @@ def post(request):
             # Only display submission date if different from current date
             elif submission_date != current_date:
                 # Display "Yesterday" if submission is from previous day
-                if current_date == (submission.submission_time + timedelta(days = 1)).strftime("%d:%m:%Y"):
+                if current_date == (submission.submission_time + datetime.timedelta(days = 1)).strftime("%d:%m:%Y"):
                     submission_time_form = submission.submission_time.strftime("Yesterday, %H:%M")
                 # Display actual date otherwise
                 else:
@@ -762,6 +707,25 @@ def like_submission(request):
             return HttpResponse({"success":"true"})
     return redirect('/')
 
+@csrf_exempt
+def delete_post(request):
+    '''
+    Deletes the specified post owned by the user
+    '''
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            submission_id = request.POST.get("submission_id")
+            try:
+                submission = Submission.objects.get(username=request.user.username, id=submission_id)
+                submission.remove_submission(True)
+                if submission.active_challenge.get_challenge_description() == ActiveChallenge.get_last_active_challenge().get_challenge_description():
+                    return redirect('/submit/')
+                else:
+                    return redirect('/history/')
+            except:
+                return HttpResponse({"success":"false"})
+    return redirect('/')
+
 #endregion
 
 #region Comments:
@@ -870,6 +834,47 @@ def decline_friend_request(request):
 
 #endregion
 
+#region Store
+
+@csrf_exempt
+def buy_item(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            username = data['username']
+            item_name = data['item_name']
+            spendable_points = data['spendable_points']
+            item = StoreItem.objects.get(item_name=item_name)
+            if int(spendable_points) >= item.cost:
+                item_instance = OwnedItem(item_name=item_name, username=username, is_active=False)
+                item_instance.save()
+                p = Profile.get_profile(username)
+                p.spendable_points -= item.cost
+                p.save()
+        return HttpResponse({"success":"true"})
+
+@csrf_exempt
+def activate_item(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            username = data['username']
+            item_name = data['item_name']
+            OwnedItem.make_active(item_name, username)
+        return HttpResponse({"success":"true"})
+
+@csrf_exempt
+def deactivate_item(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            username = data['username']
+            item_name = data['item_name']
+            OwnedItem.make_inactive(item_name, username)
+        return HttpResponse({"success":"true"})
+
+#endregion
+
 #region Accounts
 
 def signout(request):
@@ -931,56 +936,6 @@ def resubscribe_to_emails(request):
     return redirect('/')
 
 #endregion
-
-def store(request):
-    context = {}
-    if request.user.is_authenticated:
-        template = loader.get_template('account/store.html')
-
-        CurrentChallenge = ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = CurrentChallenge.get_challenge_description()
-        context["username"] = request.user.username
-        Profile.calculate_spendable_points_by_username(request.user.username)
-        profileObj = Profile.get_profile(request.user.username)
-        user_points = str(profileObj.points)
-        user_spendable_points = str(profileObj.spendable_points)
-        context["user_points"] = user_points
-        context["user_spendable_points"] = user_spendable_points
-
-        # Fetches user's profile picture
-        item = OwnedItem.get_active_item_data(request.user.username)
-        context["is_active"] = item["is_active"]
-        context["profile_image"] = item["image"]
-        context["text_colour"] = item["text"]
-        
-        store_info = {}
-        StoreItems = StoreItem.objects.all()
-        for item in StoreItems:
-            is_owned = OwnedItem.owns_item(item.item_name, request.user.username)
-            if is_owned:
-                is_active = OwnedItem.objects.get(item_name=item.item_name, username=request.user.username).is_active
-            else:
-                is_active = False
-
-            profile_image = item.photo.url
-            text_colour = '#'+item.text_colour
-
-            store_info[item.id] = {
-                'item_name': item.item_name,
-                'item_cost':  item.cost,
-                'is_owned': is_owned,
-                'is_active': is_active,
-                'image': profile_image,
-                'text': text_colour
-            }
-
-        context['store'] = store_info
-
-        return HttpResponse(template.render(context, request))
-    else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names
