@@ -287,7 +287,7 @@ main .side {
     height: 40px;
     position: relative;
     margin: auto;
-    font-size: clamp(30px, 6vw, 60px);
+    font-size: 30px;
     line-height: 40px;
 }
 
