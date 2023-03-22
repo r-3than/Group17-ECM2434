@@ -709,15 +709,21 @@ def like_submission(request):
 
 @csrf_exempt
 def delete_post(request):
+    '''
+    Deletes the specified post owned by the user
+    '''
     if request.method == "POST":
         if request.user.is_authenticated:
             submission_id = request.POST.get("submission_id")
-            submission = Submission.objects.filter(id=submission_id).first()
-            submission.remove_submission(True)
-            if submission.active_challenge.get_challenge_description() == ActiveChallenge.get_last_active_challenge().get_challenge_description():
-                return redirect('/submit/')
-            else:
-                return redirect('/history/')
+            try:
+                submission = Submission.objects.get(username=request.user.username, id=submission_id)
+                submission.remove_submission(True)
+                if submission.active_challenge.get_challenge_description() == ActiveChallenge.get_last_active_challenge().get_challenge_description():
+                    return redirect('/submit/')
+                else:
+                    return redirect('/history/')
+            except:
+                return HttpResponse({"success":"false"})
     return redirect('/')
 
 #endregion
