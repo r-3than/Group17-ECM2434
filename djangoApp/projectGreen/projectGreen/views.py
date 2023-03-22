@@ -122,13 +122,9 @@ def buy_item(request):
             spendable_points = data['spendable_points']
             itemObj = StoreItem.objects.get(item_name=item_name)
             if int(spendable_points) >= itemObj.cost:
-                print("error1")
                 item_instance = OwnedItem(item_name=item_name, username=username, is_active=False)
-                print("error2")
                 item_instance.save()
-                print("error3")
                 p = Profile.get_profile(username)
-                print("error4")
                 p.spendable_points -= itemObj.cost
                 p.save()
     return HttpResponse({"success":"true"})
