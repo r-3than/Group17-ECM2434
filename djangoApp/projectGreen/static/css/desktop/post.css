@@ -294,10 +294,8 @@ header .side {
 .links {
     background-color: var(--exeter-dark-green);
     color: white;
-    /* width: 75%; */
     width: 360px;
-    /* height: 37vh; */
-    height: 360px;
+    height: 430px;
     padding: 6%;
     padding-left: 9%;
     margin: auto;

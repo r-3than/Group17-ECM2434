@@ -710,8 +710,11 @@ def like_submission(request):
 def delete_post(request):
     if request.method == "POST":
         if request.user.is_authenticated:
-            print("bruh")
-            return
+            submission_id = request.POST.get("submission_id")
+            submission = Submission.objects.filter(id=submission_id).first()
+            submission.remove_submission(True)
+            return redirect('/submit/')
+    return redirect('/')
 
 #endregion
 
