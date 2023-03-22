@@ -60,3 +60,7 @@ The points system is entirely modular, so can be changed globally in [models.py]
 + [Luc](https://github.com/lbiragnet) - *<lbb203@exeter.ac.uk>*
 + [Steven](https://github.com/StevenXD777) - *<sj546@exeter.ac.uk>*
 + [James](https://github.com/James13524) - *<ja669@exeter.ac.uk>*
+
+## License
+
+This project uses an MIT license, detailed in [LICENCE.MD](LICENSE.MD).

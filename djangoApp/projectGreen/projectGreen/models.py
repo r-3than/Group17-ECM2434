@@ -568,7 +568,7 @@ class Submission(models.Model):
 
     def remove_submission(self, delete_instance: bool=True) -> bool:
         '''
-        Removes submission object, as well as associated upvote objects,
+        Removes submission object, as well as associated upvote and comment objects,
         from database (conditional flag) and synchronises points
         Returns False if post is reported (points do not change)
         '''
