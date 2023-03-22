@@ -25,6 +25,7 @@
             }
         </style>
         {% endif %}
+        <title>Store</title>
     </head>
     <body>
         <header class="row">
@@ -45,6 +46,12 @@
                     </div>
                     <div class="points">Score: {{user_points}}</div>
                 </div>
+                <script>
+                    account = document.getElementById("account");
+                    account.onclick = function() {
+                        location.href = "{% url 'history' %}"
+                    }
+                </script>
             </div>
         </header>
         <!-- The Links Modal -->
