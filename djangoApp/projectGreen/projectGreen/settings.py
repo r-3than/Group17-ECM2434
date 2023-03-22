@@ -25,7 +25,7 @@ MEDIA_URL = '/uploads/'
 SECRET_KEY = open("/etc/key.txt").read().strip()
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 #Store images information
 # CURRENT_PATH = os.path.abspath(os.path.dirname(__file__).decode('utf-8'))
