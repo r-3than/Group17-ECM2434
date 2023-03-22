@@ -111,7 +111,7 @@ def get_django_user(email,givenName,surName, create_new=True):
         random_password = "".join(random.choice(string.ascii_letters) for i in range(32))
         username = email_to_username(email)
         user = User(username=username, email=email,first_name=givenName,last_name=surName, password=make_password(random_password))
-        user.is_staff = True
+        user.is_staff = False
         user.save()
         ## setting points to zero here requires relative imports
     return user
