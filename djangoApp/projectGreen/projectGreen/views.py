@@ -714,7 +714,10 @@ def delete_post(request):
             submission_id = request.POST.get("submission_id")
             submission = Submission.objects.filter(id=submission_id).first()
             submission.remove_submission(True)
-            return redirect('/submit/')
+            if submission.active_challenge.get_challenge_description() == ActiveChallenge.get_last_active_challenge().get_challenge_description():
+                return redirect('/submit/')
+            else:
+                return redirect('/history/')
     return redirect('/')
 
 #endregion
