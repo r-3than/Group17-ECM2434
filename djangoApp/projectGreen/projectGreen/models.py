@@ -3,6 +3,7 @@ Main Author:
     TN - Models and points system
 Sub-Author:
     LB - Challenge model helper functions; overall code review, location checking
+    JA - StoreItem and OwnedItem model, with helper fuctions
 '''
 
 import io
@@ -34,7 +35,7 @@ def punctuality_scaling(time_for_challenge: int, minutes_late: int) -> int:
     '''
     return round(math.sqrt(max(time_for_challenge-minutes_late, 0)+1))
 
-def load_profanity_file() -> list[str]:
+def load_profanity_file() -> list:
     '''
     Loads list of profane words from the provided source URL
     Note that changing the source may require an alteration to the current formatting
@@ -283,7 +284,6 @@ class Friend(models.Model):
         Accepts a pending friend request
         i.e. sets pending to False
         '''
-        # TODO IS THIS EVEN NECESSARY?
         # checks that users exist
         try:
             User.objects.get(username=from_username)
@@ -370,7 +370,7 @@ class Friend(models.Model):
             LOGGER.warning('the friendship between "{}" and "{}" does not exist'.format(from_username, to_username))
 
     @classmethod
-    def get_pending_friend_usernames(cls, username: str) -> list[str]:
+    def get_pending_friend_usernames(cls, username: str) -> list:
         '''
         Fetchs all friend connections to a user flagged as pending
         i.e. outstanding friend requests
@@ -379,7 +379,7 @@ class Friend(models.Model):
         return [f.left_username for f in friend_requests]
 
     @classmethod
-    def get_friend_usernames(cls, username: str) -> list[str]:
+    def get_friend_usernames(cls, username: str) -> list:
         '''
         Gets a list of usernames of all friends of a user
         '''
@@ -635,13 +635,13 @@ class Submission(models.Model):
         else:
             return True
 
-    def get_upvotes(self) -> list['Upvote']:
+    def get_upvotes(self) -> list:
         '''
         Gets list of Upvotes for this submission
         '''
         return Upvote.objects.filter(submission=self)
 
-    def get_comments(self) -> list['Comment']:
+    def get_comments(self) -> list:
         '''
         Gets list of Comments for this submission
         Reported comments are excluded from this list
@@ -682,7 +682,7 @@ class Submission(models.Model):
 
         return False
 
-    def location_check_missing_metadata(self, latitude:str, longitude:str) -> bool:
+    def location_check_missing_metadata(self, latitude: str, longitude: str) -> bool:
         '''
         Checks if the GPS coordinates of a user are within the challenge allowed distance
         Only used if GPS metadata from a submission image is missing
@@ -851,6 +851,11 @@ class Comment(models.Model):
                     log.warning('flagged inappropriate word "{}" in {}\'s comment'.format(word, self.comment_username))
                 return True
         return False
+    
+    verbose_name = 'Comment'
+    verbose_name_plural = 'Comments'
+    class Meta:
+        db_table = 'Comments'
 
 class StoreItem(models.Model):
     item_name = models.CharField(max_length=256)
@@ -875,7 +880,7 @@ class StoreItem(models.Model):
         db_table = 'StoreItems'
 
 class OwnedItem(models.Model):
-    item_name = models.CharField(max_length=256)
+    item_name = models.CharField(max_length=128)
     username = models.CharField(max_length=USERNAME_MAX_LENGTH)
     is_active = models.BooleanField(default=False)
 
@@ -920,6 +925,7 @@ class OwnedItem(models.Model):
             active_item = OwnedItem.objects.get(is_active=True, username=username, item_name=item_name)
             active_item.is_active=False
             active_item.save()
+            return True
         except OwnedItem.DoesNotExist:
             return False
 
@@ -954,13 +960,7 @@ class OwnedItem(models.Model):
             'text': text_colour
         }
 
-
-
     verbose_name = 'OwnedItem'
     verbose_name_plural = 'OwnedItems'
     class Meta:
         db_table = 'OwnedItems'
-    verbose_name = 'Comment'
-    verbose_name_plural = 'Comments'
-    class Meta:
-        db_table = 'Comments'
