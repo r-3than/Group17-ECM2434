@@ -173,7 +173,8 @@
 
                                     button.onclick = function() {
                                         var content = document.getElementById("content");
-                                        if (content == "") {
+                                        if (content.value.trim() == "") {
+                                            content.value = "";
                                             return;
                                         }
                                         else {
