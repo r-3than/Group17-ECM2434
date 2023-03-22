@@ -14,6 +14,16 @@
         <link href="{% static 'css/desktop/friends.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
         <link href="{% static 'css/mobile/friends-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+        {% if is_active is True %}
+        <style>
+            .main-pic .icon,
+            .account .icon {
+                background-image: url('{{ profile_image }}');
+                background-position: center;
+                color: {{ text_colour }};
+            }
+        </style>
+        {% endif %}
     </head>
     <body>
         <header class="row">
@@ -125,10 +135,14 @@
                 </div>
 
                 <div class="friends-list" id="current" style="display: flex;">
-                    {% for friend in friends %}
+                    {% for friend, item in friends %}
                         <div class="friend row rounded-3">
                             <div class="side left">
+                                {% if item.is_active is True %}
+                                <div class="icon rounded-circle" style="background-image: url('{{ item.image }}'); background-position: center; color: {{ item.text }};">{{friend|make_list|first| capfirst}}</div>
+                                {% else %}
                                 <div class="icon rounded-circle">{{friend|make_list|first| capfirst}}</div>
+                                {% endif %}
                             </div>
                             <div class="centre">
                                 <div>{{friend}}</div>
@@ -145,10 +159,14 @@
                 </div>
                                 
                 <div class="friends-list" id="incoming" style="display: none;">
-                    {% for friend in incoming %}
+                    {% for friend, item in incoming %}
                         <div class="friend row rounded-3">
                             <div class="side left">
+                                {% if item.is_active is True %}
+                                <div class="icon rounded-circle" style="background-image: url('{{ item.image }}'); background-position: center; color: {{ item.text }};">{{friend|make_list|first| capfirst}}</div>
+                                {% else %}
                                 <div class="icon rounded-circle">{{friend|make_list|first| capfirst}}</div>
+                                {% endif %}
                             </div>
                             <div class="centre">
                                 <div>{{friend}}</div>

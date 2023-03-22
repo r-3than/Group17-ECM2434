@@ -522,11 +522,57 @@ def friends(request):
     if request.user.is_authenticated:
         template = loader.get_template('account/friends.html')
 
+        try: # Fetches user's profile picture
+            item = OwnedItem.objects.get(username=request.user.username, is_active=True)
+            profile_picture = StoreItem.objects.get(item_name=item.item_name)
+            context["is_active"] = True
+            context["profile_image"] = profile_picture.photo.url
+            context["text_colour"] = '#'+profile_picture.text_colour
+        except:
+            context["is_active"] = False
+            context["profile_image"] = None
+            context["text_colour"] = None
+
         user_friends = Friend.get_friend_usernames(request.user.username)
-        context['friends'] = user_friends
+        friend_items = []
+        for friend_username in user_friends:
+            try: # Fetches profile picture for submission user
+                friend_item = OwnedItem.objects.get(username=friend_username, is_active=True)
+                friend_profile_picture = StoreItem.objects.get(item_name=friend_item.item_name)
+                is_active = True
+                profile_image = friend_profile_picture.photo.url
+                text_colour = '#'+friend_profile_picture.text_colour
+            except:
+                is_active = False
+                profile_image = None
+                text_colour = None
+            friend_items.append({
+                'is_active': is_active,
+                'image': profile_image,
+                'text': text_colour
+            })
+        context['friends'] = zip(user_friends, friend_items)
+            
 
         incoming = Friend.get_pending_friend_usernames(request.user.username)
-        context['incoming'] = incoming
+        incoming_items = []
+        for incoming_username in incoming:
+            try: # Fetches profile picture for submission user
+                incoming_item = OwnedItem.objects.get(username=incoming_username, is_active=True)
+                incoming_profile_picture = StoreItem.objects.get(item_name=incoming_item.item_name)
+                is_active = True
+                profile_image = incoming_profile_picture.photo.url
+                text_colour = '#'+incoming_profile_picture.text_colour
+            except:
+                is_active = False
+                profile_image = None
+                text_colour = None
+            incoming_items.append({
+                'is_active': is_active,
+                'image': profile_image,
+                'text': text_colour
+            })
+        context['incoming'] = zip(incoming, incoming_items)
 
         current_challenge =ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = current_challenge.get_challenge_description()
@@ -632,6 +678,17 @@ def leaderboard(request):
         template = loader.get_template('misc/leaderboard.html')
 
         user_profile = Profile.get_profile(request.user.username)
+
+        try: # Fetches user's profile picture
+            item = OwnedItem.objects.get(username=request.user.username, is_active=True)
+            profile_picture = StoreItem.objects.get(item_name=item.item_name)
+            context["is_active"] = True
+            context["profile_image"] = profile_picture.photo.url
+            context["text_colour"] = '#'+profile_picture.text_colour
+        except:
+            context["is_active"] = False
+            context["profile_image"] = None
+            context["text_colour"] = None
 
         # Get overall leaders & user positon
         profiles = Profile.objects.order_by('-points')
