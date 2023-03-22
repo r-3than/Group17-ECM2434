@@ -16,7 +16,8 @@ from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-
+MEDIA_ROOT = os.path.join(BASE_DIR, '').replace('\\', '/')
+MEDIA_URL = '/uploads/'
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/4.1/howto/deployment/checklist/
 
@@ -25,6 +26,13 @@ SECRET_KEY = 'django-insecure-*f-8r*xtx6mljgv8pdcp^^)z&y&80r1p_iyf!y_lf=*0600$ca
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
+
+#Store images information
+# CURRENT_PATH = os.path.abspath(os.path.dirname(__file__).decode('utf-8'))
+
+# STORE_PHOTOS_ROOT = os.path.join(CURRENT_PATH, 'storePhotos').replace('\\','/')
+
+# STORE_PHOTOS_URL = '/storePhotos/'
 
 LOGGING = {
     'version': 1,

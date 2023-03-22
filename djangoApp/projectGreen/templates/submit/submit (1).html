@@ -14,6 +14,15 @@
         <link href="{% static 'css/desktop/submit.css' %}" rel="stylesheet" media="screen and (min-width: 961px)">
         <link href="{% static 'css/mobile/submit-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 960px)">
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+        {% if is_active is True %}
+        <style>
+            .account .icon {
+                background-image: url('{{ profile_image }}');
+                background-position: center;
+                color: {{ text_colour }};
+            }
+        </style>
+        {% endif %}
     </head>
     <body>
         <header class="row">

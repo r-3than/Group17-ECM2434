@@ -16,6 +16,15 @@
         <link href="{% static 'css/desktop/feed.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
         <link href="{% static 'css/mobile/feed-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+        {% if is_active is True %}
+        <style>
+            .account .icon {
+                background-image: url('{{ profile_image }}');
+                background-position: center;
+                color: {{ text_colour }};
+            }
+        </style>
+        {% endif %}
     </head>
     <body>
         <header class="row">
@@ -59,6 +68,8 @@
                     <div class="modal-body links">
                         <a href="{% url 'history' %}">Submission History</a> <br>
                         <a href="{% url 'friends' %}">Manage Friends</a> <br>
+                        <a href="{% url 'leaderboard' %}">Leaderboard</a> <br>
+                        <a href="{% url 'store' %}">Store</a> <br>
                         <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
                         <div style="background-color: white; height: 5px; width: 80%;"></div>
@@ -76,6 +87,8 @@
                 <div class="links rounded-5">
                     <a href="{% url 'history' %}">Submission History</a>
                     <a href="{% url 'friends' %}">Manage Friends</a>
+                    <a href="{% url 'leaderboard' %}">Leaderboard</a>
+                    <br><a href="{% url 'store' %}">Store</a>
                     <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                     <div style="background-color: white; height: 5px; width: 80%;"></div>
@@ -98,7 +111,11 @@
                             <div class="side"></div>
                             <div class="centre">
                                 <div class="img rounded-5">
+                                    {% if info.submission_user_profile_picture.is_active is True %}
+                                    <div class="icon rounded-circle" style="background-image: url('{{ info.submission_user_profile_picture.image }}'); background-position: center; color: {{ info.submission_user_profile_picture.text }};">{{info.submission_username|make_list|first| capfirst}}</div>
+                                    {% else %}
                                     <div class="icon rounded-circle">{{info.submission_username|make_list|first| capfirst}}</div>
+                                    {% endif %}
                                     <img id="image{{info.submission_id}}" class="details" src="{{ info.submission_photo }}">
                                 </div>
                             </div>

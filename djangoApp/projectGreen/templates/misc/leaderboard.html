@@ -14,6 +14,15 @@
         <link href="{% static 'css/desktop/leaderboard.css' %}" rel="stylesheet" media="screen and (min-width: 1001px)">
         <link href="{% static 'css/mobile/leaderboard-mobile.css' %}" rel="stylesheet" media="screen and (max-width: 1000px)">
         <link href="{% static 'css/variables.css' %}" rel="stylesheet">
+        {% if is_active is True %}
+        <style>
+            .account .icon {
+                background-image: url('{{ profile_image }}');
+                background-position: center;
+                color: {{ text_colour }};
+            }
+        </style>
+        {% endif %}
     </head>
     <body>
         <header class="row">
@@ -59,6 +68,7 @@
                         <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <a href="{% url 'history' %}">Submission History</a> <br>
                         <a href="{% url 'friends' %}">Manage Friends</a> <br>
+                        <a href="{% url 'store' %}">Store</a> <br>
                         <div style="background-color: white; height: 5px; width: 80%;"></div>
                         <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a> <br>
                     </div>
@@ -75,6 +85,7 @@
                     <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="{% url 'history' %}">Submission History</a>
                     <a href="{% url 'friends' %}">Manage Friends</a>
+                    <br><a href="{% url 'store' %}">Store</a>
                     <div style="background-color: white; height: 5px; width: 80%;"></div>
                     <a href="https://www.exeter.ac.uk/about/sustainability/">University Green Policy</a>
                 </div>
@@ -105,10 +116,14 @@
                                 </div>
                             {% endif %}
                             <div>
-                                {% for profile in leaders %}
+                                {% for profile, item in leaders %}
                                     <div class="record">
                                         <div class="position">{{forloop.counter}}</div>
+                                        {% if item.is_active is True %}
+                                        <div class="icon rounded-circle" style="background-image: url('{{ item.image }}'); background-position: center; color: {{ item.text }};">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        {% else %}
                                         <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        {% endif %}
                                         <div class="username">{{profile.user.username}}</div>
                                         <div class="point-number">{{profile.points}}</div>
                                     </div>
@@ -125,10 +140,14 @@
                                 </div>
                             {% endif %}
                             <div>
-                                {% for profile in friends %}
+                                {% for profile, item in friends %}
                                     <div class="record">
                                         <div class="position">{{forloop.counter}}</div>
+                                        {% if item.is_active is True %}
+                                        <div class="icon rounded-circle" style="background-image: url('{{ item.image }}'); background-position: center; color: {{ item.text }};">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        {% else %}
                                         <div class="icon rounded-circle">{{profile.user.username|make_list|first| capfirst}}</div>
+                                        {% endif %}
                                         <div class="username">{{profile.user.username}}</div>
                                         <div class="point-number">{{profile.points}}</div>
                                     </div>

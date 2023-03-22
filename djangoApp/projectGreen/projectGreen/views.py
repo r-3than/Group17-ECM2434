@@ -3,14 +3,25 @@ Authors:
     ER
     LB
     TN
+    OL
+    JA
     OJ
 '''
+
+import datetime
+import os
+from sre_constants import SUCCESS
+import time
+from django.http import HttpResponse
+from django.shortcuts import redirect
+from projectGreen.settings import MEDIA_ROOT
 
 import datetime
 import base64
 import json
 
 from datetime import date, timedelta
+
 
 from django.contrib.auth import logout
 from django.contrib.auth.models import User
@@ -22,7 +33,7 @@ from django.views.decorators.csrf import csrf_exempt
 
 from microsoft_authentication.auth.auth_decorators import microsoft_login_required
 
-from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Upvote, Comment
+from projectGreen.models import ActiveChallenge, Friend, Profile, Submission, Upvote, Comment, StoreItem, OwnedItem
 
 #region Pages
 
@@ -38,6 +49,96 @@ def signin(request):
     active_challenge = ActiveChallenge.get_last_active_challenge()
     context["active_challenge"] = active_challenge.get_challenge_description()
     return HttpResponse(template.render(context, request))
+
+@csrf_exempt
+def uploadphoto(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            upload=request.FILES["upload_pic"]
+            picture_bytes = b""
+            for data in upload:
+                picture_bytes += data
+            has_submitted = Submission.user_has_submitted(request.user.username)
+            active_challenge = ActiveChallenge.objects.last()
+            if has_submitted == True:
+                replace_submission=Submission.objects.get(username=request.user.username, active_challenge=active_challenge)
+                replace_submission.delete()
+
+            current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+            newSubmission = Submission(username=request.user.username,
+            active_challenge=active_challenge,
+            reported=False,
+            reviewed=False,
+            photo_bytes=picture_bytes,
+            submission_time=current_date)
+            # Check location
+            if active_challenge.challenge.allowed_distance == 0.0 or newSubmission.location_is_valid():
+                newSubmission.save()
+                
+            return redirect('/home/')
+                
+@csrf_exempt
+def flag_submission(request):
+     if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            submission_id = data["submission_id"]
+            submssionObj=Submission.objects.filter(id=submission_id).first()
+            submssionObj.report_submission(request.user.username)
+
+        return HttpResponse({"success":"true"})
+
+@csrf_exempt
+def like_submission(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            submission_id = data["submission_id"]
+            checker = Upvote.objects.filter(voter_username=request.user.username,
+                submission_id=submission_id)
+            if len(checker) < 1:
+                SubmissionObj = Submission.objects.filter(id=submission_id).first()
+                SubmissionObj.create_upvote(request.user.username)
+            else:
+                checker.first().remove_upvote()
+        return HttpResponse({"success":"true"})
+
+@csrf_exempt
+def buy_item(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            username = data['username']
+            item_name = data['item_name']
+            spendable_points = data['spendable_points']
+            itemObj = StoreItem.objects.get(item_name=item_name)
+            if int(spendable_points) >= itemObj.cost:
+                item_instance = OwnedItem(item_name=item_name, username=username, is_active=False)
+                item_instance.save()
+                p = Profile.get_profile(username)
+                p.spendable_points -= itemObj.cost
+                p.save()
+        return HttpResponse({"success":"true"})
+
+@csrf_exempt
+def activate_item(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            username = data['username']
+            item_name = data['item_name']
+            OwnedItem.make_active(item_name, username)
+        return HttpResponse({"success":"true"})
+
+@csrf_exempt
+def deactivate_item(request):
+    if request.method == "POST":
+        if request.user.is_authenticated:
+            data=json.loads(request.body)
+            username = data['username']
+            item_name = data['item_name']
+            OwnedItem.make_inactive(item_name, username)
+        return HttpResponse({"success":"true"})
 
 def challenge(request):
     '''
@@ -56,6 +157,12 @@ def challenge(request):
         context["user_points"] = user_points
         context["post_count"] = post_count
 
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
+
         return HttpResponse(template.render(context, request))
     else:
         return signin(request)
@@ -65,8 +172,9 @@ def submit(request):
     Displays the page where the user can submit a photo
     '''
     context = {}
-
     if request.user.is_authenticated:
+        template = loader.get_template('submit/submit.html')
+
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
         user_profile = Profile.get_profile(request.user.username)
@@ -74,7 +182,12 @@ def submit(request):
         post_count= Friend.get_friend_post_count(user_profile.user.username,active_challenge)
         context["user_points"] = user_points
         context["post_count"] = post_count
-        template = loader.get_template('submit/submit.html')
+
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
 
         return HttpResponse(template.render(context, request))
     else:
@@ -88,7 +201,6 @@ def university_feed(request):
     '''
     Displays the university-wide feed
     '''
-     # TODO RENAME THIS
     context = {}
     if request.user.is_authenticated:
         template = loader.get_template('feed/feed.html')
@@ -97,6 +209,12 @@ def university_feed(request):
         user_profile = Profile.get_profile(request.user.username)
         user_points = str(user_profile.points)
         context["user_points"] = user_points
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
+
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = active_challenge.get_challenge_description()
@@ -145,9 +263,17 @@ def university_feed(request):
             # Not ideal but ensures points sync
             user_profile = Profile.objects.filter(id=request.user.id).first()
             has_reviewed = submission.reviewed
+            # Fetches profile picture for submission user
+            submission_user_item = OwnedItem.get_active_item_data(submission.username)
+                
             submissions_info[submission.id] = {
                                                'submission_id': submission.id,
                                                'submission_user_displayname': user_display_name,
+                                               'submission_user_profile_picture': {
+                                                    'is_active': submission_user_item['is_active'],
+                                                    'image': submission_user_item['image'],
+                                                    'text': submission_user_item['text']
+                                               },
                                                'submission_username': submission.username,
                                                'submission_time': submission_time_form,
                                                'submission_photo': photo_b64,
@@ -179,6 +305,12 @@ def friends_feed(request):
         user_profile = Profile.objects.filter(id=request.user.id).first()
         user_points = str(user_profile.points)
         context["user_points"] = user_points
+
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
 
         # List the submissions from most recent
         active_challenge = ActiveChallenge.get_last_active_challenge()
@@ -227,9 +359,18 @@ def friends_feed(request):
                 else:
                     has_liked = 0
                 Profile.recalculate_user_points_by_username(submission.username)
+
+                # Fetches profile picture for submission user
+                submission_user_item = OwnedItem.get_active_item_data(submission.username)
+                
                 submissions_info[submission.id] = {
                                                 'submission_id': submission.id,
                                                 'submission_user_displayname': user_display_name,
+                                                'submission_user_profile_picture': {
+                                                    'is_active': submission_user_item["is_active"],
+                                                    'image': submission_user_item["image"],
+                                                    'text': submission_user_item["text"]
+                                                },
                                                 'submission_username': submission.username,
                                                 'submission_time': submission_time_form,
                                                 'submission_photo': photo_b64,
@@ -241,11 +382,18 @@ def friends_feed(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        return signin(request)
-
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
+  
 #endregion
 
 #region Account Management
+
+def camera(request):
+    template = loader.get_template('camera/camera.html')
+    context = {}
+    return HttpResponse(template.render(context, request))
 
 def history(request):
     '''
@@ -263,6 +411,12 @@ def history(request):
         user_join_date = request.user.date_joined
         current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
         date_difference = current_date - user_join_date
+
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
 
         if date_difference.days:
             display_date = str(date_difference.days) + " days"
@@ -330,11 +484,24 @@ def friends(request):
     if request.user.is_authenticated:
         template = loader.get_template('account/friends.html')
 
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
+
         user_friends = Friend.get_friend_usernames(request.user.username)
-        context['friends'] = user_friends
+        friend_items = []
+        for friend_username in user_friends:
+            friend_items.append(OwnedItem.get_active_item_data(friend_username))
+        context['friends'] = zip(user_friends, friend_items)
+            
 
         incoming = Friend.get_pending_friend_usernames(request.user.username)
-        context['incoming'] = incoming
+        incoming_items = []
+        for incoming_username in incoming:
+            incoming_items.append(OwnedItem.get_active_item_data(incoming_username))
+        context['incoming'] = zip(incoming, incoming_items)
 
         current_challenge =ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = current_challenge.get_challenge_description()
@@ -362,6 +529,12 @@ def post(request):
         if request.user.is_authenticated:
             active_challenge = ActiveChallenge.get_last_active_challenge()
             context["active_challenge"] = active_challenge.get_challenge_description()
+
+            # Fetches user's profile picture
+            item = OwnedItem.get_active_item_data(request.user.username)
+            context["is_active"] = item["is_active"]
+            context["profile_image"] = item["image"]
+            context["text_colour"] = item["text"]
 
             submission_id = request.POST.get("submission_id", "")
             submission=Submission.objects.filter(id=submission_id).first()
@@ -408,9 +581,17 @@ def post(request):
             user_points = str(user_profile.points)
             context["user_points"] = user_points
 
+            # Fetches profile picture for submission user
+            submission_user_item = OwnedItem.get_active_item_data(submission.username)
+
             context['submission'] = {
                                                'id': submission.id,
                                                'user_displayname': user_display_name,
+                                               'user_profile_picture': {
+                                                    'is_active': submission_user_item["is_active"],
+                                                    'image': submission_user_item["image"],
+                                                    'text': submission_user_item["text"]
+                                                },
                                                'username': submission.username,
                                                'time': submission_time_form,
                                                'photo': photo_b64,
@@ -441,6 +622,12 @@ def leaderboard(request):
 
         user_profile = Profile.get_profile(request.user.username)
 
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
+
         # Get overall leaders & user positon
         profiles = Profile.objects.order_by('-points')
         context["is_leader"] = False
@@ -456,18 +643,26 @@ def leaderboard(request):
                 if profile.user.username in friend_usernames:
                     user_friends.append(profile)
         leaders = profiles[:20]
-        context["leaders"] = leaders
+        leader_items = []
+        for profile in leaders:
+            leader_items.append(OwnedItem.get_active_item_data(profile.user.username))
+        context["leaders"] = zip(leaders, leader_items)
 
         # Get friend leaders & user position
         user_friends.append(user_profile)
-        user_friends.sort(key=lambda x: x.points, reverse=True)
+        friend_items = []
+        for profile in user_friends:
+            friend_items.append(OwnedItem.get_active_item_data(profile.user.username))
+        friends_list = list(zip(user_friends, friend_items))
+        friends_list.sort(key=lambda x: x[0].points, reverse=True)
+        context["friends"] = friends_list[:20]
+
         for index, profile in enumerate(user_friends):
             if profile.user.username == request.user.username:
                 if index < 20:
                     context["is_friend_leader"] = True
                 else:
                     context["friends_position"] = index
-        context["friends"] = user_friends[:20]
 
         current_challenge = ActiveChallenge.get_last_active_challenge()
         context["active_challenge"] = current_challenge.get_challenge_description()
@@ -736,6 +931,56 @@ def resubscribe_to_emails(request):
     return redirect('/')
 
 #endregion
+
+def store(request):
+    context = {}
+    if request.user.is_authenticated:
+        template = loader.get_template('account/store.html')
+
+        CurrentChallenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        context["username"] = request.user.username
+        Profile.calculate_spendable_points_by_username(request.user.username)
+        profileObj = Profile.get_profile(request.user.username)
+        user_points = str(profileObj.points)
+        user_spendable_points = str(profileObj.spendable_points)
+        context["user_points"] = user_points
+        context["user_spendable_points"] = user_spendable_points
+
+        # Fetches user's profile picture
+        item = OwnedItem.get_active_item_data(request.user.username)
+        context["is_active"] = item["is_active"]
+        context["profile_image"] = item["image"]
+        context["text_colour"] = item["text"]
+        
+        store_info = {}
+        StoreItems = StoreItem.objects.all()
+        for item in StoreItems:
+            is_owned = OwnedItem.owns_item(item.item_name, request.user.username)
+            if is_owned:
+                is_active = OwnedItem.objects.get(item_name=item.item_name, username=request.user.username).is_active
+            else:
+                is_active = False
+
+            profile_image = item.photo.url
+            text_colour = '#'+item.text_colour
+
+            store_info[item.id] = {
+                'item_name': item.item_name,
+                'item_cost':  item.cost,
+                'is_owned': is_owned,
+                'is_active': is_active,
+                'image': profile_image,
+                'text': text_colour
+            }
+
+        context['store'] = store_info
+
+        return HttpResponse(template.render(context, request))
+    else:
+        print("Not signed in")
+        template = loader.get_template('home/sign-in.html')
+        return HttpResponse(template.render(context, request))
 
 # If pages need to be restricted to certain groups of users.
 @microsoft_login_required(groups=("SpecificGroup1", "SpecificGroup2"))  # Add here the list of Group names
