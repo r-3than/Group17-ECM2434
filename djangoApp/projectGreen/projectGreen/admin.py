@@ -1,4 +1,3 @@
-
 '''
 Main Author:
     TN - Full admin views
