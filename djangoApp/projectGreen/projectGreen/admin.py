@@ -184,7 +184,7 @@ class SubmissionAdmin(admin.ModelAdmin):
         ''' Fixed by ER '''
         if submission.photo_bytes is not None:
             photo_url=base64.b64encode(submission.photo_bytes).decode("utf-8")
-            return format_html("<img src='data:image/png;base64,{decoded}'>".format(decoded=photo_url))
+            return format_html("<img src='data:image/png;base64,{decoded}' style=\"object-fit: contain; height: 180px;\">".format(decoded=photo_url))
         else:
             return '[no image found]'
 

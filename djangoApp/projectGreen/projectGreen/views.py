@@ -301,16 +301,16 @@ def history(request):
         # Get the user submissions from most recent
         submissions = Submission.objects.filter(username = request.user.username).order_by('-submission_time')
 
-        # Display date joined
-        user_join_date = request.user.date_joined
-        current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
-        date_difference = current_date - user_join_date
-
         # Fetches user's profile picture
         item = OwnedItem.get_active_item_data(request.user.username)
         context["is_active"] = item["is_active"]
         context["profile_image"] = item["image"]
         context["text_colour"] = item["text"]
+
+        # Display date joined
+        user_join_date = request.user.date_joined
+        current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+        date_difference = current_date - user_join_date
 
         if date_difference.days:
             display_date = str(date_difference.days) + " days"
@@ -385,13 +385,28 @@ def friends(request):
         context["profile_image"] = item["image"]
         context["text_colour"] = item["text"]
 
+        # Display date joined
+        user_join_date = request.user.date_joined
+        current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+        date_difference = current_date - user_join_date
+
+        if date_difference.days:
+            display_date = str(date_difference.days) + " days"
+        elif date_difference.seconds > 3600:
+            display_date = str(date_difference.seconds // 3600) + " hours"
+        elif date_difference.seconds > 60:
+            display_date = str(date_difference.seconds // 60) + " minutes"
+        else:
+            display_date = "a few seconds"
+
+        context["display_date"] = display_date
+
         user_friends = Friend.get_friend_usernames(request.user.username)
         friend_items = []
         for friend_username in user_friends:
             friend_items.append(OwnedItem.get_active_item_data(friend_username))
         context['friends'] = zip(user_friends, friend_items)
             
-
         incoming = Friend.get_pending_friend_usernames(request.user.username)
         incoming_items = []
         for incoming_username in incoming:
@@ -415,8 +430,8 @@ def store(request):
     if request.user.is_authenticated:
         template = loader.get_template('account/store.html')
 
-        CurrentChallenge = ActiveChallenge.get_last_active_challenge()
-        context["active_challenge"] = CurrentChallenge.get_challenge_description()
+        current_challenge = ActiveChallenge.get_last_active_challenge()
+        context["active_challenge"] = current_challenge.get_challenge_description()
         context["username"] = request.user.username
         Profile.calculate_spendable_points_by_username(request.user.username)
         profileObj = Profile.get_profile(request.user.username)
@@ -424,6 +439,22 @@ def store(request):
         user_spendable_points = str(profileObj.spendable_points)
         context["user_points"] = user_points
         context["user_spendable_points"] = user_spendable_points
+
+        # Display date joined
+        user_join_date = request.user.date_joined
+        current_date = datetime.datetime.now().replace(tzinfo=datetime.timezone.utc)
+        date_difference = current_date - user_join_date
+
+        if date_difference.days:
+            display_date = str(date_difference.days) + " days"
+        elif date_difference.seconds > 3600:
+            display_date = str(date_difference.seconds // 3600) + " hours"
+        elif date_difference.seconds > 60:
+            display_date = str(date_difference.seconds // 60) + " minutes"
+        else:
+            display_date = "a few seconds"
+
+        context["display_date"] = display_date
 
         # Fetches user's profile picture
         item = OwnedItem.get_active_item_data(request.user.username)
@@ -917,7 +948,7 @@ def unsubscribe_from_emails(request):
         except Exception as e:
             print(str(e))
         finally:
-            return redirect('/account/')
+            return redirect('/history/')
     return redirect('/')
 
 def resubscribe_to_emails(request):
@@ -932,7 +963,7 @@ def resubscribe_to_emails(request):
         except Exception as e:
             print(str(e))
         finally:
-            return redirect('/account/')
+            return redirect('/history/')
     return redirect('/')
 
 #endregion
