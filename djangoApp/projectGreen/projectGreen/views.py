@@ -281,9 +281,7 @@ def friends_feed(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
   
 #endregion
 
@@ -487,9 +485,7 @@ def store(request):
 
         return HttpResponse(template.render(context, request))
     else:
-        print("Not signed in")
-        template = loader.get_template('home/sign-in.html')
-        return HttpResponse(template.render(context, request))
+        return signin(request)
 
 #endregion
 
