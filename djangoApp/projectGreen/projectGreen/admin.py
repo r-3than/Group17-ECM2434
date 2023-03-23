@@ -9,6 +9,8 @@ import base64
 import logging
 
 from datetime import datetime
+import pytz
+
 from django.contrib import admin
 from django.contrib.auth.models import User
 from django.template.loader import render_to_string
@@ -52,7 +54,7 @@ def publish_challenge(modeladmin, request, queryset):
     '''
     challenge = queryset[0]
     ActiveChallenge.objects.all().update(is_expired=True)
-    active_challenge = ActiveChallenge(date=datetime.now(), challenge=challenge)
+    active_challenge = ActiveChallenge(date=datetime.utcnow().replace(tzinfo=pytz.utc), challenge=challenge)
     active_challenge.save()
 
     send_email_notfication(active_challenge, request)
