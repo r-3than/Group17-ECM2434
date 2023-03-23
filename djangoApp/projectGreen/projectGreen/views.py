@@ -872,7 +872,7 @@ def buy_item(request):
             item_name = data['item_name']
             spendable_points = data['spendable_points']
             item = StoreItem.objects.get(item_name=item_name)
-            if int(spendable_points) >= item.cost:
+            if int(spendable_points) >= item.cost and (not OwnedItem.owns_item(item_name, username)):
                 item_instance = OwnedItem(item_name=item_name, username=username, is_active=False)
                 item_instance.save()
                 p = Profile.get_profile(username)
