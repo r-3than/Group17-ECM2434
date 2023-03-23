@@ -4,6 +4,9 @@
 [![Django CI](https://github.com/r-3than/Group17-ECM2434/actions/workflows/django.yml/badge.svg?branch=main)](https://github.com/r-3than/Group17-ECM2434/actions/workflows/django.yml)
 
 ## Project Summary
+
+<image src="BeGreen Presentation Poster.png" width="100%">
+
 BeGreen is a django-powered web-based social media app, designed to encorage sustainability on campus through the use of *"eco-challenges"*.
 Users are encoraged to submit photos of them completing the sustainable activity, and to interact with submissions of their friends and others on the app.
 
