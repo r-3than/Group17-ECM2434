@@ -10,6 +10,15 @@ body {
     font-family: "Inter";
 }
 
+html {
+    height: 100%;
+}
+
+body {
+    height: 100%;
+    overflow-y: scroll;
+}
+
 .row:after {
     content: "";
     display: table;
